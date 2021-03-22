@@ -22,7 +22,7 @@ sudo docker build -t <원하는 도커 이미지 이름>:<버전 정보 원하�
 # ex) sudo docker build -t pyl:1.0 .
 
 # docker container running
-sudo docker -it -d --gpus all --name <원하는 컨테이너 이름> <실행하길 원하는 도커 이미지>
+sudo docker -it -d -v <공유할 폴더 위치>:<컨테이너 내부 공유폴더 위치> --gpus all --name <원하는 컨테이너 이름> <실행하길 원하는 도커 이미지>
 # ex) sudo docker -it -d /nas/bgpark/CAM_IO:/data/CAM_IO --gpus all --name pyl-test pyl:1.0
 
 # docker 내부로 진입
