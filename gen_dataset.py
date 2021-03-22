@@ -76,7 +76,7 @@ class CAMIO_Dataset(Dataset):
         return img, label
 
 
-
+# TODO 데이터 생성하는 부분(robot/lapa) 둘다 통합하는 코드로 변경 필요함
 
 trainset = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
             'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
@@ -87,7 +87,7 @@ valset = ['R017', 'R022', 'R116', 'R208', 'R303']
 class_name = ['camIO', 'non_camIO']
 tar_surgery = 'robot'
 video_ext = '.mp4'
-anno_path = '/home/mkchoi/dataset/CAM'
+anno_path = '/data/CAM_IO/robot/OOB'
 fps = 30
 
 
@@ -135,7 +135,7 @@ def gen_data(org_video_path, save_dir_path):
         df = pd.read_csv(apath)
         d_size = len(df) - 1
 
-        idx_list = []
+        t_idx_list = []
         for i in range(d_size):
             t_start = df.loc[i]['start']
             t_end = df.loc[i]['end']
@@ -143,13 +143,18 @@ def gen_data(org_video_path, save_dir_path):
             if not isinstance(t_start, str) or not isinstance(t_end, str):
                 break
 
-            idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)])
+            t_idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)])
 
         # pass if timestamp is not existed
-        if len(idx_list) < 1:
+        if len(t_idx_list) < 1:
             continue
 
-        video = cv2.VideoCapture(os.path.join(org_video_path, tar_surgery, video_name))
+        idx_list = []
+        for li in t_idx_list:
+            idx_list.append(li[0])
+            idx_list.append(li[1])
+
+        video = cv2.VideoCapture(os.path.join(org_video_path, tar_surgery, 'video', video_name))
         v_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
         
         OOB_idx = 0
