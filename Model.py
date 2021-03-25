@@ -12,7 +12,9 @@ class CAMIO(pl.LightningModule):
         super().__init__()
         # self.model = models.resnet50(pretrained=True)
         self.model = models.wide_resnet50_2(pretrained=True)
+        # self.model = models.densenet201(pretrained=True)
         self.model.fc = torch.nn.Linear(self.model.fc.in_features, 2)
+        # self.model.classifier = torch.nn.Linear(self.model.classifier.in_features, 2)
         self.criterion = torch.nn.CrossEntropyLoss()
         # self.softmax = torch.nn.Softmax()
         
@@ -36,7 +38,7 @@ class CAMIO(pl.LightningModule):
 
         return loss
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx): # 배치마다 실행
         x, y = batch
         y_hat = self.model(x)
         loss = self.criterion(y_hat, y)
@@ -62,7 +64,7 @@ class CAMIO(pl.LightningModule):
             'val_precision':prec,'val_recall':rc, 
             'val_f1': f1}
 
-    def validation_epoch_end(self, outputs):
+    def validation_epoch_end(self, outputs): # epoch 마다 실행
         f_loss = 0
         f_acc = 0
         f_prec = 0
@@ -145,7 +147,7 @@ class CAMIO(pl.LightningModule):
 
         for cls_name in cm.classes:
             print('============' * 5)
-            print('Class Name : [{}]'.format(cls_name))
+            print('Class Name : [{}]'.format(cls_name)) # Class name 에 대한걸 positive라고 생각하고 tp, fn, fp, tn 구하기
             TP = cm.TP[cls_name]
             TN = cm.TN[cls_name]
             FP = cm.FP[cls_name]
