@@ -8,9 +8,7 @@ from pytorch_lightning import loggers as pl_loggers
 from Model import CAMIO
 from gen_dataset import CAMIO_Dataset
 
-import time
-
-def train():
+def test():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--batch_size', type=int, 
@@ -20,22 +18,9 @@ def train():
     parser.add_argument('--data_path', type=str, 
                         default='/data/CAM_IO/robot/new_images', help='Data path :)')
     parser.add_argument('--log_path', type=str, 
-                        default='/CAM_IO/logs', help='log path :)')
+                        default='/CAM_IO', help='Data path :)')
     parser.add_argument('--num_gpus', type=int, 
                         default=2, help='The number of GPUs using for training.')
-
-    ## log saved in project_name
-    parser.add_argument('--project_name', type=str, 
-                        default='robot_oob_train_1', help='log saved in project_name')
-
-    ## Robot Lapa
-    parser.add_argument('--dataset', type=str, 
-                        default='robot', choices=['robot', 'lapa'], help='[robot, lapa] choice on dataset')
-
-    ## OOB NIR
-    parser.add_argument('--task', type=str, 
-                        default='OOB', choices=['OOB', 'NIR'], help='[OOB, NIR] choice on task')
-
 
     args, _ = parser.parse_known_args()
 
@@ -45,24 +30,18 @@ def train():
 
     # extracted images path
     base_path = args.data_path
-    
-    # log base path
-    log_base_path = os.path.join(args.log_path, args.dataset, args.task)
+    dpath = args.log_path
 
-    # bath size
     BATCH_SIZE = args.batch_size
-
-    # model
     model = CAMIO() # Trainer에서 사용할 모델
 
-    # dataset 설정
-    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=1)
-    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=1)
+    # testset # train, val 모두 체크
+    testset = CAMIO_Dataset(base_path, is_train=False, test_mode=True, data_ratio=1)
 
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
+    print('done')
+
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, 
                                             shuffle=True, num_workers=8)
-    vali_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, 
-                                            shuffle=False, num_workers=8)
 
     """
         dirpath : log 저장되는 위치
@@ -70,7 +49,7 @@ def train():
         monitor : 저장할 metric 기준
     """
     checkpoint_callback = ModelCheckpoint(
-            dirpath=os.path.join(log_base_path, args.project_name), filename='{epoch}-{val_loss:.4f}',
+            dirpath=dpath + '/logs/OOB_robot_test8', filename='{epoch}-{val_loss:.4f}',
             save_top_k=1, save_last=True, verbose=True, monitor="val_loss", mode="min",
         )
 
@@ -80,8 +59,8 @@ def train():
         name : tensorboard log 저장할 폴더 이름 (이 안에 하위폴더로 version_0, version_1, ... 이런식으로 생김)
         default_hp_metric : 뭔지 모르는데 거슬려서 False
     """
-    tb_logger = pl_loggers.TensorBoardLogger(save_dir=os.path.join(log_base_path, args.project_name),
-                                            name='TB_log',
+    tb_logger = pl_loggers.TensorBoardLogger(save_dir=dpath + '/logs/OOB_robot_test',
+                                            name='DPP_Test',
                                             default_hp_metric=False)
     """
         gpus : GPU 몇 개 사용할건지, 1개면 ddp 안함
@@ -91,19 +70,16 @@ def train():
         accelerator : 멀티 GPU 모드 설정
     """
 
-    # pytorch lightning Trainer Class
-    ## train
+    # pytorch lightning Trainer setting
     trainer = pl.Trainer(gpus=args.num_gpus, 
                         max_epochs=args.max_epoch, 
                         checkpoint_callback=checkpoint_callback,
                         logger=tb_logger,
                         accelerator='ddp')
-    trainer.fit(model, train_loader, vali_loader)
-
 
     # test
-    # model = model.load_from_checkpoint('/home/mkchoi/logs/OOB_robot_test/epoch=0-val_loss=0.2456.ckpt')
-    # trainer.test(model, test_loader)
+    test_model = model.load_from_checkpoint('/CAM_IO/logs/OOB_robot_test7/epoch=6-val_loss=0.0323.ckpt')
+    trainer.test(test_model, test_loader)
 
 if __name__ == "__main__":
-    train()
+    test()

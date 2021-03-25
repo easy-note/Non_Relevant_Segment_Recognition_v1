@@ -4,4 +4,3 @@ RUN pip install pytorch-lightning
 
 ADD . /CAM_IO
 WORKDIR /CAM_IO
-
