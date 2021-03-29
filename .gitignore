@@ -1,5 +1,8 @@
 # logs 
 /logs
 
-# 파이썬
+# results
+/results
+
+# python
 /__pycache__
