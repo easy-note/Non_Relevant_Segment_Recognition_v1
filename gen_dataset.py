@@ -44,7 +44,8 @@ class CAMIO_Dataset(Dataset):
             tar_path = base_path + '/test'
             self.aug = data_transforms['test']
         '''
-        if self.test_mode : # test_mode 
+        if self.test_mode : # test_mode (it will be check all of data /train and /val)
+            # tar_path_list = [base_path + '/test'] # if you want to other test set, try this
             tar_path_list = [base_path + '/train', base_path + '/val']
             self.aug = data_transforms['test']
 
@@ -56,27 +57,28 @@ class CAMIO_Dataset(Dataset):
                 tar_path_list = [base_path + '/val']
                 self.aug = data_transforms['val']
 
-        for tar_path in tar_path_list : # ['/train', '/val']
-            print(tar_path)
+        for tar_path in tar_path_list : # ['/train', '/val', 'test'] whatever you want
             
-            dir_list = os.listdir(tar_path) # [cam, nonCamIO]
+            dir_list = os.listdir(tar_path) # [InBody, OutBody]
             
-            for dir_name in dir_list: # [cam, nonCamIO]
-                print(dir_name)
-                dpath = os.path.join(tar_path, dir_name) # [train, val] [cam, nonCamIO]
+            for dir_name in dir_list: # [InBody, OutBody]
+                dpath = os.path.join(tar_path, dir_name) # [train, val, test] / [InBody, OutBody]
                 t_img_list = glob.glob(dpath + '/*jpg')
-                print(t_img_list)
+
+                print("Load Dataset at \t {} \t ".format(dpath), end='')
                 
-                if 'non' in dir_name: # non_camIO == out of body -> 0
+                if 'In' in dir_name: # Inbody
                     # tar_label = np.array([1, 0])
                     tar_label = 0
-                else: # camIO == inbody -> 1
+                else: # Outbody
                     tar_label = 1
                     # tar_label = np.array([0, 1])
                 
                 self.img_list += t_img_list
                 for _ in range(len(t_img_list)):
                     self.label_list.append(tar_label)
+
+                print("File Count :", len(t_img_list), "===> Label Info : ", tar_label)
         
         indices = list(range(len(self.img_list)))
         random.shuffle(indices)
@@ -108,7 +110,7 @@ trainset = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R01
 valset = ['R017', 'R022', 'R116', 'R208', 'R303']
 
 # class_name = ['camIO', 'non_camIO'] # [0(in body), 1(out of body)]
-class_name = ['non_camIO', 'camIO'] # [0(out of body), 1(in body)] -> oob , ib / nir, rgb
+class_name = ['InBody', 'OutBody']
 
 tar_surgery = 'robot'
 video_ext = '.mp4'

@@ -14,11 +14,11 @@ def train():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--batch_size', type=int, 
-                        default=32, help='Size of the batches for each training step.')
+                        default=16, help='Size of the batches for each training step.')
     parser.add_argument('--max_epoch', type=int, 
                         default=20, help='The maximum number of training epoch.')
     parser.add_argument('--data_path', type=str, 
-                        default='/data/CAM_IO/robot/new_images', help='Data path :)')
+                        default='/data/CAM_IO/robot/images', help='Data path :)')
     parser.add_argument('--log_path', type=str, 
                         default='/CAM_IO/logs', help='log path :)')
     parser.add_argument('--num_gpus', type=int, 
@@ -26,7 +26,7 @@ def train():
 
     ## log saved in project_name
     parser.add_argument('--project_name', type=str, 
-                        default='robot_oob_train_1', help='log saved in project_name')
+                        default='robot_oob_train_2', help='log saved in project_name')
 
     ## Robot Lapa
     parser.add_argument('--dataset', type=str, 
@@ -56,13 +56,13 @@ def train():
     model = CAMIO() # Trainer에서 사용할 모델
 
     # dataset 설정
-    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=1)
-    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=1)
+    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=0.2)
+    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=0.2)
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
-                                            shuffle=True, num_workers=8)
-    vali_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, 
-                                            shuffle=False, num_workers=8)
+                                            shuffle=True, num_workers=2)
+    vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
+                                            shuffle=False, num_workers=2)
 
     """
         dirpath : log 저장되는 위치
