@@ -2,7 +2,7 @@
 /logs
 
 # results
-/results
+/results*
 
 # python
 /__pycache__
