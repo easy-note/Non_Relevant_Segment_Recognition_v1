@@ -8,6 +8,10 @@ from pytorch_lightning import loggers as pl_loggers
 from Model import CAMIO
 from gen_dataset import CAMIO_Dataset
 
+import pandas as pd
+import shutil
+from tqdm import tqdm
+
 import time
 
 def train():
@@ -16,7 +20,7 @@ def train():
     parser.add_argument('--batch_size', type=int, 
                         default=16, help='Size of the batches for each training step.')
     parser.add_argument('--max_epoch', type=int, 
-                        default=20, help='The maximum number of training epoch.')
+                        default=10, help='The maximum number of training epoch.')
     parser.add_argument('--data_path', type=str, 
                         default='/data/CAM_IO/robot/images', help='Data path :)')
     parser.add_argument('--log_path', type=str, 
@@ -26,7 +30,7 @@ def train():
 
     ## log saved in project_name
     parser.add_argument('--project_name', type=str, 
-                        default='robot_oob_train_2', help='log saved in project_name')
+                        default='robot_oob_train_4', help='log saved in project_name')
 
     ## Robot Lapa
     parser.add_argument('--dataset', type=str, 
@@ -35,6 +39,7 @@ def train():
     ## OOB NIR
     parser.add_argument('--task', type=str, 
                         default='OOB', choices=['OOB', 'NIR'], help='[OOB, NIR] choice on task')
+
 
 
     args, _ = parser.parse_known_args()
@@ -56,13 +61,66 @@ def train():
     model = CAMIO() # Trainer에서 사용할 모델
 
     # dataset 설정
-    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=0.2)
-    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=0.2)
+    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=1.0)
+    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=1.0)
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
-                                            shuffle=True, num_workers=2)
+                                            shuffle=True, num_workers=8)
     vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
-                                            shuffle=False, num_workers=2)
+                                            shuffle=False, num_workers=8)
+    ###### this section is for check that dataset gets img and label correctly ####
+    ### 해당 section은 단지 모델이 학습하는 데이터셋이 무엇인지 확인하기 위해 구성된 Dataset의 image와 label정보를 모두 /get_dataset_results에 저장하는 부분
+    ### 학습시 꼭 필요한 부분이 아님.
+    # datset log check
+    ''' 
+    trainset_save_path = os.path.join('get_dataset_results', 'trainset')
+    valiset_save_path = os.path.join('get_dataset_results', 'valiset')
+
+    trainset_df = pd.DataFrame({
+        'img_list' : trainset.img_list,
+        'label_list' : trainset.label_list
+    })
+
+    valiset_df = pd.DataFrame({
+        'img_list' : valiset.img_list,
+        'label_list' : valiset.label_list
+    })
+    
+    # csv 저장
+    # trainset_df.to_csv(os.path.join(trainset_save_path, 'trainset.csv'), mode='w')
+    valiset_df.to_csv(os.path.join(valiset_save_path, 'valiset.csv'), mode='w')
+
+    # 사용된 이미지(img_list) 파일복사 | train
+
+    label_class = [0, 1]
+    copied_count = [0, 0]
+    for tar_label in label_class :
+        for img_path in tqdm(trainset_df[trainset_df['label_list'] == tar_label]['img_list'], desc='trainset coping_{}'.format(tar_label)) :
+            file_name, file_ext = os.path.basename(img_path).split('.')
+            copy_name = file_name + '_copy_' + str(tar_label) + '.' + file_ext
+            shutil.copyfile(img_path, os.path.join(trainset_save_path, str(tar_label), copy_name))
+
+            copied_count[tar_label]+=1
+    
+
+    print('train copeied count : ', copied_count)
+    
+
+    # 사용된 이미지(img_list) 파일복사 | validation
+    label_class = [0, 1]
+    copied_count = [0, 0]
+    for tar_label in label_class :
+        for img_path in tqdm(valiset_df[valiset_df['label_list'] == tar_label]['img_list'], desc='valiset coping_{}'.format(tar_label)) :
+            file_name, file_ext = os.path.basename(img_path).split('.')
+            copy_name = file_name + 'copy' + '_' + str(tar_label) + '.' + file_ext
+            shutil.copyfile(img_path, os.path.join(valiset_save_path, str(tar_label), copy_name))
+
+            copied_count[tar_label]+=1
+
+    print('vali copeied count : ', copied_count)
+    '''
+
+    ##### ### ###
 
     """
         dirpath : log 저장되는 위치
