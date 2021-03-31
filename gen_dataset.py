@@ -44,7 +44,8 @@ class CAMIO_Dataset(Dataset):
             tar_path = base_path + '/test'
             self.aug = data_transforms['test']
         '''
-        if self.test_mode : # test_mode 
+        if self.test_mode : # test_mode (it will be check all of data /train and /val)
+            # tar_path_list = [base_path + '/test'] # if you want to other test set, try this
             tar_path_list = [base_path + '/train', base_path + '/val']
             self.aug = data_transforms['test']
 
@@ -56,34 +57,72 @@ class CAMIO_Dataset(Dataset):
                 tar_path_list = [base_path + '/val']
                 self.aug = data_transforms['val']
 
-        for tar_path in tar_path_list : # ['/train', '/val']
-            print(tar_path)
+        for tar_path in tar_path_list : # ['/train', '/val', 'test'] whatever you want
             
-            dir_list = os.listdir(tar_path) # [cam, nonCamIO]
+            dir_list = os.listdir(tar_path) # [InBody, OutBody]
             
-            for dir_name in dir_list: # [cam, nonCamIO]
-                print(dir_name)
-                dpath = os.path.join(tar_path, dir_name) # [train, val] [cam, nonCamIO]
-                t_img_list = glob.glob(dpath + '/*jpg')
-                print(t_img_list)
+            for dir_name in dir_list: # [InBody, OutBody]
+                dpath = os.path.join(tar_path, dir_name) # [train, val, test] / [InBody, OutBody]
+                t_img_list = glob.glob(dpath + '/*.jpg') # all .jpg file in [train, val, test] / [InBody, OutBody] / *.jpg
+
+                print("Load Dataset at \t {} \t ====> {} file Exsisted ".format(dpath, len(t_img_list)))
                 
-                if 'non' in dir_name: # non_camIO == out of body -> 0
+                if 'In' in dir_name: # Inbody
                     # tar_label = np.array([1, 0])
                     tar_label = 0
-                else: # camIO == inbody -> 1
+                else: # Outbody
                     tar_label = 1
                     # tar_label = np.array([0, 1])
-                
-                self.img_list += t_img_list
-                for _ in range(len(t_img_list)):
-                    self.label_list.append(tar_label)
-        
+
+                # init temp ==> it will be added into self.img_list, self.label
+                temp_img_list = []
+                temp_label_list = []
+
+                ###  this is for balacing train_set 3(In body) : 1(out body) ==> temp code ### 
+                if 'In' in dir_name and 'train' in tar_path : # train
+                    print('\t @@@ in / train')
+                    # img
+                    ## 중복허용하지 않고 sampling
+                    temp_img_list = random.sample(t_img_list, 14506) # out body의 3배 (43518)
+                    
+
+                elif 'In' in dir_name and 'val' in tar_path : # val
+                    print('\t @@@ in / val')
+                    # img
+                    ## 중복허용하지 않고 sampling
+                    temp_img_list = random.sample(t_img_list, 3717) # out body의 3배 (11151)
+
+                else : 
+                    # img
+                    temp_img_list = t_img_list
+                    
+                # label
+                # label will be configurationed of temp_img_list count 
+                temp_label_list = [tar_label] * len(temp_img_list)
+
+                # update dataset (append temp data) 
+                self.img_list += temp_img_list # img
+                self.label_list += temp_label_list # label
+                    
+                # check updataing rightly
+                print('\t Dataset Updated from ==> {} | Updated File Count ==> {} ", Updated Label Count ==> {} | Label Info ==> {} '.format(dpath, len(temp_img_list), len(temp_label_list), np.unique(temp_label_list)))
+                print('')
+
+
+        # modify number of dataset from data_ratio parameter
         indices = list(range(len(self.img_list)))
         random.shuffle(indices)
         split = int(len(indices) * data_ratio)
 
         self.img_list = [self.img_list[i] for i in indices[:split]]
         self.label_list = [self.label_list[i] for i in indices[:split]]
+
+        # final check dataset info
+        print('\t\t ===== '*2, 'DATASET REPORT', '\t\t ===== '*2)
+        print('\t\t @ Dataset composed from ==> {} | target count ==> {} ", label count ==> {} '.format(tar_path_list, len(self.img_list), len(self.label_list)))
+        print('\t\t @ label composite info', np.unique(self.label_list, return_counts=True))
+        print('\t\t ===== '*2, '==============', '\t\t ===== '*2)
+        
         
 
     def __len__(self):
@@ -99,8 +138,7 @@ class CAMIO_Dataset(Dataset):
 
 
 # TODO 데이터 생성하는 부분(robot/lapa) 둘다 통합하는 코드로 변경 필요함
-
-
+'''
 trainset = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
             'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
             'R204', 'R205', 'R206', 'R207', 'R209', 'R210', 'R301', 'R302', 'R304', 'R305', 'R313']
@@ -108,12 +146,13 @@ trainset = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R01
 valset = ['R017', 'R022', 'R116', 'R208', 'R303']
 
 # class_name = ['camIO', 'non_camIO'] # [0(in body), 1(out of body)]
-class_name = ['non_camIO', 'camIO'] # [0(out of body), 1(in body)] -> oob , ib / nir, rgb
+class_name = ['InBody', 'OutBody']
 
 tar_surgery = 'robot'
 video_ext = '.mp4'
 anno_path = '/data/CAM_IO/robot/OOB'
 fps = 30
+'''
 
 
 def time_to_idx(time, fps):
