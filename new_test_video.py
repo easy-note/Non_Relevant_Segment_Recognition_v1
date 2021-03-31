@@ -36,7 +36,11 @@ def test_video() :
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--model_path', type=str,
-                        default=os.getcwd() + '/logs/robot/OOB/robot_oob_train_1/epoch=12-val_loss=0.0303.ckpt', help='trained model_path')
+                        default=os.getcwd() + '/logs/robot/OOB/robot_oob_train_3/epoch=2-val_loss=0.0541.ckpt', help='trained model_path')
+    # robot_3 | 
+    # robot_4 | /logs/robot/OOB/robot_oob_train_4/epoch=9-val_loss=0.0597.ckpt
+    
+
     # os.getcwd() + '/logs/robot/OOB/robot_oob_train_1/epoch=12-val_loss=0.0303.ckpt' // OOB = 1
     # os.getcwd() + '/logs/OOB_robot_test7/epoch=6-val_loss=0.0323.ckpt' // OOB = 0
     parser.add_argument('--data_dir', type=str,
@@ -46,7 +50,7 @@ def test_video() :
                         default='/data/CAM_IO/robot/OOB', help='annotation_path :) ')
 
     parser.add_argument('--results_save_dir', type=str,
-                        default=os.path.join(os.getcwd(), 'results'), help='inference results save path')
+                        default=os.path.join(os.getcwd(), 'results3'), help='inference results save path')
 
     parser.add_argument('--mode', type=str,
                         default='robot', choices=['robot', 'lapa'], help='inference results save path')
@@ -73,15 +77,20 @@ def test_video() :
     
     else : # robot
         model = CAMIO()
+        model = model.load_from_checkpoint(args.model_path)
+
         model.cuda()
         model.eval()
-        model = model.load_from_checkpoint(args.model_path)
+
+        
+
+        
+        
 
         print('\n\t=== model_loded for ROBOT ===\n')
 
         # starting inference
         test_video_for_robot(args.data_dir, args.anno_dir, args.results_save_dir, model, data_transforms)
-
 
 
 
@@ -123,7 +132,8 @@ def calc_confusion_metric(gts, preds):
 def test_video_for_robot(data_dir, anno_dir, results_save_dir, model, data_transforms) :
     
     ### base setting ###
-    valset = ['R017', 'R022', 'R116', 'R208', 'R303']
+    # valset = ['R017', 'R022', 'R116', 'R208', 'R303']
+    valset = ['R017']
 
     video_ext = '.mp4'
     fps = 30
@@ -141,7 +151,7 @@ def test_video_for_robot(data_dir, anno_dir, results_save_dir, model, data_trans
     print('\t=== === === ===\n\n')
 
     # inference step
-    inference_for_robot(info_dict, model, data_transforms, results_save_dir, inference_step=100)
+    inference_for_robot(info_dict, model, data_transforms, results_save_dir, inference_step=5)
     
     
 
@@ -332,6 +342,7 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
 
             FP_frame_cnt = 0
             FN_frame_cnt = 0
+            frame_check_cnt = 0 # loop cnt
 
             # inference per frame 
             for frame_idx, truth in enumerate(tqdm(truth_list, desc='Inferencing... \t ==> {}'.format(video_name))) :
@@ -347,7 +358,7 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
 
                 # inference frame in model
                 _img = data_transforms['val'](Image.fromarray(img))
-                _img = torch.unsqueeze(_img, 0)
+                _img = torch.unsqueeze(_img, 0).cuda()
                 outputs = model(_img)
 
                 # results of predict
@@ -363,7 +374,9 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
                 # saving FP
                 if truth == IB_CLASS and predict == OOB_CLASS :
                     FP_frame_cnt+=1
-                    print('frame {} | truth {} | predict {}'.format(frame_idx, truth, predict))
+                    print('frame no {} | truth {} | predict {}'.format(frame_idx, truth, predict))
+                    print('CHECKED_FRAME_CNT({}) | [FP:FN] = [{}:{}]'.format(frame_check_cnt, FP_frame_cnt, FN_frame_cnt))
+
                     fp_frame_saving_path = os.path.join(fp_frame_saved_dir, '{}_{:010d}.jpg'.format(video_name, frame_idx))
                     print('Saving FP Frame \t\t ', fp_frame_saving_path)
                     cv2.imwrite(fp_frame_saving_path, img)
@@ -372,11 +385,15 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
                 # saving FN
                 if truth == OOB_CLASS and predict == IB_CLASS :
                     FN_frame_cnt+=1
-                    print('frame {} | truth {} | predict {}'.format(frame_idx, truth, predict))
+                    print('frame no {} | truth {} | predict {}'.format(frame_idx, truth, predict))
+                    print('CHECKED_FRAME_CNT({}) | [FP:FN] = [{}:{}]'.format(frame_check_cnt, FP_frame_cnt, FN_frame_cnt))
+
                     fn_frame_saving_path = os.path.join(fn_frame_saved_dir, '{}_{:010d}.jpg'.format(video_name, frame_idx))
                     print('Saving FN Frame \t\t ', fn_frame_saving_path)
                     cv2.imwrite(fn_frame_saving_path, img)
                     print('')
+                
+                frame_check_cnt+=1 # loop cnt check
 
             print('TOTAL FRAME : ', len(frame_idx_list))
             print('FP FRAME CNT : ', FP_frame_cnt)
