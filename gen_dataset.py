@@ -83,14 +83,14 @@ class CAMIO_Dataset(Dataset):
                     print('\t @@@ in / train')
                     # img
                     ## 중복허용하지 않고 sampling
-                    temp_img_list = random.sample(t_img_list, 43518) # out body의 3배
+                    temp_img_list = random.sample(t_img_list, 14506) # out body의 3배 (43518)
                     
 
                 elif 'In' in dir_name and 'val' in tar_path : # val
                     print('\t @@@ in / val')
                     # img
                     ## 중복허용하지 않고 sampling
-                    temp_img_list = random.sample(t_img_list, 11151) # out body의 3배
+                    temp_img_list = random.sample(t_img_list, 3717) # out body의 3배 (11151)
 
                 else : 
                     # img
@@ -138,7 +138,7 @@ class CAMIO_Dataset(Dataset):
 
 
 # TODO 데이터 생성하는 부분(robot/lapa) 둘다 통합하는 코드로 변경 필요함
-
+'''
 trainset = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
             'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
             'R204', 'R205', 'R206', 'R207', 'R209', 'R210', 'R301', 'R302', 'R304', 'R305', 'R313']
@@ -152,6 +152,7 @@ tar_surgery = 'robot'
 video_ext = '.mp4'
 anno_path = '/data/CAM_IO/robot/OOB'
 fps = 30
+'''
 
 
 def time_to_idx(time, fps):

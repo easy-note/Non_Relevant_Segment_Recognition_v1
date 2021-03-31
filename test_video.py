@@ -30,10 +30,10 @@ def time_to_idx(time, fps):
 
 
 def test_video() :
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()ß
     
     parser.add_argument('--model_path', type=str,
-                        default=model.load_from_checkpoint(os.getcwd() + '/logs/robot/OOB/robot_oob_train_1/epoch=12-val_loss=0.0303.ckpt'), help='trained model_path')
+                        default=model.load_from_checkpoint(os.getcwd() + '/logs/robot/OOB/robot_oob_train_2/epoch=1-val_loss=0.0466.ckpt'), help='trained model_path')
     
     parser.add_argument('--data_path', type=str,
                         default='/data/CAM_IO/robot/video', help='video_path :) ')
