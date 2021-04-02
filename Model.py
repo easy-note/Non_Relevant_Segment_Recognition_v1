@@ -5,10 +5,16 @@ from pytorch_lightning.metrics.utils import to_categorical
 from pytorch_lightning.metrics import Accuracy, Precision, Recall, ConfusionMatrix, F1
 from pycm import *
 
+### hparamds
+'''
+{
+    'lr' : 1e-4,
 
+}
+'''
 
 class CAMIO(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, hparams:dict):
         super().__init__()
         # self.model = models.resnet50(pretrained=True)
         self.model = models.wide_resnet50_2(pretrained=True)
@@ -17,6 +23,12 @@ class CAMIO(pl.LightningModule):
         # self.model.classifier = torch.nn.Linear(self.model.classifier.in_features, 2)
         self.criterion = torch.nn.CrossEntropyLoss()
         # self.softmax = torch.nn.Softmax()
+        
+        # hyper param setting
+        self.hparmas = hparams
+        self.init_lr = hparams['optimizer_lr']
+
+        print(hparams)
         
         self.accuracy = Accuracy()
         self.prec = Precision(num_classes=1, is_multiclass=False)
@@ -138,8 +150,13 @@ class CAMIO(pl.LightningModule):
         self.print_pycm()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-4)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.init_lr) # hyper parameterized
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+        
+        print('\n\n')
+        print(optimizer)
+        print('\n\n')
+
         return [optimizer], [scheduler]
 
     def print_pycm(self):

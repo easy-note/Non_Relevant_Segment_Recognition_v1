@@ -17,20 +17,20 @@ import time
 def train():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--batch_size', type=int, 
-                        default=16, help='Size of the batches for each training step.')
-    parser.add_argument('--max_epoch', type=int, 
-                        default=10, help='The maximum number of training epoch.')
+    parser.add_argument('--batch_size', type=int, help='Size of the batches for each training step.')
+    parser.add_argument('--max_epoch', type=int, help='The maximum number of training epoch.')
     parser.add_argument('--data_path', type=str, 
                         default='/data/CAM_IO/robot/images', help='Data path :)')
     parser.add_argument('--log_path', type=str, 
-                        default='/CAM_IO/logs', help='log path :)')
+                        default='/OOB_RECOG/logs', help='log path :)')
     parser.add_argument('--num_gpus', type=int, 
                         default=2, help='The number of GPUs using for training.')
 
+    ## init lr
+    parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
+
     ## log saved in project_name
-    parser.add_argument('--project_name', type=str, 
-                        default='robot_oob_train_4', help='log saved in project_name')
+    parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
     ## Robot Lapa
     parser.add_argument('--dataset', type=str, 
@@ -44,6 +44,15 @@ def train():
 
     args, _ = parser.parse_known_args()
 
+    # hyper parameter setting
+    config_hparams = {
+        'optimizer_lr' : args.init_lr,
+    }
+
+    print('\n\n')
+    print('batch size : ', args.batch_size)
+    print('init lr : ', config_hparams['optimizer_lr'])
+    print('\n\n')
 
     # 사용할 GPU 디바이스 번호들
     os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
@@ -58,16 +67,20 @@ def train():
     BATCH_SIZE = args.batch_size
 
     # model
-    model = CAMIO() # Trainer에서 사용할 모델
+    model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
+
 
     # dataset 설정
-    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=1.0)
-    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=1.0)
+    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=0.01)
+    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=0.01)
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
-                                            shuffle=True, num_workers=8)
+                                            shuffle=False, num_workers=8)
     vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
                                             shuffle=False, num_workers=8)
+
+
+    
     ###### this section is for check that dataset gets img and label correctly ####
     ### 해당 section은 단지 모델이 학습하는 데이터셋이 무엇인지 확인하기 위해 구성된 Dataset의 image와 label정보를 모두 /get_dataset_results에 저장하는 부분
     ### 학습시 꼭 필요한 부분이 아님.
@@ -127,10 +140,15 @@ def train():
         filename : 저장되는 checkpoint file 이름
         monitor : 저장할 metric 기준
     """
+    checkpoint_filename = 'ckpoint_{}-batch={}-lr={}-'.format(args.project_name, BATCH_SIZE, args.init_lr)
+    checkpoint_filename = checkpoint_filename + '{epoch}-{val_loss:.4f}'
     checkpoint_callback = ModelCheckpoint(
-            dirpath=os.path.join(log_base_path, args.project_name), filename='{epoch}-{val_loss:.4f}',
-            save_top_k=1, save_last=True, verbose=True, monitor="val_loss", mode="min",
-        )
+            dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
+            save_top_k=1, save_last=True, verbose=True, monitor="val_loss", mode="min"
+    )
+
+    # change last checkpoint name
+    checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-batch={}-lr={}-'.format(args.project_name, BATCH_SIZE, args.init_lr) + '{epoch}-last'
 
     """
         tensorboard logger

@@ -64,6 +64,8 @@ class CAMIO_Dataset(Dataset):
             for dir_name in dir_list: # [InBody, OutBody]
                 dpath = os.path.join(tar_path, dir_name) # [train, val, test] / [InBody, OutBody]
                 t_img_list = glob.glob(dpath + '/*.jpg') # all .jpg file in [train, val, test] / [InBody, OutBody] / *.jpg
+                # sorting because of apply  random seed fairly
+                # t_img_list = sorted(t_img_list)
 
                 print("Load Dataset at \t {} \t ====> {} file Exsisted ".format(dpath, len(t_img_list)))
                 
@@ -83,14 +85,16 @@ class CAMIO_Dataset(Dataset):
                     print('\t @@@ in / train')
                     # img
                     ## 중복허용하지 않고 sampling
-                    temp_img_list = random.sample(t_img_list, 14506) # out body의 3배 (43518)
+                    random.seed(100) # seed fix
+                    temp_img_list = random.sample(t_img_list, 43518) # out body의 3배 (43518)
                     
 
                 elif 'In' in dir_name and 'val' in tar_path : # val
                     print('\t @@@ in / val')
                     # img
                     ## 중복허용하지 않고 sampling
-                    temp_img_list = random.sample(t_img_list, 3717) # out body의 3배 (11151)
+                    random.seed(100) # seed fix
+                    temp_img_list = random.sample(t_img_list, 11151) # out body의 3배 (11151)
 
                 else : 
                     # img
@@ -102,7 +106,7 @@ class CAMIO_Dataset(Dataset):
 
                 # update dataset (append temp data) 
                 self.img_list += temp_img_list # img
-                self.label_list += temp_label_list # label
+                self.label_list += temp_label_list # label 
                     
                 # check updataing rightly
                 print('\t Dataset Updated from ==> {} | Updated File Count ==> {} ", Updated Label Count ==> {} | Label Info ==> {} '.format(dpath, len(temp_img_list), len(temp_label_list), np.unique(temp_label_list)))
@@ -111,6 +115,7 @@ class CAMIO_Dataset(Dataset):
 
         # modify number of dataset from data_ratio parameter
         indices = list(range(len(self.img_list)))
+        random.seed(10) # seed fix
         random.shuffle(indices)
         split = int(len(indices) * data_ratio)
 
