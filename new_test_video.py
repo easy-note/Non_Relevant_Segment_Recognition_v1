@@ -92,13 +92,17 @@ def test_video() :
 def time_to_idx(time, fps):
     t_segment = time.split(':')
     # idx = int(t_segment[0]) * 3600 * fps + int(t_segment[1]) * 60 * fps + int(t_segment[2]) 
-    idx = (int(t_segment[0]) * 3600 * fps) + (int(t_segment[1]) * 60 * fps) + (int(t_segment[2]) * fps) # [h, m, s, ms] 
+    idx = (int(t_segment[0]) * 3600 * fps) + (int(t_segment[1]) * 60 * fps) + (int(t_segment[2]) * fps) + int(t_segment[3]) # [h, m, s, frame] 
+
 
     return idx
 
 def idx_to_time(idx, fps) :
     time_s = idx // fps
+    frame = idx % fps
+
     converted_time = str(datetime.timedelta(seconds=time_s))
+    converted_time = converted_time + ':' + str(frame)
 
     return converted_time
 
