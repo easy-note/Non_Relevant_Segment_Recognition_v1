@@ -71,8 +71,8 @@ def train():
 
 
     # dataset 설정
-    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=0.01)
-    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=0.01)
+    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=1)
+    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=1)
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
                                             shuffle=False, num_workers=8)
