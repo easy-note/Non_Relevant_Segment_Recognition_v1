@@ -36,8 +36,8 @@ def test_video() :
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--model_path', type=str,
-                        default=os.getcwd() + '/logs/robot/OOB/robot_oob_train_3/epoch=2-val_loss=0.0541.ckpt', help='trained model_path')
-    # robot_3 | 
+                        default=os.getcwd() + '/logs/robot/OOB/robot_oob_train_1/epoch=12-val_loss=0.0303.ckpt', help='trained model_path')
+    # robot_3 | /logs/robot/OOB/robot_oob_train_3/epoch=2-val_loss=0.0541.ckpt
     # robot_4 | /logs/robot/OOB/robot_oob_train_4/epoch=9-val_loss=0.0597.ckpt
     
 
@@ -50,7 +50,7 @@ def test_video() :
                         default='/data/CAM_IO/robot/OOB', help='annotation_path :) ')
 
     parser.add_argument('--results_save_dir', type=str,
-                        default=os.path.join(os.getcwd(), 'results3'), help='inference results save path')
+                        default=os.path.join(os.getcwd(), 'results1'), help='inference results save path')
 
     parser.add_argument('--mode', type=str,
                         default='robot', choices=['robot', 'lapa'], help='inference results save path')
@@ -82,32 +82,27 @@ def test_video() :
         model.cuda()
         model.eval()
 
-        
-
-        
-        
-
         print('\n\t=== model_loded for ROBOT ===\n')
 
         # starting inference
         test_video_for_robot(args.data_dir, args.anno_dir, args.results_save_dir, model, data_transforms)
 
-
-
-
-
 ### union def ###
 # cal vedio frame
 def time_to_idx(time, fps):
     t_segment = time.split(':')
-    # idx = int(t_segment[0]) * 3600 * fps + int(t_segment[1]) * 60 * fps + int(t_segment[2])
-    idx = (int(t_segment[0]) * 3600 * fps) + (int(t_segment[1]) * 60 * fps) + (int(t_segment[2]) * fps) # [h, m, s, ms] 
+    # idx = int(t_segment[0]) * 3600 * fps + int(t_segment[1]) * 60 * fps + int(t_segment[2]) 
+    idx = (int(t_segment[0]) * 3600 * fps) + (int(t_segment[1]) * 60 * fps) + (int(t_segment[2]) * fps) + int(t_segment[3]) # [h, m, s, frame] 
+
 
     return idx
 
 def idx_to_time(idx, fps) :
     time_s = idx // fps
+    frame = idx % fps
+
     converted_time = str(datetime.timedelta(seconds=time_s))
+    converted_time = converted_time + ':' + str(frame)
 
     return converted_time
 

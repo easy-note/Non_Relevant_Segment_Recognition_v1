@@ -42,6 +42,7 @@ Video using Semi-Supervised Learning](http://proceedings.mlr.press/v121/zohar20a
             - CAMIO_Dataset(Dataset) : change way to get dataset
         - new_video_test.py
             - change input img tensor format -> .cuda()
+    
     2. Modify train_CamIO.py
         - add code for dataset log check
 ---
