@@ -29,6 +29,10 @@ def train():
     ## init lr
     parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
 
+    ## training model
+    parser.add_argument('--model', type=str,
+                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2'], help='backborn model')
+
     ## log saved in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
@@ -47,11 +51,13 @@ def train():
     # hyper parameter setting
     config_hparams = {
         'optimizer_lr' : args.init_lr,
+        'backborn_model' : args.model,
     }
 
     print('\n\n')
     print('batch size : ', args.batch_size)
     print('init lr : ', config_hparams['optimizer_lr'])
+    print('backborn model : ', config_hparams['backborn_model'])
     print('\n\n')
 
     # 사용할 GPU 디바이스 번호들
@@ -71,8 +77,8 @@ def train():
 
 
     # dataset 설정
-    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=1)
-    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=1)
+    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=0.01)
+    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=0.01)
 
     print('trainset len : ', len(trainset))
     print('valiset len : ', len(valiset))
@@ -143,7 +149,7 @@ def train():
         filename : 저장되는 checkpoint file 이름
         monitor : 저장할 metric 기준
     """
-    checkpoint_filename = 'ckpoint_{}-batch={}-lr={}-'.format(args.project_name, BATCH_SIZE, args.init_lr)
+    checkpoint_filename = 'ckpoint_{}-model={}-batch={}-lr={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr)
     checkpoint_filename = checkpoint_filename + '{epoch}-{val_loss:.4f}'
     checkpoint_callback = ModelCheckpoint(
             dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
@@ -151,7 +157,7 @@ def train():
     )
 
     # change last checkpoint name
-    checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-batch={}-lr={}-'.format(args.project_name, BATCH_SIZE, args.init_lr) + '{epoch}-last'
+    checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr) + '{epoch}-last'
 
     """
         tensorboard logger

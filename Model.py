@@ -16,19 +16,50 @@ from pycm import *
 class CAMIO(pl.LightningModule):
     def __init__(self, hparams:dict):
         super().__init__()
-        # self.model = models.resnet50(pretrained=True)
-        self.model = models.wide_resnet50_2(pretrained=True)
-        # self.model = models.densenet201(pretrained=True)
-        self.model.fc = torch.nn.Linear(self.model.fc.in_features, 2)
-        # self.model.classifier = torch.nn.Linear(self.model.classifier.in_features, 2)
-        self.criterion = torch.nn.CrossEntropyLoss()
-        # self.softmax = torch.nn.Softmax()
-        
+
         # hyper param setting
         self.hparmas = hparams
         self.init_lr = hparams['optimizer_lr']
+        self.backborn = hparams['backborn_model']
 
         print(hparams)
+
+        # model setting
+        # model // choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2']
+
+        if self.backborn.find('resnet') != -1 :
+            if self.backborn == 'resnet18' :
+                print('MODEL = RESNET18')
+                self.model = models.resnet18(pretrained=True)
+
+            elif self.backborn == 'resnet34' :
+                print('MODEL = RESNET34')
+                self.model = models.resnet34(pretrained=True)
+                
+            elif self.backborn == 'resnet50' :
+                print('MODEL = RESNET50')
+                self.model = models.resnet50(pretrained=True)
+                
+
+            elif self.backborn == 'wide_resnet50_2':
+                print('MODEL = WIDE_RESNET50_2')
+                self.model = models.wide_resnet50_2(pretrained=True)
+                
+            else : 
+                assert(False, '=== Not supported Resnet model ===')
+            
+            # change to binary classification
+            self.model.fc = torch.nn.Linear(self.model.fc.in_features, 2)
+
+        elif self.backborn.find('vgg') != -1 :
+            assert(False, '=== Not yet supported Model === ')
+        
+        else :
+            assert(False, '=== Not supported Model === ')
+
+
+        self.criterion = torch.nn.CrossEntropyLoss()
+        # self.softmax = torch.nn.Softmax()
         
         self.accuracy = Accuracy()
         self.prec = Precision(num_classes=1, is_multiclass=False)
