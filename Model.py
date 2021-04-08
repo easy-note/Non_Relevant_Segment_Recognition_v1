@@ -15,7 +15,7 @@ from pycm import *
 
 class CAMIO(pl.LightningModule):
     def __init__(self, hparams:dict):
-        super().__init__()
+        super(CAMIO, self).__init__()
 
         # hyper param setting
         self.hparmas = hparams
