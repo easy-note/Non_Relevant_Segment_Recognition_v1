@@ -86,7 +86,7 @@ class CAMIO_Dataset(Dataset):
                     # img
                     ## 중복허용하지 않고 sampling
                     random.seed(100) # seed fix
-                    temp_img_list = random.sample(t_img_list, 14506) # out body의 3배 (43518) # 14506
+                    temp_img_list = random.sample(t_img_list, 43518) # out body의 3배 (43518) # 14506
                     
 
                 elif 'In' in dir_name and 'val' in tar_path : # val
@@ -94,7 +94,7 @@ class CAMIO_Dataset(Dataset):
                     # img
                     ## 중복허용하지 않고 sampling
                     random.seed(100) # seed fix
-                    temp_img_list = random.sample(t_img_list, 3717) # out body의 3배 (11151) # 3717
+                    temp_img_list = random.sample(t_img_list, 11151) # out body의 3배 (11151) # 3717
 
                 else : 
                     # img

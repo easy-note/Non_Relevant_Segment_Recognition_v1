@@ -14,20 +14,24 @@ from pycm import *
 '''
 
 class CAMIO(pl.LightningModule):
-    def __init__(self, hparams:dict):
+    def __init__(self, config:dict):
         super(CAMIO, self).__init__()
 
-        # hyper param setting
-        self.hparmas = hparams
-        self.init_lr = hparams['optimizer_lr']
-        self.backborn = hparams['backborn_model']
+        self.hparams = config # config
+        self.save_hyperparameters() # save with hparams
 
-        print(hparams)
+        # hyper param setting
+        self.init_lr = self.hparams.optimizer_lr # config['optimizer_lr']
+        self.backborn = self.hparams.backborn_model # config['backborn_model']
+
+        print(config)
+        print(self.init_lr)
+        print(self.backborn)
 
         # model setting
-        # model // choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2']
+        # model // choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d']
 
-        if self.backborn.find('resnet') != -1 :
+        if (self.backborn.find('resnet') != -1) or (self.backborn.find('resnext') != -1) :
             if self.backborn == 'resnet18' :
                 print('MODEL = RESNET18')
                 self.model = models.resnet18(pretrained=True)
@@ -40,10 +44,13 @@ class CAMIO(pl.LightningModule):
                 print('MODEL = RESNET50')
                 self.model = models.resnet50(pretrained=True)
                 
-
             elif self.backborn == 'wide_resnet50_2':
                 print('MODEL = WIDE_RESNET50_2')
                 self.model = models.wide_resnet50_2(pretrained=True)
+
+            elif self.backborn == 'resnext50_32x4d':
+                print('MODEL = RESNEXT50_32x4D')
+                self.model = models.resnext50_32x4d(pretrained=True)
                 
             else : 
                 assert(False, '=== Not supported Resnet model ===')
@@ -51,8 +58,36 @@ class CAMIO(pl.LightningModule):
             # change to binary classification
             self.model.fc = torch.nn.Linear(self.model.fc.in_features, 2)
 
-        elif self.backborn.find('vgg') != -1 :
-            assert(False, '=== Not yet supported Model === ')
+        elif self.backborn.find('mobilenet') != -1 :
+            if self.backborn == 'mobilenet_v2' :
+                print('MODEL = MOBILENET_V2')
+                self.model = models.mobilenet_v2(pretrained=True)
+                self.num_ftrs = self.model.classifier[-1].in_features
+                self.model.classifier = torch.nn.Linear(self.num_ftrs, 2)
+            
+            elif self.backborn == 'mobilenet_v3_small' :
+                print('MODEL = MOBILENET_V3_SMALL')
+                self.model = models.mobilenet_v3_small(pretrained=True)
+
+                self.model.classifier = torch.nn.Sequential(
+                    torch.nn.Linear(576, 2)
+                )
+            else :
+                assert(False, '=== Not supported MobileNet model ===')
+        
+        elif self.backborn.find('squeezenet') != -1 :
+            if self.backborn == 'squeezenet1_0' :
+                print('MODEL = squeezenet1_0')
+                self.model = models.squeezenet1_0(pretrained=True)
+
+                final_conv = torch.nn.Conv2d(512, 2, 1)
+                self.model.classifier = torch.nn.Sequential(
+                    final_conv,
+                    torch.nn.AdaptiveAvgPool2d((1,1))
+                )
+            else :
+                assert(False, '=== Not supported Squeezenet model ===')
+
         
         else :
             assert(False, '=== Not supported Model === ')
