@@ -4,6 +4,7 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import loggers as pl_loggers
+from pytorch_lightning.plugins import DDPPlugin
 
 from Model import CAMIO
 from gen_dataset import CAMIO_Dataset
@@ -31,7 +32,7 @@ def train():
 
     ## training model
     parser.add_argument('--model', type=str,
-                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2'], help='backborn model')
+                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='backborn model')
 
     ## log saved in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
@@ -177,12 +178,15 @@ def train():
     """
 
     # pytorch lightning Trainer Class
-    ## train
+    ## train    
     trainer = pl.Trainer(gpus=args.num_gpus, 
                         max_epochs=args.max_epoch, 
                         checkpoint_callback=checkpoint_callback,
                         logger=tb_logger,
+                        plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
                         accelerator='ddp')
+
+
     trainer.fit(model, train_loader, vali_loader)
 
 
