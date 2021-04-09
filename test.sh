@@ -6,6 +6,6 @@ do
     --anno_dir "/data/CAM_IO/robot/OOB" \
     --results_save_dir "./results_robot_oob_0406" \
     --model $model \
-    --inference_step 10000 \
+    --inference_step 1000 \
     --test_videos "R017" "R022" "R116" "R208" "R303"
 done

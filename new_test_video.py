@@ -275,7 +275,7 @@ def gettering_information_for_robot (video_root_path, anno_root_path, video_set,
         
     return info_dict
 
-def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inference_step) : 
+def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inference_step) : # project_name is only for use for title in total_metric_df.csv
     print('\n\n\n\t\t\t ### STARTING DEF [inference_for_robot] ### \n\n')
 
     # create results folder
@@ -286,6 +286,9 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
         print('ERROR : Creating Directory, ' + results_save_dir)
 
     total_videoset_cnt = len(info_dict['video']) # total number of video set
+
+    # init total metric df
+    total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'OOB_False_Metric']) # row cnt is same as checking vidoes length
 
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 1):
@@ -371,7 +374,10 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
 
             FP_frame_cnt = 0
             FN_frame_cnt = 0
+            TP_frame_cnt = 0
+            TN_frame_cnt = 0
             frame_check_cnt = 0 # loop cnt
+            OOB_false_metric = -1 # false metric
 
             # inference per frame 
             # no gradient
@@ -395,6 +401,14 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
 
                     # results of predict
                     predict = torch.argmax(outputs.cpu()) # predict
+
+                    # TP
+                    if truth == OOB_CLASS and predict == OOB_CLASS :
+                        TP_frame_cnt+=1
+
+                    # TN
+                    if truth == IB_CLASS and predict == IB_CLASS :
+                        TN_frame_cnt+=1
 
                     # save results
                     frame_idx_list.append(frame_idx)
@@ -428,10 +442,14 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
                     frame_check_cnt+=1 # loop cnt check
 
             print('TOTAL FRAME : ', len(frame_idx_list))
-            print('FP FRAME CNT : ', FP_frame_cnt)
-            print('FN FRAME CNT : ', FN_frame_cnt)
             
             video.release()
+
+            # calc OOB_fasle metric
+            try : # zero devision except
+                OOB_false_metric = FP_frame_cnt / (FP_frame_cnt + TP_frame_cnt + FN_frame_cnt) # positie = OOB
+            except :
+                OOB_false_metric = -1
 
             # saving inferece result
             result_dict = {
@@ -446,15 +464,44 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
             print('Result Saved at \t ====> ', each_video_result_dir)
             inference_results_df.to_csv(os.path.join(each_video_result_dir, 'Inference_{}.csv'.format(video_name)), mode="w")
 
+            # saving FN FP TP TN Metric
+            results_metric = {
+                'Video_set' : [videoset_name],
+                'Video_name' : [video_name],
+                'FP' : [FP_frame_cnt],
+                'TP' : [TP_frame_cnt],
+                'FN' : [FN_frame_cnt],
+                'TN' : [TN_frame_cnt],
+                'TOTAL' : [frame_check_cnt],
+                'OOB_False_Metric' : [OOB_false_metric]
+            }
+
+            # each metric per video
+            result_metric_df = pd.DataFrame(results_metric)    
+
+            print('Metric Saved at \t ====> ', each_video_result_dir)
+            result_metric_df.to_csv(os.path.join(each_video_result_dir, 'OOB_False_Metric_{}.csv'.format(video_name)), mode="w")
+
+            # append metric
+            # columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'OOB_False_Metric']
+
+            
+            # total_metric_df = total_metric_df.append(result_metric_df)
+            total_metric_df = pd.concat([total_metric_df, result_metric_df], ignore_index=True)
+
+            print('')
+            print(total_metric_df)
+            total_metric_df.to_csv(os.path.join(results_save_dir, 'Total_metric_{}.csv'.format(os.path.basename(results_save_dir))), mode="w") # save on project direc
+            
             # saving plot
             fig = plt.figure(figsize=(16,8))
 
             # plt.hold()
-            plt.scatter(np.array(frame_idx_list), np.array(gt_list), color='blue', marker='o', s=15, label='Truth') # ground truth
+            plt.scatter(np.array(frame_idx_list), np.array(gt_list), color='blue', marker='o', s=20, label='Truth') # ground truth
             plt.scatter(np.array(frame_idx_list), np.array(predict_list), color='red', marker='o', s=5, label='Predict') # predict
 
-            plt.title('Inference Results By per {} Frame | Video : {}'.format(inference_step, video_name));
-            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | FN : {}'.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, FN_frame_cnt));
+            plt.title('Inference Results By per {} Frame | Video : {} | Results : {} '.format(inference_step, video_name, os.path.basename(results_save_dir)));
+            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | TP : {} | FN : {} | TN : {} | TOTAL : {} | OOB_Metric : {} '.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, frame_check_cnt, OOB_false_metric));
             plt.ylabel('class'); plt.xlabel('frame');
             plt.legend(loc='center right');
 
@@ -463,6 +510,9 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
             # save metric
             # calc_confusion_metric(inference_results_df['truth'], inference_results_df['predict'])
             saved_text = calc_confusion_metric(gt_list, predict_list)
+            saved_text += '\n\nFP\t\tTP\t\tFN\t\tTN\t\tTOTAL\n'
+            saved_text += '{}\t\t{}\t\t{}\t\t{}\t\t{}\n\n'.format(FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, frame_check_cnt)
+            saved_text += 'OOB_false_metric : {:.4f}'.format(OOB_false_metric)
 
             with open(os.path.join(each_video_result_dir, 'Metric_{}.txt'.format(video_name)), 'w') as f :
                 f.write(saved_text)
