@@ -55,7 +55,7 @@ def test_video() :
     
     ## trained model (you should put same model as trained model)
     parser.add_argument('--model', type=str,
-                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2'], help='trained backborn model')
+                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model')
     
     # inference frame step
     parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
@@ -108,7 +108,7 @@ def test_video() :
         print('')
         print(test_hparams)
 
-        model = CAMIO.load_from_checkpoint(args.model_path, hparams=test_hparams)
+        model = CAMIO.load_from_checkpoint(args.model_path, config=test_hparams)
 
         model.cuda()
         model.eval()
