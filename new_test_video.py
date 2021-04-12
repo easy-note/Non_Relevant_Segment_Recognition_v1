@@ -55,7 +55,7 @@ def test_video() :
     
     ## trained model (you should put same model as trained model)
     parser.add_argument('--model', type=str,
-                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2'], help='trained backborn model')
+                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model')
     
     # inference frame step
     parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
@@ -108,7 +108,7 @@ def test_video() :
         print('')
         print(test_hparams)
 
-        model = CAMIO.load_from_checkpoint(args.model_path, hparams=test_hparams)
+        model = CAMIO.load_from_checkpoint(args.model_path, config=test_hparams)
 
         model.cuda()
         model.eval()
@@ -275,7 +275,7 @@ def gettering_information_for_robot (video_root_path, anno_root_path, video_set,
         
     return info_dict
 
-def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inference_step) : 
+def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inference_step) : # project_name is only for use for title in total_metric_df.csv
     print('\n\n\n\t\t\t ### STARTING DEF [inference_for_robot] ### \n\n')
 
     # create results folder
@@ -286,6 +286,9 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
         print('ERROR : Creating Directory, ' + results_save_dir)
 
     total_videoset_cnt = len(info_dict['video']) # total number of video set
+
+    # init total metric df
+    total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_False_Metric']) # row cnt is same as checking vidoes length
 
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 1):
@@ -371,7 +374,10 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
 
             FP_frame_cnt = 0
             FN_frame_cnt = 0
+            TP_frame_cnt = 0
+            TN_frame_cnt = 0
             frame_check_cnt = 0 # loop cnt
+            OOB_false_metric = -1 # false metric
 
             # inference per frame 
             # no gradient
@@ -396,6 +402,14 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
                     # results of predict
                     predict = torch.argmax(outputs.cpu()) # predict
 
+                    # TP
+                    if truth == OOB_CLASS and predict == OOB_CLASS :
+                        TP_frame_cnt+=1
+
+                    # TN
+                    if truth == IB_CLASS and predict == IB_CLASS :
+                        TN_frame_cnt+=1
+
                     # save results
                     frame_idx_list.append(frame_idx)
                     gt_list.append(truth)
@@ -409,7 +423,7 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
                         print('frame no {} | truth {} | predict {}'.format(frame_idx, truth, predict))
                         print('CHECKED_FRAME_CNT({}) | [FP:FN] = [{}:{}]'.format(frame_check_cnt, FP_frame_cnt, FN_frame_cnt))
 
-                        fp_frame_saving_path = os.path.join(fp_frame_saved_dir, '{}_{:010d}.jpg'.format(video_name, frame_idx))
+                        fp_frame_saving_path = os.path.join(fp_frame_saved_dir, '{}-{:010d}.jpg'.format(video_name, frame_idx))
                         print('Saving FP Frame \t\t ', fp_frame_saving_path)
                         cv2.imwrite(fp_frame_saving_path, img)
                         print('')
@@ -420,7 +434,7 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
                         print('frame no {} | truth {} | predict {}'.format(frame_idx, truth, predict))
                         print('CHECKED_FRAME_CNT({}) | [FP:FN] = [{}:{}]'.format(frame_check_cnt, FP_frame_cnt, FN_frame_cnt))
 
-                        fn_frame_saving_path = os.path.join(fn_frame_saved_dir, '{}_{:010d}.jpg'.format(video_name, frame_idx))
+                        fn_frame_saving_path = os.path.join(fn_frame_saved_dir, '{}-{:010d}.jpg'.format(video_name, frame_idx))
                         print('Saving FN Frame \t\t ', fn_frame_saving_path)
                         cv2.imwrite(fn_frame_saving_path, img)
                         print('')
@@ -428,10 +442,14 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
                     frame_check_cnt+=1 # loop cnt check
 
             print('TOTAL FRAME : ', len(frame_idx_list))
-            print('FP FRAME CNT : ', FP_frame_cnt)
-            print('FN FRAME CNT : ', FN_frame_cnt)
             
             video.release()
+
+            # calc OOB_fasle metric
+            try : # zero devision except
+                OOB_false_metric = FP_frame_cnt / (FP_frame_cnt + TP_frame_cnt + FN_frame_cnt) # positie = OOB
+            except :
+                OOB_false_metric = -1
 
             # saving inferece result
             result_dict = {
@@ -444,17 +462,50 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
             inference_results_df = pd.DataFrame(result_dict)
             
             print('Result Saved at \t ====> ', each_video_result_dir)
-            inference_results_df.to_csv(os.path.join(each_video_result_dir, 'Inference_{}.csv'.format(video_name)), mode="w")
+            inference_results_df.to_csv(os.path.join(each_video_result_dir, 'Inference-{}.csv'.format(video_name)), mode="w")
 
+            # saving FN FP TP TN Metric
+            results_metric = {
+                'Video_set' : [videoset_name],
+                'Video_name' : [video_name],
+                'FP' : [FP_frame_cnt],
+                'TP' : [TP_frame_cnt],
+                'FN' : [FN_frame_cnt],
+                'TN' : [TN_frame_cnt],
+                'TOTAL' : [frame_check_cnt],
+                'GT_OOB' : [gt_list.count(OOB_CLASS)],
+                'GT_IB' : [gt_list.count(IB_CLASS)],
+                'PREDICT_OOB' : [predict_list.count(OOB_CLASS)],
+                'PREDICT_IB' : [predict_list.count(IB_CLASS)],
+                'GT_OOB_1FPS' : [truth_oob_count],
+                'GT_IB_1FPS' : [video_len-truth_oob_count],
+                'OOB_False_Metric' : [OOB_false_metric]
+            }
+
+            # each metric per video
+            result_metric_df = pd.DataFrame(results_metric)    
+
+            print('Metric Saved at \t ====> ', each_video_result_dir)
+            result_metric_df.to_csv(os.path.join(each_video_result_dir, 'OOB_False_Metric-{}.csv'.format(video_name)), mode="w")
+
+            # append metric
+            # columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_False_Metric'])           
+            # total_metric_df = total_metric_df.append(result_metric_df)
+            total_metric_df = pd.concat([total_metric_df, result_metric_df], ignore_index=True) # shoul shink columns
+
+            print('')
+            print(total_metric_df)
+            total_metric_df.to_csv(os.path.join(results_save_dir, 'Total_metric-{}.csv'.format(os.path.basename(results_save_dir))), mode="w") # save on project direc
+            
             # saving plot
             fig = plt.figure(figsize=(16,8))
 
             # plt.hold()
-            plt.scatter(np.array(frame_idx_list), np.array(gt_list), color='blue', marker='o', s=15, label='Truth') # ground truth
+            plt.scatter(np.array(frame_idx_list), np.array(gt_list), color='blue', marker='o', s=20, label='Truth') # ground truth
             plt.scatter(np.array(frame_idx_list), np.array(predict_list), color='red', marker='o', s=5, label='Predict') # predict
 
-            plt.title('Inference Results By per {} Frame | Video : {}'.format(inference_step, video_name));
-            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | FN : {}'.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, FN_frame_cnt));
+            plt.title('Inference Results By per {} Frame | Video : {} | Results : {} '.format(inference_step, video_name, os.path.basename(results_save_dir)));
+            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | TP : {} | FN : {} | TN : {} | TOTAL : {} | OOB_Metric : {} '.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, frame_check_cnt, OOB_false_metric));
             plt.ylabel('class'); plt.xlabel('frame');
             plt.legend(loc='center right');
 
@@ -463,8 +514,11 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
             # save metric
             # calc_confusion_metric(inference_results_df['truth'], inference_results_df['predict'])
             saved_text = calc_confusion_metric(gt_list, predict_list)
+            saved_text += '\n\nFP\t\tTP\t\tFN\t\tTN\t\tTOTAL\n'
+            saved_text += '{}\t\t{}\t\t{}\t\t{}\t\t{}\n\n'.format(FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, frame_check_cnt)
+            saved_text += 'OOB_false_metric : {:.4f}'.format(OOB_false_metric)
 
-            with open(os.path.join(each_video_result_dir, 'Metric_{}.txt'.format(video_name)), 'w') as f :
+            with open(os.path.join(each_video_result_dir, 'Metric-{}.txt'.format(video_name)), 'w') as f :
                 f.write(saved_text)
 
 
