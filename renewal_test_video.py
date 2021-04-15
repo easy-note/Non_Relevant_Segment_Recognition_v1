@@ -151,15 +151,13 @@ def test_video() :
         print('\n\t=== model_loded for ROBOT ===\n')
 
         # starting inference
-        '''
         test_video_for_robot(args.data_dir, args.anno_dir, args.inference_assets_dir, args.results_save_dir, model, args.test_videos, args.inference_step)
-        '''
+        
 
     # finish time stamp
     finishTime = time.time()
     f_tm = time.localtime(finishTime)
 
-    print('\n\n=============== \t\t FINISED \t\t ============= \n\n')
     log_txt = 'FINISED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
     save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
 
