@@ -158,7 +158,7 @@ def test_video() :
     finishTime = time.time()
     f_tm = time.localtime(finishTime)
 
-    log_txt = 'FINISED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
+    log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
     save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
 
 
@@ -682,13 +682,14 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step) : # 
             # calc FN, FP, TP, TN frame and TOTAL
             metric_frame = return_metric_frame(inference_results_df)
 
-            print('\n\n=============== \tFN\t ============= \n\n')
-
-            FP_frame_cnt = len(metric_frame['FP_df'])
             FN_frame_cnt = len(metric_frame['FN_df'])
-            TP_frame_cnt = len(metric_frame['TP_df'])
+            FP_frame_cnt = len(metric_frame['FP_df'])
             TN_frame_cnt = len(metric_frame['TN_df'])
+            TP_frame_cnt = len(metric_frame['TP_df'])
             TOTAL_frame_cnt = len(inference_results_df)
+
+            print('\n\n=============== \tFN\t ============= \n\n')
+            print(metric_frame['FN_df'])
 
             print('\n\n=============== \tFP\t ============= \n\n')
             print(metric_frame['FP_df'])
@@ -703,10 +704,10 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step) : # 
             
 
             print('\n\n=============== \tINFO\t ============= \n\n')
-            print(FP_frame_cnt)
             print(FN_frame_cnt)
-            print(TP_frame_cnt)
+            print(FP_frame_cnt)
             print(TN_frame_cnt)
+            print(TP_frame_cnt)
             print(TOTAL_frame_cnt)
             print(truth_oob_count)
             print(video_len - truth_oob_count)
@@ -790,6 +791,6 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step) : # 
     
 if __name__ == "__main__":
     ###  base setting for model testing ### 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
 
     test_video()

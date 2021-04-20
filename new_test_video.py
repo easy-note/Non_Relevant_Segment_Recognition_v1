@@ -28,7 +28,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
-
+import time
+import json
 
 
 
@@ -77,10 +78,30 @@ def test_video() :
 
     args, _ = parser.parse_known_args()
 
-    print(args)
-    print('')
-    print(args.inference_step)
-    print(args.test_videos)
+    ### ### create results folder for save args and log.txt ### ###
+    try :
+        if not os.path.exists(args.results_save_dir) :
+            os.makedirs(args.results_save_dir)
+    except OSError :
+        print('ERROR : Creating Directory, ' + args.results_save_dir)
+
+    # save args log
+    with open(os.path.join(args.results_save_dir, 'commandline_args.txt'), 'w') as f:
+        json.dump(args.__dict__, f, indent=2)
+
+    log_txt='\n\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n\n'
+    log_txt+=json.dumps(args.__dict__, indent=2)
+
+    # start time stamp
+    startTime = time.time()
+    s_tm = time.localtime(startTime)
+    
+    log_txt+='\n\n=============== \t\t INFERNECE TIME \t\t ============= \n\n'
+    log_txt+='STARTED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', s_tm)
+    
+    save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
+
+    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
 
     data_transforms = {
@@ -118,6 +139,14 @@ def test_video() :
         # starting inference
         test_video_for_robot(args.data_dir, args.anno_dir, args.results_save_dir, model, data_transforms, args.test_videos, args.inference_step)
 
+
+    # finish time stamp
+    finishTime = time.time()
+    f_tm = time.localtime(finishTime)
+
+    log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
+    save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
+
 ### union def ###
 # cal vedio frame
 def time_to_idx(time, fps):
@@ -152,6 +181,13 @@ def calc_confusion_metric(gts, preds):
     saved_text = '{} \nprecision \t : \t {} \nrecall \t\t : \t {} \n\n{}'.format(classification_report_result, prec, recall, metric)
 
     return saved_text
+
+
+# save log 
+def save_log(log_txt, save_dir) :
+    print('=========> SAVING LOG ... | {}'.format(save_dir))
+    with open(save_dir, 'a') as f :
+        f.write(log_txt)
 
 ### union def ### 
 
@@ -528,6 +564,6 @@ def inference_for_robot(info_dict, model, data_transforms, results_save_dir, inf
 
 if __name__ == "__main__":
     ###  base setting for model testing ### 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
 
     test_video()
