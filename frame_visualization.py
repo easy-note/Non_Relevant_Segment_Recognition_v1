@@ -7,19 +7,22 @@ from itertools import groupby
 
 import argparse
 import json
+import os
 
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--title_name', type=str, default='R017', help='trained model_path')
+parser.add_argument('--title_name', type=str, default='R017_OOB_Frame_Inference', help='trained model_path')
+
+parser.add_argument('--sub_title_name', type=str, default='R017_ch1_video_01', help='trained model_path')
 
 parser.add_argument('--GT_path', type=str, default='./new_results-robot_oob_resnet50-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv', help='trained model_path')
 
-parser.add_argument('--model_name', type=str, nargs='+', default=["resnet50", "wide_resnet50_2"],
+parser.add_argument('--model_name', type=str, nargs='+', default=["resnet50", "wide_resnet50_2", "resnet34"],
 					choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model')
 
 parser.add_argument('--model_infernce_path', type=str, nargs='+',
-					default=["./new_results-robot_oob_resnet50-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv", "./new_results-robot_oob_wide_resnet50_2-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv"], help='inference video')
+					default=["./new_results-robot_oob_resnet50-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv", "./new_results-robot_oob_wide_resnet50_2-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv", "./results-robot_oob_resnet34-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv"], help='inference video')
 
 parser.add_argument('--results_save_dir', type=str, default= './visual_results', help='inference results save path')
 
@@ -32,7 +35,6 @@ def encode_list(s_list): # run-length encoding from list
 
 def main():
 
-	print(args)
 	print(json.dumps(args.__dict__, indent=2))
 
 
@@ -45,8 +47,11 @@ def main():
 	height = 0.5 # bar chart thic
 
 	## Data prepare
+	print(args.GT_path)
+	print('------')
 	GT_df = pd.read_csv(args.GT_path)
-	frame_label = GT_df['frame'] # sync xticks label from GT
+	frame_label = list(GT_df['frame']) # sync xticks label from GT
+	time_label = list(GT_df['time']) # sync xticks label from GT
 
 	yticks = ['GT'] # y축 names # 순서중요
 	yticks += args.model_name
@@ -108,7 +113,7 @@ def main():
 	print(runlength_model)
 
 	#### 2. matplotlib의 figure 및 axis 설정
-	fig, ax = plt.subplots(1,1,figsize=(10,5)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
+	fig, ax = plt.subplots(1,1,figsize=(12,8)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
 	
 	##### initalize label for legned, this code should be write before writing barchart #####
 	init_bar = ax.barh(range(len(yticks)), np.zeros(len(yticks)), label=label_names[IB], height=height, color=colors[IB]) # dummy data
@@ -132,69 +137,39 @@ def main():
 		
 		bar = ax.barh(range(len(yticks)), widths, left=starts, height=height, color=colors[frame_class]) # don't input label
 	
-	#### 4. x축 세부설정
-	ax.set_xticks(range(27444))
-	ax.set_xticklabels(frame_label) # xtick change
-	ax.xaxis.set_tick_params(labelsize=10)
-	ax.set_xlabel('Frame', fontsize=14)
+	#### 4. title 설정
+	fig.suptitle(args.title_name, fontsize=18)
+	ax.set_title(args.sub_title_name)
 	
-	#### 5. y축 세부설정
+	#### 5. title 설정
+	fig.suptitle(args.title_name, fontsize=18)
+	ax.set_title(args.sub_title_name)
+
+	#### 6. x축 세부설정
+	step_size = 3000 # xtick step_size
+	ax.set_xticks(range(0, len(frame_label), step_size)) # 3000
+	ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(frame_label[::step_size], time_label[::step_size])]) # xtick change
+	ax.xaxis.set_tick_params(labelsize=7)
+	ax.set_xlabel('Frame / Time (h:m:s:fps)', fontsize=12)
+	
+	#### 7. y축 세부설정
 	ax.set_yticks(range(len(yticks)))
 	ax.set_yticklabels(yticks, fontsize=10)	
-	ax.set_ylabel('Model', fontsize=14)
+	ax.set_ylabel('Model', fontsize=12)
 	
-	#### 6. 범례 나타내기
+	#### 8. 범례 나타내기
 	box = ax.get_position() # 범례를 그래프상자 밖에 그리기위해 상자크기를 조절
 	ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
 	ax.legend(label_names, loc='center left', bbox_to_anchor=(1,0.5), shadow=True, ncol=1)
 	
-	#### 7. 보조선(눈금선) 나타내기
+	#### 9. 보조선(눈금선) 나타내기
 	ax.set_axisbelow(True)
 	ax.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
 	
-	#### 8. 그래프 저장하고 출력하기
-	plt.savefig('./visual_results/ex_barhplot.png', format='png', dpi=300)
+	#### 10. 그래프 저장하고 출력하기
+	plt.savefig(os.path.join(args.results_save_dir, '{}-{}.png'.format(args.title_name, args.sub_title_name)), format='png', dpi=500)
 	plt.show()
 
 
 if __name__=='__main__':
 	main()
-
-
-
-'''
-N, K = 4, 3
-data = np.random.rand(N, K)
-tick_labels = ["a", "b", "c", "d"]
-labels = ["x", "y", "z"]
-
-normalized = data / data.sum(axis=1, keepdims=True)
-cumulative = np.zeros(N)
-tick = np.arange(N)
-
-
-print('data\n',data)
-print('cumulative\n', cumulative)
-print('tick', tick)
-print('normlaizaed\n', normalized)
-
-for k in range(K):
-    print('-----')
-    print('k', k)
-    color = plt.cm.viridis(float(k) / K, 1)
-    print('color', color)
-    plt.barh(tick, normalized[:, k], left=cumulative, color=color, label=labels[k])
-    # plt.bar(tick, normalized[:, k], bottom=cumulative, color=color, label=labels[k])
-    print('cum', cumulative)
-    cumulative += normalized[:, k]
-    print('cum_add', cumulative)
-
-plt.xlim((0, 1))
-# plt.ylim((0, 1))
-plt.yticks(tick, tick_labels)
-# plt.xticks(tick, tick_labels)
-plt.legend()
-# plt.show()
-plt.savefig('./visual_results/temp_frame_visual.png', dpi=200)
-'''
-
