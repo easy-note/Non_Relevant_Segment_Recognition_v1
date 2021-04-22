@@ -12,25 +12,96 @@ import os
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--title_name', type=str, default='R017_OOB_Frame_Inference', help='trained model_path')
+parser.add_argument('--title_name', type=str, help='plot title, and save file name')
 
-parser.add_argument('--sub_title_name', type=str, default='R017_ch1_video_01', help='trained model_path')
+parser.add_argument('--sub_title_name', type=str, help='sub plot title, and save file name')
 
-parser.add_argument('--GT_path', type=str, default='./new_results-robot_oob_resnet50-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv', help='trained model_path')
+parser.add_argument('--GT_path', type=str, help='GT model_inference assets path')
 
-parser.add_argument('--model_name', type=str, nargs='+', default=["resnet50", "wide_resnet50_2", "resnet34"],
-					choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model')
+parser.add_argument('--model_name', type=str, nargs='+',
+					choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model, it will be yticks name')
 
-parser.add_argument('--model_infernce_path', type=str, nargs='+',
-					default=["./new_results-robot_oob_resnet50-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv", "./new_results-robot_oob_wide_resnet50_2-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv", "./results-robot_oob_resnet34-1_3-last/R017/R017_ch1_video_01/Inference-R017_ch1_video_01.csv"], help='inference video')
+parser.add_argument('--model_infernce_path', type=str, nargs='+', help='model_inference_assets path. this order should be pair with --model_name. if not, results is not unpair.')
 
-parser.add_argument('--results_save_dir', type=str, default= './visual_results', help='inference results save path')
+parser.add_argument('--results_save_dir', type=str, help='inference results save path')
+
+parser.add_argument('--filter', type=str, nargs='?', choices=['mean', 'median'], help='only predict results will be apply')
+
+parser.add_argument('--kernel_size', type=int, default=1, choices=[1,3,5,7,9,11,19], help='filter kernel size')
 
 args, _ = parser.parse_known_args()
 
 def encode_list(s_list): # run-length encoding from list
     return [[len(list(group)), key] for key, group in groupby(s_list)] # [[length, value], [length, value]...]
 
+
+def medfilt (x, k):
+	"""Apply a length-k median filter to a 1D array x.
+	Boundaries are extended by repeating endpoints.
+	"""
+	assert k % 2 == 1, "Median filter length must be odd."
+	assert x.ndim == 1, "Input must be one-dimensional."
+
+	k2 = (k - 1) // 2
+	y = np.zeros ((len (x), k), dtype=x.dtype)
+
+	print('==> prepare')
+	print(y)
+
+	y[:,k2] = x
+	
+	print('\n==> arrange')
+	print(y)
+	for i in range (k2):
+		j = k2 - i
+		y[j:,i] = x[:-j]
+		y[:j,i] = x[0]
+		y[:-j,-(i+1)] = x[j:]
+		y[-j:,-(i+1)] = x[-1]
+
+	print('\n==> margin padding')
+	print(y)
+
+	return np.median (y, axis=1)
+
+
+def meanfilt (x, k):
+	"""Apply a length-k mean filter to a 1D array x.
+	Boundaries are extended by repeating endpoints.
+	"""
+	assert k % 2 == 1, "Median filter length must be odd."
+	assert x.ndim == 1, "Input must be one-dimensional."
+
+	k2 = (k - 1) // 2
+	y = np.zeros ((len (x), k), dtype=x.dtype)
+	y[:,k2] = x
+	for i in range (k2):
+		j = k2 - i
+		y[j:,i] = x[:-j]
+		y[:j,i] = x[0]
+		y[:-j,-(i+1)] = x[j:]
+		y[-j:,-(i+1)] = x[-1]
+	return np.mean (y, axis=1)
+
+def apply_filter(assets ,filter_type:str, kernel_size) : # input = numpy, kernel should be odd
+	
+	print('\n\n\t\t ===== APPLYING FILTER | type : {} | kernel_size = {} =====\n\n'.format(filter_type, kernel_size))
+
+	results = -1 # reutrn
+	
+	if filter_type == 'median' :
+		results=medfilt(assets, kernel_size) # 1D numpy
+		results=results.astype(assets.dtype) # convert to original dtype
+
+		print('\t\t==> original \t')
+		print(assets)
+		print('\t\t==> results \t')
+		print(results)
+
+	elif filter_type == 'mean' :
+		pass
+
+	return results # numpy
 
 
 def main():
@@ -60,7 +131,16 @@ def main():
 	
 	# pairwise read
 	for y_name, inf_path in zip(args.model_name, args.model_infernce_path) :
-		predict_data[y_name] = pd.read_csv(inf_path)['predict']
+		p_data = pd.read_csv(inf_path)['predict']
+
+		# filter processing		
+		if args.filter is not None :
+			p_data = apply_filter(p_data.to_numpy(), args.filter, args.kernel_size) # 1D numpy, 'filter', kernel_size
+			p_data = pd.Series(p_data)
+
+		
+		predict_data[y_name] = p_data
+
 
 	print(predict_data)
 	
@@ -140,10 +220,8 @@ def main():
 	#### 4. title 설정
 	fig.suptitle(args.title_name, fontsize=18)
 	ax.set_title(args.sub_title_name)
-	
-	#### 5. title 설정
-	fig.suptitle(args.title_name, fontsize=18)
-	ax.set_title(args.sub_title_name)
+
+	#### 5. 
 
 	#### 6. x축 세부설정
 	step_size = 3000 # xtick step_size

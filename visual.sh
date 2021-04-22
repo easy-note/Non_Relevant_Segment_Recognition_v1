@@ -1,40 +1,53 @@
 : << "END"
-model_array=("resnet34" \
-            "resnet50" \
-            "wide_resnet50_2")
+save results file name = {--title_name}-{--sub_title_name}.png
 
-model_path_array=("./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=resnet34-batch=32-lr=0.001-epoch=49-last.ckpt" \
-                "./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=resnet50-batch=32-lr=0.001-epoch=49-last.ckpt" \
-                "./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=wide_resnet50_2-batch=32-lr=0.001-epoch=49-last.ckpt")
+--model_name (yticks name)
+--model_inference_path 
+these args option input should be pair with ordering
+if not, results are not synced.
 
-results_save_dir_array=("./results-robot_oob_resnet34-1_3-last" \
-                "./results-robot_oob_resnet50-1_3-last" \
-                "./results-robot_oob_wide_resnet50_2-1_3-last")
-
-
-for (( i = 0 ; i < ${#model_path_array[@]} ; i++ ))
-do
-    python new_test_video.py \
-    --model_path ${model_path_array[$i]} \
-    --data_dir "/data/CAM_IO/robot/video" \
-    --anno_dir "/data/CAM_IO/robot/OOB" \
-    --results_save_dir ${results_save_dir_array[$i]} \
-    --model ${model_array[$i]} \
-    --inference_step 10000 \
-    --test_videos "R017" "R022" "R116" "R208" "R303"
-done
+--filter [median, mean]
+--kernel_size [1,3,5,7,9,11,19], default = 1
+only apply in predict results, not GT
+if you dont want to apply filter, remove --filter and --kernel_size
 END
 
-model_inf_path_1="./results-robot_oob_resnet18-1_3-last/R017/R017_ch1_video_01/Inference_R017_ch1_video_01.csv"
-model_inf_path_2="./results-robot_oob_resnet18-1_3-last/R017/R017_ch1_video_01/Inference_R017_ch1_video_01.csv"
-model_inf_path_3="./results-robot_oob_resnet18-1_3-last/R017/R017_ch1_video_01/Inference_R017_ch1_video_01.csv"
-model_inf_path_4="./results-robot_oob_resnet18-1_3-last/R017/R017_ch1_video_01/Inference_R017_ch1_video_01.csv"
-model_inf_path_5="./results-robot_oob_resnet18-1_3-last/R017/R017_ch1_video_01/Inference_R017_ch1_video_01.csv"
+: << "END"
+R017
+R017_ch1_video_01
+R017_ch1_video_04
+
+R022
+R022_ch1_video_01
+R022_ch1_video_03
+R022_ch1_video_05
+
+R116
+R116_ch1_video_01
+R116_ch1_video_03
+R116_ch1_video_06
+
+R208
+R208_ch1_video_01
+R208_ch1_video_03
+
+R303
+R303_ch1_video_01
+R303_ch1_video_04
+END
+
+
+model_inf_path_1="./results-robot_oob_resnet18-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
+model_inf_path_2="./results-robot_oob_resnet34-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
+model_inf_path_3="./results-robot_oob_resnet50-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
+model_inf_path_4="./results-robot_oob_resnext50_32x4d-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
+model_inf_path_5="./results-robot_oob_wide_resnet50_2-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
 
 python frame_visualization.py \
---title_name "R017_Inference_RESNET_1_3" \
---sub_title_name "R017_ch1_video_01" \
+--title_name "R303_Inference_RESNET_1_1" \
+--sub_title_name "R303_ch1_video_04-MEDIAN(19)" \
 --GT_path $model_inf_path_1 \
 --model_name "resnet18" "resnet34" "resnet50" "resnext50_32x4d" "wide_resnet50_2" \
 --model_infernce_path $model_inf_path_1 $model_inf_path_2 $model_inf_path_3 $model_inf_path_4 $model_inf_path_5 \
---results_save_dir "./visual_results"
+--results_save_dir "./visual_results/median" \
+--filter "median" --kernel_size 19
