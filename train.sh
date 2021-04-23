@@ -30,11 +30,14 @@ for (( i = 0 ; i < ${#model_array[@]} ; i++ ))
 do
     python train_camIO.py \
     --project_name ${project_name_array[$i]} \
-    --max_epoch 3 \
+    --max_epoch 10 \
     --log_path "/OOB_RECOG/logs" \
     --batch_size 32 \
     --init_lr 1e-3 \
     --model ${model_array[$i]} \
-    --IB_ratio 3 \
-    --random_seed 10
+    --IB_ratio 10 \
+    --random_seed 10 \
+    --fold 'free' \
+    --train_videos 'R002' 'R003' \
+    --val_videos 'R001'
 done

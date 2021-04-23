@@ -20,35 +20,46 @@ import json
 
 def train():
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--batch_size', type=int, help='Size of the batches for each training step.')
-    parser.add_argument('--max_epoch', type=int, help='The maximum number of training epoch.')
-    parser.add_argument('--data_path', type=str, 
-                        default='/data/CAM_IO/robot/images', help='Data path :)')
-    parser.add_argument('--log_path', type=str, 
-                        default='/OOB_RECOG/logs', help='log path :)')
-    parser.add_argument('--num_gpus', type=int, 
-                        default=2, help='The number of GPUs using for training.')
-
-    ## init lr
-    parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
+    ## train file and log file are saving in project_name
+    parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
     ## training model
     parser.add_argument('--model', type=str,
                         choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='backborn model')
 
+    ## init lr
+    parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
+
+    ## batch size
+    parser.add_argument('--batch_size', type=int, help='Size of the batches for each training step.')
+
+    ## epoch
+    parser.add_argument('--max_epoch', type=int, help='The maximum number of training epoch.')
+
+    ## data_path (.csv dir)
+    parser.add_argument('--data_path', type=str, 
+                        default='/data/CAM_IO/robot/images', help='Data path :)')
+
+    ## log save path
+    parser.add_argument('--log_path', type=str, 
+                        default='/OOB_RECOG/logs', help='log path :)')
+
+    ## gpus 
+    parser.add_argument('--num_gpus', type=int, 
+                        default=2, help='The number of GPUs using for training.')
+
+    ## fold
+    parser.add_argument('--fold', default='free', type=str,
+                        choices=['1','2','3', 'free'], help='valset 1, 2, 3, free=for setting train_videos, val_vidoes')
+
     ## trian dataset video
-    parser.add_argument('--train_videos', type=str, nargs='+',
-                        default=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
-                            'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
-                            'R204', 'R205', 'R206', 'R207', 'R209', 'R210', 'R301', 'R302', 'R304', 'R305', 'R313'],
+    parser.add_argument('--train_videos', type=str, nargs='*',
                         choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
                                 'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
                                 'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='train video')
 
     ## val dataset video
-    parser.add_argument('--val_videos', type=str, nargs='+',
-                        default=['R017', 'R022', 'R116', 'R208', 'R303'],
+    parser.add_argument('--val_videos', type=str, nargs='*',
                         choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
                                 'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
                                 'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='val video')
@@ -58,9 +69,6 @@ def train():
 
     ## IB ratio
     parser.add_argument('--IB_ratio', type=int, help='IB = OOB * IB_ratio')
-
-    ## log saved in project_name
-    parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
     ## Robot Lapa
     parser.add_argument('--dataset', type=str,
@@ -139,21 +147,45 @@ def train():
     # make img info csv path
     # make_robot_csv(base_path, base_path)
 
-    # model
-    # model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
+    # model load
+    model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
 
+    # fold 별 train, validation video 설정
+    train_videos = []
+    val_videos = []
+    
+    if args.fold == '1' :
+        train_videos = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
+                    'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
+                    'R204', 'R205', 'R206', 'R207', 'R209', 'R210', 'R301', 'R302', 'R304', 'R305', 'R313']
+        val_videos = ['R017', 'R022', 'R116', 'R208', 'R303']
 
+    elif args.fold == '2' :
+        train_videos = ['R001', 'R002', 'R005', 'R007', 'R010', 'R014', 'R015', 'R017', 
+                    'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
+                    'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313']
+        val_videos = ['R003', 'R004', 'R006', 'R013', 'R018']
+    
+    elif args.fold == '3' :
+        train_videos = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R013', 'R014', 'R015', 'R017', 'R018', 
+                    'R022', 'R048', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
+                    'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313']
+        val_videos = ['R007', 'R010', 'R019', 'R056', 'R074']
+
+    elif args.fold == 'free' : # from argument
+        train_videos = args.train_videos
+        val_videos = args.val_videos
 
     # dataset 설정
     # IB_ratio = [1,2,3,..] // IB개수 = OOB개수*IB_ratio
-    trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=args.train_videos, is_train=True, random_seed=10, IB_ratio=args.IB_ratio)
-    valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=args.val_videos, is_train=False, random_seed=10, IB_ratio=args.IB_ratio)
+    trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=train_videos, is_train=True, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
+    valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=val_videos, is_train=False, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
     
 
     print('trainset len : ', len(trainset))
     print('valiset len : ', len(valiset))
 
-    exit(0)
+    
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
                                             shuffle=False, num_workers=8)
@@ -221,15 +253,15 @@ def train():
         filename : 저장되는 checkpoint file 이름
         monitor : 저장할 metric 기준
     """
-    checkpoint_filename = 'ckpoint_{}-model={}-batch={}-lr={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr)
+    checkpoint_filename = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio)
     checkpoint_filename = checkpoint_filename + '{epoch}-{val_loss:.4f}'
     checkpoint_callback = ModelCheckpoint(
             dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
-            save_top_k=1, save_last=True, verbose=True, monitor="val_loss", mode="min"
+            save_top_k=1, save_last=True, verbose=True, monitor="OOB_false_metric", mode="min"
     )
 
     # change last checkpoint name
-    checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr) + '{epoch}-last'
+    checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio) + '{epoch}-last'
 
     """
         tensorboard logger

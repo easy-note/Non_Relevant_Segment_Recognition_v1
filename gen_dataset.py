@@ -84,6 +84,7 @@ class CAMIO_Dataset(Dataset):
     def __init__(self, csv_path, patient_name, is_train, random_seed, IB_ratio):
         self.is_train = is_train
         self.csv_path = csv_path 
+        self.aug = data_transforms['train'] if is_train else data_transforms['val']
         
         self.img_list = [] # img
         self.label_list = [] # label
@@ -142,6 +143,11 @@ class CAMIO_Dataset(Dataset):
         print('\n\n')
         print('==> \tFINAL ASSETS')
         print(self.assets_df)
+        print('\n\n')
+
+        print('\n\n')
+        print('==> \tFINAL HEAD')
+        print(self.assets_df.head(20))
         print('\n\n')
 
         # last processing
