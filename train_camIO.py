@@ -8,12 +8,15 @@ from pytorch_lightning.plugins import DDPPlugin
 
 from Model import CAMIO
 from gen_dataset import CAMIO_Dataset
+from gen_dataset import make_robot_csv
 
 import pandas as pd
 import shutil
 from tqdm import tqdm
 
 import time
+
+import json
 
 def train():
     parser = argparse.ArgumentParser()
@@ -34,15 +37,37 @@ def train():
     parser.add_argument('--model', type=str,
                         choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='backborn model')
 
+    ## trian dataset video
+    parser.add_argument('--train_videos', type=str, nargs='+',
+                        default=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
+                            'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
+                            'R204', 'R205', 'R206', 'R207', 'R209', 'R210', 'R301', 'R302', 'R304', 'R305', 'R313'],
+                        choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
+                                'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
+                                'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='train video')
+
+    ## val dataset video
+    parser.add_argument('--val_videos', type=str, nargs='+',
+                        default=['R017', 'R022', 'R116', 'R208', 'R303'],
+                        choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
+                                'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
+                                'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='val video')
+
+    ## random seed
+    parser.add_argument('--random_seed', type=int, help='dataset ranbom seed')
+
+    ## IB ratio
+    parser.add_argument('--IB_ratio', type=int, help='IB = OOB * IB_ratio')
+
     ## log saved in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
     ## Robot Lapa
-    parser.add_argument('--dataset', type=str, 
+    parser.add_argument('--dataset', type=str,
                         default='robot', choices=['robot', 'lapa'], help='[robot, lapa] choice on dataset')
 
     ## OOB NIR
-    parser.add_argument('--task', type=str, 
+    parser.add_argument('--task', type=str,
                         default='OOB', choices=['OOB', 'NIR'], help='[OOB, NIR] choice on task')
 
 
@@ -50,9 +75,21 @@ def train():
     args, _ = parser.parse_known_args()
 
     # hyper parameter setting
+    # '__{}' parameters are not use in Model, just save record for train args parameter
     config_hparams = {
-        'optimizer_lr' : args.init_lr,
+        '__project_name' : args.project_name,
+        '__dataset' : args.dataset,
+        '__task' : args.task,
+
         'backborn_model' : args.model,
+        'optimizer_lr' : args.init_lr,
+
+        '__max_epoch' : args.max_epoch,
+        '__train_videos :' : args.train_videos,
+        '__val_videos :' : args.val_videos,
+
+        '__IB_ratio' : args.IB_ratio,
+        '__random_seed' : args.random_seed
     }
 
     print('\n\n')
@@ -61,35 +98,69 @@ def train():
     print('backborn model : ', config_hparams['backborn_model'])
     print('\n\n')
 
+
+    ### ### create results folder for save args and log.txt ### ###
+
+    # log base path
+    log_base_path = os.path.join(args.log_path, args.dataset, args.task)
+
+    try :
+        if not os.path.exists(os.path.join(log_base_path, args.project_name)):
+            os.makedirs(os.path.join(log_base_path, args.project_name))
+    except OSError :
+        print('ERROR : Creating Directory, ' + os.path.join(log_base_path, args.project_name))
+
+    # save args log
+    log_txt='\n\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n\n'
+    log_txt+=json.dumps(args.__dict__, indent=2)
+
+    # start time stamp
+    startTime = time.time()
+    s_tm = time.localtime(startTime)
+    
+    log_txt+='\n\n=============== \t\t TRAIN TIME \t\t ============= \n\n'
+    log_txt+='STARTED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', s_tm)
+    
+    save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
+
+    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+    
+    
+
     # 사용할 GPU 디바이스 번호들
     os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
 
-    # extracted images path
+    # images path (.csv dir)
     base_path = args.data_path
-    
-    # log base path
-    log_base_path = os.path.join(args.log_path, args.dataset, args.task)
 
     # bath size
     BATCH_SIZE = args.batch_size
 
+    # make img info csv path
+    # make_robot_csv(base_path, base_path)
+
     # model
-    model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
+    # model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
+
 
 
     # dataset 설정
-    trainset =  CAMIO_Dataset(base_path, is_train=True, test_mode=False, data_ratio=1)
-    valiset = CAMIO_Dataset(base_path, is_train=False, test_mode=False, data_ratio=1)
+    # IB_ratio = [1,2,3,..] // IB개수 = OOB개수*IB_ratio
+    trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=args.train_videos, is_train=True, random_seed=10, IB_ratio=args.IB_ratio)
+    valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=args.val_videos, is_train=False, random_seed=10, IB_ratio=args.IB_ratio)
+    
 
     print('trainset len : ', len(trainset))
     print('valiset len : ', len(valiset))
+
+    exit(0)
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
                                             shuffle=False, num_workers=8)
     vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
                                             shuffle=False, num_workers=8)
 
-
+    
     
     ###### this section is for check that dataset gets img and label correctly ####
     ### 해당 section은 단지 모델이 학습하는 데이터셋이 무엇인지 확인하기 위해 구성된 Dataset의 image와 label정보를 모두 /get_dataset_results에 저장하는 부분
@@ -193,6 +264,24 @@ def train():
     # test
     # model = model.load_from_checkpoint('/home/mkchoi/logs/OOB_robot_test/epoch=0-val_loss=0.2456.ckpt')
     # trainer.test(model, test_loader)
+
+    # finish time stamp
+    finishTime = time.time()
+    f_tm = time.localtime(finishTime)
+
+    log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
+    save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
+
+
+
+# save log 
+def save_log(log_txt, save_dir) :
+    print('=========> SAVING LOG ... | {}'.format(save_dir))
+    with open(save_dir, 'a') as f :
+        f.write(log_txt)
+
+
+
 
 if __name__ == "__main__":
     train()
