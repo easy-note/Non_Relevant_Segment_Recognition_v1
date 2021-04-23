@@ -110,7 +110,7 @@ class CAMIO(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self.model(x)
+        y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
 
@@ -118,7 +118,7 @@ class CAMIO(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx): # 배치마다 실행
         x, y = batch
-        y_hat = self.model(x)
+        y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
 
         c_hat = to_categorical(y_hat)
@@ -136,6 +136,8 @@ class CAMIO(pl.LightningModule):
         self.log("val_precision", prec, on_epoch=True, prog_bar=True)
         self.log("val_recall", rc, on_epoch=True, prog_bar=True)
         self.log("val_f1", f1, on_epoch=True, prog_bar=True)
+        
+
 
         # return loss
         return {'val_loss':loss, 'val_acc':acc,
@@ -163,12 +165,21 @@ class CAMIO(pl.LightningModule):
             f_loss/cnt, f_acc/cnt, f_prec/cnt, f_rc/cnt, f_f1/cnt
         ))
 
+        # calc OOB metric 
+        TP, TN, FP, FN, OOB_metric = self.calc_OOB_false_metric()
+        self.log("val_TP", TP, on_epoch=True, prog_bar=True)
+        self.log("val_TN", TN, on_epoch=True, prog_bar=True)
+        self.log("val_FP", FP, on_epoch=True, prog_bar=True)
+        self.log("val_FN", FN, on_epoch=True, prog_bar=True)
+        self.log("OOB_false_metric", OOB_metric, on_epoch=True, prog_bar=True)
+
+        # print info, and initializae self.gts, preds
         self.print_pycm()
 
 
     def test_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self.model(x)
+        y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
 
         c_hat = to_categorical(y_hat)
@@ -268,3 +279,29 @@ class CAMIO(pl.LightningModule):
         
         self.gts = []
         self.preds = []
+
+    def calc_OOB_false_metric(self) :
+        IB_CLASS, OOB_CLASS = (0,1)
+        OOB_false_metric = -1 
+        
+        cm = ConfusionMatrix(self.gts, self.preds)
+        
+        TP = cm.TP[OOB_CLASS]
+        TN = cm.TN[OOB_CLASS]
+        FP = cm.FP[OOB_CLASS]
+        FN = cm.FN[OOB_CLASS]
+
+        try : # zero division except       
+            OOB_false_metric = FP / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB
+        except : 
+            OOB_false_metric = -1
+        
+        print('\n')
+        print('===> \tOOB FALSE METRIC \t <===')
+        print(OOB_false_metric)
+        print('\n')
+
+        return (TP, TN, FP, FN, OOB_false_metric)
+
+
+        
