@@ -35,7 +35,7 @@ def encode_list(s_list): # run-length encoding from list
     return [[len(list(group)), key] for key, group in groupby(s_list)] # [[length, value], [length, value]...]
 
 
-def medfilt (x, k):
+def medfilter (x, k):
 	"""Apply a length-k median filter to a 1D array x.
 	Boundaries are extended by repeating endpoints.
 	"""
@@ -65,11 +65,11 @@ def medfilt (x, k):
 	return np.median (y, axis=1)
 
 
-def meanfilt (x, k):
+def meanfilter (x, k):
 	"""Apply a length-k mean filter to a 1D array x.
 	Boundaries are extended by repeating endpoints.
 	"""
-	assert k % 2 == 1, "Median filter length must be odd."
+	assert k % 2 == 1, "Mean filter length must be odd."
 	assert x.ndim == 1, "Input must be one-dimensional."
 
 	k2 = (k - 1) // 2
@@ -90,7 +90,7 @@ def apply_filter(assets ,filter_type:str, kernel_size) : # input = numpy, kernel
 	results = -1 # reutrn
 	
 	if filter_type == 'median' :
-		results=medfilt(assets, kernel_size) # 1D numpy
+		results=medfilter(assets, kernel_size) # 1D numpy
 		results=results.astype(assets.dtype) # convert to original dtype
 
 		print('\t\t==> original \t')
@@ -102,6 +102,16 @@ def apply_filter(assets ,filter_type:str, kernel_size) : # input = numpy, kernel
 		pass
 
 	return results # numpy
+
+
+# for text on bar
+def present_text(ax, bar, text):
+	for rect in bar:
+		posx = rect.get_width()
+		posy = rect.get_y() - rect.get_height()*0.3
+		print(posx, posy)
+		ax.text(posx, posy, text, rotation=0, ha='left', va='bottom')
+
 
 
 def main():
@@ -200,6 +210,7 @@ def main():
 	init_bar = ax.barh(range(len(yticks)), np.zeros(len(yticks)), label=label_names[OOB], height=height, color=colors[OOB]) # dummy data
 	##### #### #### #### ##### #### #### #### 
 
+
 	# data processing for barchart
 	data = np.array(runlength_model.to_numpy()) # width
 	data_cum = data.cumsum(axis=0) # for calc start index
@@ -216,6 +227,17 @@ def main():
 		starts= data_cum[i,:] - widths
 		
 		bar = ax.barh(range(len(yticks)), widths, left=starts, height=height, color=colors[frame_class]) # don't input label
+	
+	#### 3_1. bachart oob metric 삽입
+	for i, model in enumerate(yticks) :
+		print(i, model)
+		text_bar = ax.barh(i, 0, height=height) # dummy data
+		present_text(ax, text_bar, '{}-{}'.format(i, model))
+
+
+
+
+		
 	
 	#### 4. title 설정
 	fig.suptitle(args.title_name, fontsize=18)
