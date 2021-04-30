@@ -37,17 +37,18 @@ R303_ch1_video_04
 END
 
 
-model_inf_path_1="./results-robot_oob_resnet18-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
-model_inf_path_2="./results-robot_oob_resnet34-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
-model_inf_path_3="./results-robot_oob_resnet50-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
-model_inf_path_4="./results-robot_oob_resnext50_32x4d-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
-model_inf_path_5="./results-robot_oob_wide_resnet50_2-1_1-last/R303/R303_ch1_video_04/Inference-R303_ch1_video_04.csv"
+model_inf_path_1="./results-robot_oob-wide_resnet50_2-fold_1-last/R116/R116_ch1_video_03/Inference-R116_ch1_video_03.csv"
+model_inf_path_2="./results-robot_oob-resnext50_32x4d-fold_1-last/R116/R116_ch1_video_03/Inference-R116_ch1_video_03.csv"
+model_inf_path_3="./results-robot_oob-mobilenet_v3_small-fold_1-last/R116/R116_ch1_video_03/Inference-R116_ch1_video_03.csv"
+model_inf_path_4="./results-robot_oob-squeezenet1_0-fold_1-last/R116/R116_ch1_video_03/Inference-R116_ch1_video_03.csv"
 
 python frame_visualization.py \
---title_name "R303_Inference_RESNET_1_1" \
---sub_title_name "R303_ch1_video_04-MEDIAN(19)" \
+--title_name "R116-Inference-FOLD_1" \
+--sub_title_name "R116_ch1_video_03" \
 --GT_path $model_inf_path_1 \
---model_name "resnet18" "resnet34" "resnet50" "resnext50_32x4d" "wide_resnet50_2" \
---model_infernce_path $model_inf_path_1 $model_inf_path_2 $model_inf_path_3 $model_inf_path_4 $model_inf_path_5 \
---results_save_dir "./visual_results/median" \
---filter "median" --kernel_size 19
+--model_name "wide_resnet50_2" "resnext50_32x4d" "mobilenet_v3_small" "squeezenet1_0" \
+--model_infernce_path $model_inf_path_1 $model_inf_path_2 $model_inf_path_3 $model_inf_path_4 \
+--results_save_dir "./visual_results/fold1"
+
+
+# --filter "median" --kernel_size 19

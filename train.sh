@@ -21,23 +21,22 @@ done
 END
 
 
-model_array=("mobilenet_v3_small")
-
-project_name_array=("robot-oob-mobilenet_v3-1_3-fold_2")
-
+model_array=("wide_resnet50_2" \
+            "resnext50_32x4d" \
+            "mobilenet_v3_small" \
+            "squeezenet1_0")
 
 for (( i = 0 ; i < ${#model_array[@]} ; i++ ))
 do
     python train_camIO.py \
-    --project_name ${project_name_array[$i]} \
-    --max_epoch 10 \
+    --project_name "robot-oob-0423-fold_1" \
+    --max_epoch 50 \
     --log_path "/OOB_RECOG/logs" \
     --batch_size 32 \
     --init_lr 1e-3 \
     --model ${model_array[$i]} \
-    --IB_ratio 10 \
+    --IB_ratio 3 \
     --random_seed 10 \
-    --fold 'free' \
-    --train_videos 'R002' 'R003' \
-    --val_videos 'R001'
+    --fold '1' \
+    --num_gpus 1
 done
