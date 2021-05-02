@@ -83,8 +83,8 @@ def meanfilter (x, k):
 		y[-j:,-(i+1)] = x[-1]
 	return np.mean (y, axis=1)
 
-def apply_filter(assets ,filter_type:str, kernel_size) : # input = numpy, kernel should be odd
-	
+def apply_filter(assets, filter_type:str, kernel_size) : # input = numpy, kernel should be odd
+
 	print('\n\n\t\t ===== APPLYING FILTER | type : {} | kernel_size = {} =====\n\n'.format(filter_type, kernel_size))
 
 	results = -1 # reutrn
@@ -111,6 +111,60 @@ def present_text(ax, bar, text):
 		posy = rect.get_y() - rect.get_height()*0.3
 		print(posx, posy)
 		ax.text(posx, posy, text, rotation=0, ha='left', va='bottom')
+
+# calc OOB_Metric
+# input|DataFrame = 'GT' 'model A' model B' ..
+# calc FN, FP, TP, TN
+# out|{} = FN, FP, TP, TN frame
+def return_metric_frame(result_df, GT_col_name, predict_col_name) :
+    IB_CLASS, OOB_CLASS = 0,1
+
+    print(result_df)
+    
+    # FN    
+    FN_df = result_df[(result_df[GT_col_name]==OOB_CLASS) & (result_df[predict_col_name]==IB_CLASS)]
+    
+    # FP
+    FP_df = result_df[(result_df[GT_col_name]==IB_CLASS) & (result_df[predict_col_name]==OOB_CLASS)]
+
+    # TN
+    TN_df = result_df[(result_df[GT_col_name]==IB_CLASS) & (result_df[predict_col_name]==IB_CLASS)]
+    
+    # TP
+    TP_df = result_df[(result_df[GT_col_name]==OOB_CLASS) & (result_df[predict_col_name]==OOB_CLASS)]
+
+    return {
+        'FN_df' : FN_df,
+        'FP_df' : FP_df,
+        'TN_df' : TN_df,
+        'TP_df' : TP_df,
+    }
+
+# calc OOB Evaluation Metric
+def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
+	base_denominator = FP_cnt + TP_cnt + TN_cnt	
+	# init
+	EVAL_metric = {
+		'OOB_metric' : -1,
+		'correspondence' : -1,
+		'UN_correspondence' : -1,
+		'OVER_estimation' : -1,
+		'UNDER_estimtation' : -1,
+		'FN' : FN_cnt,
+		'FP' : FP_cnt,
+		'TN' : TN_cnt,
+		'TP' : TP_cnt,
+		'TOTAL' : FN_cnt + FP_cnt + TN_cnt + TP_cnt
+	}
+
+	if base_denominator > 0 : # zero devision except check, FN == full
+		EVAL_metric['OOB_metric'] = (TP_cnt - FP_cnt) / base_denominator
+		EVAL_metric['correspondence'] = TP_cnt /  base_denominator
+		EVAL_metric['UN_correspondence'] = (FP_cnt + FN_cnt) /  base_denominator
+		EVAL_metric['OVER_estimation'] = FP_cnt / base_denominator
+		EVAL_metric['UNDER_estimtation'] = FN_cnt / base_denominator
+		
+	return EVAL_metric
 
 
 
@@ -227,13 +281,30 @@ def main():
 		starts= data_cum[i,:] - widths
 		
 		bar = ax.barh(range(len(yticks)), widths, left=starts, height=height, color=colors[frame_class]) # don't input label
+
 	
-	#### 3_1. bachart oob metric 삽입
+	#### 3_1. Evaluation Metric calc 및 barchart oob metric 삽입
+	Total_Evaluation_df = df(index=range(0, 0), columns=['Model', 'kernel_size', 'OOB_metric', 'correspondence', 'UN_correspondence', 'OVER_estimation', 'UNDER_estimtation', 'FN', 'FP', 'TN', 'TP', 'TOTAL'])
+
 	for i, model in enumerate(yticks) :
 		print(i, model)
+		# calc Evaluation Metric
+		metric_frame_df = return_metric_frame(df(predict_data), 'GT', model)
+		
+		Evaluation_metric = calc_OOB_Evaluation_metric(len(metric_frame_df['FN_df']), len(metric_frame_df['FP_df']), len(metric_frame_df['TN_df']), len(metric_frame_df['TP_df']))
+		Evaluation_df = df(Evaluation_metric, index=[0])
+
+		Evaluation_df.insert(0, 'kernel_size', args.kernel_size)
+		Evaluation_df.insert(0, 'Model', model)
+
+		print(Evaluation_df)
+
+		Total_Evaluation_df = pd.concat([Total_Evaluation_df, Evaluation_df], ignore_index=True)
+
 		text_bar = ax.barh(i, 0, height=height) # dummy data
 		present_text(ax, text_bar, '{}-{}'.format(i, model))
-
+	
+	print(Total_Evaluation_df)
 
 
 
