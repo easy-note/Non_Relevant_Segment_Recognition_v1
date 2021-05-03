@@ -142,7 +142,7 @@ def return_metric_frame(result_df, GT_col_name, predict_col_name) :
 
 # calc OOB Evaluation Metric
 def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
-	base_denominator = FP_cnt + TP_cnt + TN_cnt	
+	base_denominator = FP_cnt + TP_cnt + FN_cnt	
 	# init
 	EVAL_metric = {
 		'OOB_metric' : -1,
@@ -302,12 +302,13 @@ def main():
 		Total_Evaluation_df = pd.concat([Total_Evaluation_df, Evaluation_df], ignore_index=True)
 
 		text_bar = ax.barh(i, 0, height=height) # dummy data
-		present_text(ax, text_bar, '{}-{}'.format(i, model))
+		present_text(ax, text_bar, ' OOB_METRIC : {:.3f} | OVER_ESTIMATION : {:.3f} | UNDER_ESTIMATION : {:.3f} \n FN : {} | FP : {} | TN : {} | TP : {} | TOTAL : {}'.format(Evaluation_metric['OOB_metric'], Evaluation_metric['OVER_estimation'], Evaluation_metric['UNDER_estimtation'], Evaluation_metric['FN'], Evaluation_metric['FP'], Evaluation_metric['TN'], Evaluation_metric['TP'], Evaluation_metric['TOTAL']))
 	
 	print(Total_Evaluation_df)
 
-
-
+	# Evaluation Metric save
+	Total_Evaluation_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Evaluation.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
+ 
 		
 	
 	#### 4. title 설정
