@@ -58,9 +58,46 @@ def gettering_information_for_robot (video_root_path, anno_root_path, video_set,
     print('NUMBER OF TOTAL ANNOTATION FILE : ', len(all_anno_path))
     print('')
 
+    all_video_path_df = df(all_video_path, columns=['video_path'])
+    all_anno_path_df = df(all_anno_path, columns=['anno_path'])
+
+    print(all_video_path_df)
+    print(all_anno_path_df)
+
+    
+
     for video_no in video_set : # get target video
-        video_path_list = sorted([vfile for vfile in all_video_path if os.path.basename(vfile).startswith(video_no)])
-        anno_path_list = sorted([anno_file for anno_file in all_anno_path if os.path.basename(anno_file).startswith(video_no)])
+        # video_path_list = sorted([vfile for vfile in all_video_path if os.path.basename(vfile).startswith(video_no)])
+        # anno_path_list = sorted([anno_file for anno_file in all_anno_path if os.path.basename(anno_file).startswith(video_no)])
+
+        # find video_no in video_file
+        video_path_df = all_video_path_df[all_video_path_df['video_path'].str.contains(video_no + '_')]
+
+        # init video and annotation paring path info
+        pair_info = df(range(0,0), columns=['video_path', 'anno_path'])
+
+
+        # video & annotation pairing
+        for i in range(len(video_path_df)) : 
+            video_file_name = os.path.splitext(os.path.basename(video_path_df['video_path'].iloc[i]))[0] # video_name with out extension
+            anno_path_series = all_anno_path_df[all_anno_path_df['anno_path'].str.contains(video_file_name+'_OOB')]['anno_path'] # find annotation file based in video_file_name
+            video_path_series = video_path_df.iloc[i]
+
+            info = {
+                'video_path':list(video_path_series)[0],
+                'anno_path':np.nan if len(list(anno_path_series))==0 else list(anno_path_series)[0]
+            }
+
+            pair_info=pair_info.append(info, ignore_index=True)
+
+        
+        pair_info = pair_info.fillna('') # fill na -> ""
+        
+        print(pair_info)
+
+        # df -> list 
+        video_path_list = list(pair_info['video_path'])
+        anno_path_list = list(pair_info['anno_path'])
         
         print('\t ==== GETTERING INFO ====')
         print('\t VIDEO NO | ', video_no) 
@@ -68,51 +105,37 @@ def gettering_information_for_robot (video_root_path, anno_root_path, video_set,
         print('\t anno_path', anno_path_list) # target annotaion path
         print('\t ==== ==== ==== ====\n')
 
-        # check not paring num
-        assert len(video_path_list) == len(anno_path_list), 'CANNOT PARING DATA'
-
         # it will be append to info_dict
         target_video_list = []
         target_anno_list = []
-        
+      
         for target_video_dir, target_anno_dir in (zip(video_path_list, anno_path_list)) :
 
-            
-            ## check of each pair
-            print('PARING SANITY CHECK ====> ', end='')
-
-            temp_token = os.path.basename(target_anno_dir).split('_')[:-1]
-            temp_token.pop(1) # pop 'CAMIO'
-
-            if os.path.basename(target_video_dir) == '_'.join(temp_token) + video_ext :
-                print('\t\t done')
-                print(target_video_dir)
-                print(target_anno_dir)
-            else :
-                print('fail')
-                print(target_video_dir)
-                print(target_anno_dir)
-                exit(1) 
-
-            ## check end ##
-
-            # continue to paring
-            anno_df = pd.read_csv(target_anno_dir)
-            anno_df = anno_df.dropna(axis=0) # 결측행 제거
-
-            print(anno_df)
-            
             # it will be append to temp_anno_list
             target_idx_list = []
-            
 
-            # time -> frame idx
-            for i in range(len(anno_df)) :
-    
-                t_start = anno_df.loc[i]['start']
-                t_end = anno_df.loc[i]['end']
+            # only target_video_dir 
+            if target_anno_dir != '' :
+                anno_df = pd.read_csv(target_anno_dir)
+                anno_df = anno_df.dropna(axis=0) # 결측행 제거
+
+                # time -> frame idx
+                for i in range(len(anno_df)) :
+                    t_start = anno_df.iloc[i]['start']
+                    t_end = anno_df.iloc[i]['end']
+                    
+                    target_idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)]) # temp_idx_list = [[start, end], [start, end]..]
                 
-                target_idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)]) # temp_idx_list = [[start, end], [start, end]..]
+                print('-----'*3)
+                print(target_video_dir)
+                print(target_anno_dir)
+                print(anno_df)
+
+            else :
+                print('-----'*3)
+                print(target_video_dir)
+                print(target_anno_dir)
+                print(target_idx_list)
 
             # save gettering info
             target_video_list.append(target_video_dir) # [video1_1, video_1_2, ...]
@@ -123,6 +146,7 @@ def gettering_information_for_robot (video_root_path, anno_root_path, video_set,
         info_dict['anno'].append(target_anno_list) # [[temp_idx_list_1_1, temp_idx_list_1_2], [temp_idx_list_2_1, temp_idx_list_2_2,], ...]
         
         print('\n\n')
+        print(info_dict)
         
     return info_dict
 
@@ -166,13 +190,15 @@ def gen_image_dataset_for_robot(video_root_dir, anno_root_dir, save_root_dir, ca
     
     save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
 
-    video_set = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
-                'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313']
+    video_set = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
     
     # paring video from annotation info
     info_dict = gettering_information_for_robot(video_root_dir, anno_root_dir, video_set, fps=30, video_ext='.mp4')
 
+    
+    
     total_videoset_cnt = len(info_dict['video']) # total number of video set
     print('{} VIDEO SET WILL BE CAPUERTRED ... '.format(total_videoset_cnt))
 
@@ -304,8 +330,13 @@ def gen_image_dataset_for_robot(video_root_dir, anno_root_dir, save_root_dir, ca
 
 
 if __name__ == '__main__' :
-    video_root_dir = '/data/CAM_IO/robot/video'
-    anno_root_dir = '/data/CAM_IO/robot/OOB'
-    save_root_dir = '/data/CAM_IO/robot/OOB_images_temp'
+    # video_root_dir = '/data/CAM_IO/robot/video'
+    # anno_root_dir = '/data/CAM_IO/robot/OOB'
+    # save_root_dir = '/data/CAM_IO/robot/OOB_images_temp'
+
+    video_root_dir = '/data/ROBOT/Video'
+    anno_root_dir = '/data/OOB'
+    save_root_dir = '/data/ROBOT/Img'
+
     capture_step = 30 # 1sec
     gen_image_dataset_for_robot(video_root_dir, anno_root_dir, save_root_dir, capture_step)
