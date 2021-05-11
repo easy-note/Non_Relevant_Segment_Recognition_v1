@@ -18,6 +18,8 @@ import time
 
 import json
 
+from torchsummary import summary
+
 def train():
     parser = argparse.ArgumentParser()
     ## train file and log file are saving in project_name
@@ -38,7 +40,7 @@ def train():
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
-                        default='/data/CAM_IO/robot/images', help='Data path :)')
+                        default='/data/ROBOT/Img', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -54,15 +56,15 @@ def train():
 
     ## trian dataset video
     parser.add_argument('--train_videos', type=str, nargs='*',
-                        choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
-                                'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                                'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='train video')
+                        choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'], help='train video')
 
     ## val dataset video
     parser.add_argument('--val_videos', type=str, nargs='*',
-                        choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
-                                'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                                'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='val video')
+                        choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'], help='val video')
 
     ## random seed
     parser.add_argument('--random_seed', type=int, help='dataset ranbom seed')
@@ -121,20 +123,8 @@ def train():
     # save args log
     log_txt='\n\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n\n'
     log_txt+=json.dumps(args.__dict__, indent=2)
-
-    # start time stamp
-    startTime = time.time()
-    s_tm = time.localtime(startTime)
-    
-    log_txt+='\n\n=============== \t\t TRAIN TIME \t\t ============= \n\n'
-    log_txt+='STARTED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', s_tm)
-    
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
-
-    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
     
-    
-
     # 사용할 GPU 디바이스 번호들
     os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
 
@@ -150,27 +140,47 @@ def train():
     # model load
     model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
 
+    # model param save
+    print('\n\n==== MODEL SUMMARY ====\n\n')
+    summary(model.cuda(), (3,224,224))
+
+    log_txt = '\n\n==== MODEL SUMMARY ====\n\n'
+    log_txt+= 'MODEL PARAMS : \t {}'.format(sum([param.nelement() for param in model.parameters()]))
+
+    save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
+
+    # start time stamp
+    startTime = time.time()
+    s_tm = time.localtime(startTime)
+    
+    log_txt='\n\n=============== \t\t TRAIN TIME \t\t ============= \n\n'
+    log_txt+='STARTED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', s_tm)
+    
+    save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
+
+    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
     # fold 별 train, validation video 설정
     train_videos = []
     val_videos = []
     
     if args.fold == '1' :
-        train_videos = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
-                    'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
-                    'R204', 'R205', 'R206', 'R207', 'R209', 'R210', 'R301', 'R302', 'R304', 'R305', 'R313']
-        val_videos = ['R017', 'R022', 'R116', 'R208', 'R303']
+        train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_18', 
+                'R_19', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_209', 'R_210', 'R_301', 'R_302', 'R_304', 'R_305', 'R_313']
+        val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
 
     elif args.fold == '2' :
-        train_videos = ['R001', 'R002', 'R005', 'R007', 'R010', 'R014', 'R015', 'R017', 
-                    'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                    'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313']
-        val_videos = ['R003', 'R004', 'R006', 'R013', 'R018']
+        train_videos = ['R_1', 'R_2', 'R_5', 'R_7', 'R_10', 'R_14', 'R_15', 'R_17', 
+                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
+        val_videos = ['R_3', 'R_4', 'R_6', 'R_13', 'R_18']
     
     elif args.fold == '3' :
-        train_videos = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R013', 'R014', 'R015', 'R017', 'R018', 
-                    'R022', 'R048', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                    'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313']
-        val_videos = ['R007', 'R010', 'R019', 'R056', 'R074']
+        train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                'R_22', 'R_48', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
+        val_videos = ['R_7', 'R_10', 'R_19', 'R_56', 'R_74']
 
     elif args.fold == 'free' : # from argument
         train_videos = args.train_videos
@@ -191,6 +201,8 @@ def train():
                                             shuffle=False, num_workers=8)
     vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
                                             shuffle=False, num_workers=8)
+
+    
 
     
     

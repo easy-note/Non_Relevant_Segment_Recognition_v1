@@ -5,6 +5,8 @@ from pytorch_lightning.metrics.utils import to_categorical
 from pytorch_lightning.metrics import Accuracy, Precision, Recall, ConfusionMatrix, F1
 from pycm import *
 
+from torchsummary import summary
+
 ### hparamds
 '''
 {
@@ -104,7 +106,7 @@ class CAMIO(pl.LightningModule):
 
         self.preds = []
         self.gts = []
-
+    
     def forward(self, x):
         return self.model(x)
 
@@ -166,12 +168,16 @@ class CAMIO(pl.LightningModule):
         ))
 
         # calc OOB metric 
-        TP, TN, FP, FN, OOB_metric = self.calc_OOB_false_metric()
+        TP, TN, FP, FN, OOB_metric, Over_estimation, Under_estimation, Correspondence_estimation, UNCorrespondence_estimation = self.calc_OOB_metric()
         self.log("val_TP", TP, on_epoch=True, prog_bar=True)
         self.log("val_TN", TN, on_epoch=True, prog_bar=True)
         self.log("val_FP", FP, on_epoch=True, prog_bar=True)
         self.log("val_FN", FN, on_epoch=True, prog_bar=True)
-        self.log("OOB_false_metric", OOB_metric, on_epoch=True, prog_bar=True)
+        self.log("OOB_metric", OOB_metric, on_epoch=True, prog_bar=True)
+        self.log("Over_estimation", Over_estimation, on_epoch=True, prog_bar=True)
+        self.log("Under_estimation", Under_estimation, on_epoch=True, prog_bar=True)
+        self.log("Correspondence", Correspondence_estimation, on_epoch=True, prog_bar=True)
+        self.log("UNCorrespondence", UNCorrespondence_estimation, on_epoch=True, prog_bar=True)
 
         # print info, and initializae self.gts, preds
         self.print_pycm()
@@ -280,9 +286,9 @@ class CAMIO(pl.LightningModule):
         self.gts = []
         self.preds = []
 
-    def calc_OOB_false_metric(self) :
+    def calc_OOB_metric(self) :
         IB_CLASS, OOB_CLASS = (0,1)
-        OOB_false_metric = -1 
+        OOB_metric = -1 
         
         cm = ConfusionMatrix(self.gts, self.preds)
         
@@ -292,16 +298,24 @@ class CAMIO(pl.LightningModule):
         FN = cm.FN[OOB_CLASS]
 
         try : # zero division except       
-            OOB_false_metric = FP / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB
+            OOB_metric = (TP-FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB
+            Over_estimation = FP / (FN + TP + FP)
+            Under_estimation = FN / (FN + TP + FP)
+            Correspondence_estimation = TP / (FN + TP + FP)
+            UNCorrespondence_estimation = (FP + FN) / (FN + TP + FP)
         except : 
-            OOB_false_metric = -1
+            OOB_metric = -1
+            Over_estimation = -1
+            Under_estimation = -1
+            Correspondence_estimation = -1
+            UNCorrespondence_estimation = -1
         
         print('\n')
-        print('===> \tOOB FALSE METRIC \t <===')
-        print(OOB_false_metric)
+        print('===> \tOOB METRIC \t <===')
+        print(OOB_metric)
         print('\n')
 
-        return (TP, TN, FP, FN, OOB_false_metric)
+        return (TP, TN, FP, FN, OOB_metric, Over_estimation, Under_estimation, Correspondence_estimation, UNCorrespondence_estimation)
 
 
         
