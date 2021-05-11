@@ -41,7 +41,6 @@ def make_robot_csv(data_dir, save_dir) :
     
     IB_dir_name, OOB_dir_name = ['InBody', 'OutBody']
 
-    sub_dir_name = ['train', 'val']
     class_dir_name = ['InBody', 'OutBody']
 
     print(data_dir)
@@ -51,24 +50,23 @@ def make_robot_csv(data_dir, save_dir) :
     class_list = []
 
     # calc path, class
-    for sub_path in sub_dir_name : 
-        for class_path in class_dir_name :
-            print('processing... ', os.path.join(data_dir, sub_path, class_path))
+    for class_path in class_dir_name :
+        print('processing... ', os.path.join(data_dir, class_path))
 
-            # init
-            temp_path = []
-            temp_class = []
+        # init
+        temp_path = []
+        temp_class = []
 
-            temp_path = glob.glob(os.path.join(data_dir, sub_path, class_path, '*.jpg'))
+        temp_path = glob.glob(os.path.join(data_dir, class_path, '*.jpg'))
 
-            if class_path == IB_dir_name :
-                temp_class = [IB_CLASS]*len(temp_path)
+        if class_path == IB_dir_name :
+            temp_class = [IB_CLASS]*len(temp_path)
 
-            if class_path == OOB_dir_name :
-                temp_class = [OOB_CLASS]*len(temp_path)
+        if class_path == OOB_dir_name :
+            temp_class = [OOB_CLASS]*len(temp_path)
 
-            img_path_list += temp_path
-            class_list += temp_class
+        img_path_list += temp_path
+        class_list += temp_class
 
     # save 
     save_df = df({
@@ -94,13 +92,16 @@ class CAMIO_Dataset(Dataset):
         print('\n\n')
         print('==> \tPATIENT')
         print('|'.join(patient_name))
+        patient_name_for_parser = [patient + '_' for patient in patient_name]
+        print('|'.join(patient_name_for_parser))
+        
         print('==> \tREAD_CSV')
         print(read_assets_df)
         print('\n\n')
 
 
         # select patient video
-        self.assets_df = read_assets_df[read_assets_df['img_path'].str.contains('|'.join(patient_name))]
+        self.assets_df = read_assets_df[read_assets_df['img_path'].str.contains('|'.join(patient_name_for_parser))]
 
         # seperate df by class
         self.ib_df = self.assets_df[self.assets_df['class_idx']==IB_CLASS]
