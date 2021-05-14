@@ -62,7 +62,7 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
             all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
         all_anno_path = glob.glob(anno_root_path + '/*.csv') # all annotation file list
     elif mode == 'LAPA' :
-        fps = 30
+        fps = 60
         video_ext_list = ['mp4', 'MP4', 'mpg']
         for ext in video_ext_list :
             all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
@@ -141,6 +141,12 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
             # it will be append to temp_anno_list
             target_idx_list = []
 
+            # open video cap, only check for frame count
+            video = cv2.VideoCapture(target_video_dir)
+            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+            video_fps = video.get(cv2.CAP_PROP_FPS)
+            video.release()
+
             # only target_video_dir 
             if target_anno_dir != '' :
 
@@ -159,31 +165,40 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
                     print(target_video_dir)
                     print(target_anno_dir)
                     print(anno_df)
+
                 
                 elif mode=='LAPA' : # json
                     with open(target_anno_dir) as json_file:
                         json_data = json.load(json_file)
 
-                    # open video cap, only check for frame count
-                    video = cv2.VideoCapture(target_video_dir)
-                    video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-                    video_fps = video.get(cv2.CAP_PROP_FPS)
-                    video.release()
-
                     # annotation frame
                     for anno_data in json_data['annotations'] :
-                        t_start = anno_data['start']
-                        t_end = anno_data['end']
+                        f_start = anno_data['start']
+                        f_end = anno_data['end']
                         
                         # truncate
-                        target_idx_list.append([int(math.floor(t_start)), int(math.floor(t_end))]) # temp_idx_list = [[start, end], [start, end]..]
+                        target_idx_list.append([f_start, f_end]) # temp_idx_list = [[start, end], [start, end]..]
 
                     print('-----'*3)
                     print(target_video_dir)
                     print(target_anno_dir)
                     print('ANNO \t FPS {} | TOTAL {}'.format(json_data['frameRate'], json_data['totalFrame']))
                     print('VIDEO \t FPS {} | TOTAL {}'.format(video_fps, video_len))
+                    log_txt='VIDEO | {}\t\tANNO | {}\n'.format(os.path.splitext(os.path.basename(target_video_dir))[0], os.path.splitext(os.path.basename(target_anno_dir))[0])
+                    log_txt+='ANNO \t FPS {} | TOTAL {}\n'.format(json_data['frameRate'], json_data['totalFrame'])
+                    log_txt+='VIDEO \t FPS {} | TOTAL {}\n'.format(video_fps, video_len)
+                    save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
+
+                    if(json_data['totalFrame'] != video_len) :
+                        print('NOT PAIR anno : {} | video : {}'.format(json_data['totalFrame'], video_len))
+                        log_txt='NOT PAIR [TotalFrame]\t video : {} | anno : {} | video : {}\n'.format(os.path.splitext(os.path.basename(target_video_dir))[0], json_data['totalFrame'], video_len)
+                        save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
+
                     print(json_data['annotations'])
+                    
+                    save_log('\n----------------------\n', os.path.join(save_root_dir, 'log.txt')) # save log
+
+                    
                     
             else :
                 print('-----'*3)
@@ -204,6 +219,59 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
     
     return info_dict
 
+def check_anno_sequence(anno_info:list):
+
+    if len(anno_info) == 1 :
+        p_start, p_end = anno_info[0][0], anno_info[0][1]
+        is_block_seq_ok = False
+
+        if p_start < p_end : 
+            is_block_seq_ok = True
+
+        if not(is_block_seq_ok) :
+            return False
+
+
+    elif len(anno_info) >  1 :
+        p_start, p_end = anno_info[0][0], anno_info[0][1]
+        for start, end in anno_info[1:] :
+            is_block_seq_ok = False
+            is_total_seq_ok = False
+
+            if start < end : 
+                is_block_seq_ok = True
+
+            if p_end < start : 
+                is_total_seq_ok = True 
+
+            if not(is_block_seq_ok) or not(is_total_seq_ok) :
+                return False
+
+            p_start, p_end = start, end
+
+    return True
+
+def check_anno_over_frame(anno_info:list, video_len):
+    has_not_over_frame = False
+    
+    last_start, last_end = anno_info[-1]
+    
+    if last_end < video_len : 
+        has_not_over_frame = True
+    
+    print('ANNO LAST FRAME END : {} | VIDEO_LEN : {}'.format(last_end, video_len))
+
+    return has_not_over_frame
+
+def check_anno_float(anno_info:list):
+    is_not_float = False 
+    
+    for start, end in anno_info : 
+        if (int(start) == start) and (int(end) == end) :
+            is_not_float = True
+    
+    return is_not_float
+
 
 def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capture_step, mode):
     # start time stamp
@@ -223,12 +291,16 @@ def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capt
     try :
         if not os.path.exists(oob_save_dir) :
             os.makedirs(oob_save_dir)
+            os.makedirs(os.path.join(oob_save_dir, 'start'))
+            os.makedirs(os.path.join(oob_save_dir, 'end'))
     except OSError :
         print('ERROR : Creating Directory, ' + oob_save_dir)
 
     try :
         if not os.path.exists(ib_save_dir) :
             os.makedirs(ib_save_dir)
+            os.makedirs(os.path.join(ib_save_dir, 'start'))
+            os.makedirs(os.path.join(ib_save_dir, 'end'))
     except OSError :
         print('ERROR : Creating Directory, ' + ib_save_dir)
 
@@ -256,8 +328,10 @@ def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capt
     ### mode = ['ROBOT', 'LAPA']
     ### video_set = robot_video_set, lapa_video_set
     if mode=='ROBOT' : 
+        fps=30
         info_dict = gettering_information_for_oob(video_root_dir, anno_root_dir, robot_video_set, mode='ROBOT')
     elif mode=='LAPA' :
+        fps=60
         info_dict = gettering_information_for_oob(video_root_dir, anno_root_dir, lapa_video_set, mode='LAPA')
     else :
         assert False, 'ONLY SUPPORT MODE [ROBOT, LAPA] | Input mode : {}'.format(mode) 
@@ -270,10 +344,15 @@ def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capt
     NON_READ_CNT = 0
     NON_WRITE_CNT = 0
 
+    ### temp###
+    total_margin_cnt = 0
+    total_abnormal_margin_cnt = 0 
+
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 1): 
         hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
         videoset_name = '{}_{}'.format(op_method, patient_idx)
+        
 
         print('COUNT OF VIDEO SET | {} / {} \t\t ======>  VIDEO SET | {}'.format(i, total_videoset_cnt, videoset_name))
         print('NUMBER OF VIDEO : {} | NUMBER OF ANNOTATION INFO : {}'.format(len(video_path_list), len(anno_info_list)))
@@ -281,7 +360,7 @@ def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capt
         print('\n')
 
         for video_path, anno_info in zip(video_path_list, anno_info_list) :
-
+            
             video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
             print(video_name)
 
@@ -294,18 +373,23 @@ def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capt
             print('\tAnnotation Info : {}'.format(anno_info))
 
             ### check idx -> time
-            for start, end in anno_info :
-                print([idx_to_time(start, 30), idx_to_time(end, 30)])
-            
+            if anno_info : # not empty list
+                for start, end in anno_info :
+                    print([idx_to_time(start, fps), idx_to_time(end, fps)])
+            else : # empty
+                print(anno_info)
+                print('=====> NO EVENT')
+
             print('')
+
 
             ####  make truth list ####
             IB_CLASS, OOB_CLASS = [0, 1]
             truth_list = np.zeros(video_len, dtype='uint8') if IB_CLASS == 0 else np.ones(video_len, dtype='uint8')
-            for start, end in anno_info :
-                truth_list[start:end+1] = OOB_CLASS # OOB Section
 
-            truth_list = list(truth_list) # change to list
+            if anno_info : # only has event
+                for start, end in anno_info :
+                    truth_list[int(math.floor(start)):int(math.floor(end+1))] = OOB_CLASS # OOB Section # it's ok to out of range (numpy)
 
             truth_oob_count = truth_list.count(OOB_CLASS)
 
@@ -317,74 +401,110 @@ def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capt
             temp_OOB_cnt = 0
             temp_IB_cnt = 0
             print('\n\n \t *** START *** \n\n')
-            # captureing image and save 
-            for frame_idx, truth in enumerate(tqdm(truth_list, desc='Capturing... \t ==> {}'.format(video_name))) :
-                img = None
-                save_file_name = None
+            
+            if anno_info : # only has event
+                print(anno_info)
+                # checking anno_seq
+                if not(check_anno_sequence(anno_info)): 
+                    save_log('\n{}-{}\n'.format(video_name, 'Annotation Sequence ERROR'), os.path.join(save_root_dir, 'log.txt')) # save log
+                    print('\n{}-{}\n'.format(video_name, 'Annotation Sequence ERROR'))
                 
-                if frame_idx % capture_step != 0 :
-                    continue
+                # checking anno has overframe
+                if not(check_anno_over_frame(anno_info, video_len)) : 
+                    save_log('\n{}-{}\n'.format(video_name, 'Annotation Last Frame ERROR'), os.path.join(save_root_dir, 'log.txt')) # save log
+                    print('\n{}-{}\n'.format(video_name, 'Annotation Last Frame ERROR'))
+                
+                # checking anno float
+                if not(check_anno_float(anno_info)) : 
+                    save_log('\n{}-{}\n'.format(video_name, 'Annotation Float'), os.path.join(save_root_dir, 'log.txt')) # save log
+                    print('\n{}-{}\n'.format(video_name, 'Annotation Float Frame ERROR'))
 
-                is_set_ = video.set(1, frame_idx) # frame setting
-                is_read_, img = video.read() # read frame
-                
-                # set/ read sanity check
-                if not (is_set_ and is_read_) :
-                    print('video_path : ', video_path)
-                    print('video_name : ', video_name)
-                    print('frame : ', frame_idx)
-                    print('set : ', is_set_)
-                    print('read : ', is_read_)
+                continue
+
+                # checking annotation margin
+                for start_idx, end_idx in anno_info : 
+                    # target_idx_list.append([int(math.floor(t_start)), int(math.floor(t_end))]) # temp_idx_list = [[start, end], [start, end]..]
                     
-                    READ_LOG='video_path : {}\t video_name : {}\t frame : {}\t set : {}\t read : {}\n'.format(video_path, video_name, frame_idx, is_set_, is_read_)
-                    save_log(READ_LOG, os.path.join(save_root_dir, 'read_log.txt'))
+                    end_idx = end_idx-1 # last frame exception
+                    # refined 
+                    refined_start_idx = int(math.floor(start_idx))
+                    refined_end_idx = int(math.floor(end_idx))
                     
-                    NON_READ_CNT+=1
-                    continue
+                    print('video_name : {}\t\t video_len : {}\t\t start:{}\t\t end:{}\t\t'.format(video_name, video_len, start_idx, end_idx))
 
+                    if (start_idx != refined_start_idx) and (end_idx != refined_end_idx) :
+                        total_abnormal_margin_cnt += 1
 
-                # set dir / file name
-                if truth == OOB_CLASS : # is out of body?
-                    save_file_name = os.path.join(oob_save_dir, '{}_{:010d}.jpg'.format(video_name, frame_idx)) # OOB
-                elif truth == IB_CLASS : # is inbody ?
-                    save_file_name = os.path.join(ib_save_dir, '{}_{:010d}.jpg'.format(video_name, frame_idx)) # IB
+                    start_class = truth_list[refined_start_idx]
+                    end_class = truth_list[refined_end_idx]
+
+                    log_txt='video_name : {}\t\t video_len : {}\t\t start:{}\t refined_start:{}\t s_class:{}\t\t end:{}\t refined_end:{}\t e_class:{}\t\n'.format(video_name, video_len, start_idx, refined_start_idx, start_class, end_idx, refined_end_idx, end_class)
+                    print(log_txt)
+                    save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
+
+                    # start capture
+                    is_set_= None
+                    is_read_= None
+                    img = None
+                    print(video.set(cv2.CAP_PROP_FPS, float(30.0)))
+                    is_set_ = video.set(cv2.CAP_PROP_POS_FRAMES, video_len-1) # frame setting
+                    is_read_, img = video.read() # read frame
+
                 
-                is_write_ = cv2.imwrite(save_file_name, img) # save
+                    # set dir / file name // start_class
+                    if start_class == OOB_CLASS : # is out of body?
+                        save_file_name = os.path.join(oob_save_dir, 'start', '{}_{:010d}.jpg'.format(video_name, refined_start_idx)) # OOB
+                    elif start_class == IB_CLASS : # is inbody ?
+                        save_file_name = os.path.join(ib_save_dir,'start', '{}_{:010d}.jpg'.format(video_name, refined_start_idx)) # IB
 
-                # write sanity check
-                if not (is_write_) :
-                    print('video_path : ', video_path)
-                    print('video_name : ', video_name)
-                    print('frame : ', frame_idx)
-                    print('file_name : ', save_file_name)
-                    print('write :', is_write_)
+                    if not (is_set_ and is_read_) :
+                        READ_LOG='video_path : {}\t video_name : {}\t total_frame : {}\t frame : {}\t set : {}\t read : {} \t\t[start]\n'.format(video_path, video_name, video_len, video_len, is_set_, is_read_)
+                        save_log(READ_LOG, os.path.join(save_root_dir, 'read_log.txt'))
+                    else :
+                        is_write_ = cv2.imwrite(save_file_name, img) # save
+
+                    # end capture
+                    is_set_= None
+                    is_read_= None
+                    img = None
+                    is_set_ = video.set(cv2.CAP_PROP_POS_FRAMES, video_len) # frame setting
+                    is_read_, img = video.read() # read frame
+
+
+
+                    if start_class == OOB_CLASS : # is out of body?
+                        save_file_name = os.path.join(oob_save_dir, 'end', '{}_{:010d}.jpg'.format(video_name, refined_end_idx)) # OOB
+                    elif end_class == IB_CLASS : # is inbody ?
+                        save_file_name = os.path.join(ib_save_dir,'end', '{}_{:010d}.jpg'.format(video_name, refined_end_idx)) # IB
                     
-                    WRITE_LOG='video_path : {}\t video_name : {}\t frame : {}\t file_name : {}\t write : {}\n'.format(video_path, video_name, frame_idx, save_file_name, is_write_)
-                    save_log(WRITE_LOG, os.path.join(save_root_dir, 'write_log.txt'))
+                    if not (is_set_ and is_read_) :
+                        READ_LOG='video_path : {}\t video_name : {}\t total_frame : {}\t frame : {}\t set : {}\t read : {} \t\t[end]\n'.format(video_path, video_name, video_len, video_len, is_set_, is_read_)
+                        save_log(READ_LOG, os.path.join(save_root_dir, 'read_log.txt'))
+                    else :
+                        is_write_ = cv2.imwrite(save_file_name, img) # save
 
-                    NON_WRITE_CNT+=1
-                    continue
-                
-                # processed count
-                if truth == OOB_CLASS : # is out of body?
-                    temp_OOB_cnt += 1
-                elif truth == IB_CLASS : # is inbody ?
-                    temp_IB_cnt += 1
+                    total_margin_cnt+=1
     
 
             Processed_OOB_cnt+=temp_OOB_cnt
             Processed_IB_cnt+=temp_IB_cnt
             video.release()
 
-            print('Video processing done | OOB : {:08d}, IB : {:08d}'.format(temp_OOB_cnt, temp_IB_cnt))
-            log_txt='video_name : {}\t\tOOB:{}\t\tIB:{}\n'.format(video_name, temp_OOB_cnt, temp_IB_cnt)
-            save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
-            
+            # print('Video processing done | OOB : {:08d}, IB : {:08d}'.format(temp_OOB_cnt, temp_IB_cnt))
+            # log_txt='video_name : {}\t\tOOB:{}\t\tIB:{}\n'.format(video_name, temp_OOB_cnt, temp_IB_cnt)
+            # save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
+    exit(0)
             
     print('Total processing done | OOB : {:08d}, IB : {:08d}'.format(Processed_OOB_cnt, Processed_IB_cnt))
     log_txt='DONE.\t\t\t\tPROCESSED OOB:{}\t\tPROCESSED IB:{}\n\n'.format(Processed_OOB_cnt, Processed_IB_cnt)
     log_txt+='NON READ : {} \t\t\t\t NON WRITE : {} \n\n'.format(NON_READ_CNT, NON_WRITE_CNT)
     save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
+
+    ##### dummy
+    log_txt='TOTAL MARGIN CNT : {}\t ABNOTMAL MARGIN CNT : {}\t\n\n'.format(total_margin_cnt, total_abnormal_margin_cnt)
+    save_log(log_txt, os.path.join(save_root_dir, 'log.txt')) # save log
+    ### 
+
 
     # finish time stamp
     finishTime = time.time()
@@ -401,7 +521,7 @@ if __name__ == '__main__' :
 
     video_root_dir = '/data/LAPA/Video'
     anno_root_dir = '/data/OOB'
-    save_root_dir = '/data/LAPA/Img'
+    save_root_dir = '/data/LAPA/Img_Anno'
 
     capture_step = 60 # frame
     # mode = ['ROBOT', 'LAPA']
