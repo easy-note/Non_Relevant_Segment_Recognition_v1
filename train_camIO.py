@@ -130,12 +130,12 @@ def train():
 
     # images path (.csv dir)
     base_path = args.data_path
+    
+    # make img info csv path
+    # make_robot_csv(base_path, base_path)
 
     # bath size
     BATCH_SIZE = args.batch_size
-
-    # make img info csv path
-    # make_robot_csv(base_path, base_path)
 
     # model load
     model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
@@ -269,7 +269,7 @@ def train():
     checkpoint_filename = checkpoint_filename + '{epoch}-{val_loss:.4f}'
     checkpoint_callback = ModelCheckpoint(
             dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
-            save_top_k=1, save_last=True, verbose=True, monitor="OOB_false_metric", mode="min"
+            save_top_k=1, save_last=True, verbose=True, monitor="OOB_metric", mode="min"
     )
 
     # change last checkpoint name
