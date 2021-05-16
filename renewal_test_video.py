@@ -730,7 +730,7 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
             print('\tAnnotation Info : {}'.format(anno_info))
 
             ### check idx -> time
-            if not anno_info : # event 
+            if anno_info : # event 
                 for start, end in anno_info :
                     print([idx_to_time(start, fps), idx_to_time(end, fps)])
             else : # no evnet
@@ -745,7 +745,7 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
             IB_CLASS, OOB_CLASS = [0, 1]
             truth_list = np.zeros(video_len, dtype='uint8') if IB_CLASS == 0 else np.ones(video_len, dtype='uint8')
 
-            if not anno_info : # only has event
+            if anno_info : # only has event
                 for start, end in anno_info :
                     truth_list[start:end+1] = OOB_CLASS # OOB Section
 
