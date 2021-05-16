@@ -120,7 +120,15 @@ def present_text_for_section(ax, bar, pos_x, text):
 		posx = pos_x
 		posy = rect.get_y() + rect.get_height()*1.3
 		print(posx, posy)
-		ax.text(posx, posy, text, rotation=0, ha='left', va='top')
+		ax.text(posx, posy, text, rotation=0, ha='left', va='top', fontsize=8)
+
+def present_text_for_sub_section(ax, bar, pos_x, text):
+	for rect in bar:
+		posx = pos_x
+		posy = rect.get_y() + rect.get_height()*1.0
+		print(posx, posy)
+		print('------presesnt')
+		ax.text(posx, posy, text, rotation=0, ha='left', va='top', fontsize=8)
 
 # calc OOB_Metric
 # input|DataFrame = 'GT' 'model A' model B' ..
@@ -271,7 +279,7 @@ def main():
 	print(runlength_model)
 
 	#### 2. matplotlib의 figure 및 axis 설정
-	fig, ax = plt.subplots(2,1,figsize=(18,13)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
+	fig, ax = plt.subplots(2,1,figsize=(18,12)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
 	print(fig)
 	
 	##### initalize label for legned, this code should be write before writing barchart #####
@@ -332,7 +340,7 @@ def main():
 	total_len = len(total_info_df)
 	
 	# init_variable
-	WINDOW_SIZE = 5000
+	WINDOW_SIZE = 3000
 	INFERENCE_STEP = 5
 	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+1) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
 	slide_window_start_end_idx[-1][1] = total_len # last frame of last pickle
@@ -357,25 +365,32 @@ def main():
 
 			model_section_oob_metric_list.append(Evaluation_metric['OOB_metric']) # section oob metric
 		
+		# model save oob_metric 
+		section_oob_dict[model] = copy.deepcopy(model_section_oob_metric_list) # deep copy 
+
+		text_bar = ax[0].barh(i, 0, height=height) # dummy data
+
 		# oob_metric -> -1==>1변경 // TN 만 있을경우		
 		for k in range(len(model_section_oob_metric_list)) :
 			if model_section_oob_metric_list[k] == -1.0 :
 				model_section_oob_metric_list[k] = 1.0
-		
-		# model oob_metric 
-		section_oob_dict[model] = copy.deepcopy(model_section_oob_metric_list) # deep copy 
-		
-		# ranking // 가장 낮은 부분 3곳(MIN_NUM) 체크 및 표시
-		text_bar = ax[0].barh(i, 0, height=height) # dummy data
 
-		MIN_COUNT = 2
+				pos_x = frame_start_idx[k]
+				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n★')
+				
+		
+		# ranking // 가장 낮은 부분 3곳(MIN_NUM) 체크 및 표시 (-1 ==> 1변경 기준)
+		MIN_COUNT = 3
 		sort_index = np.argsort(np.array(model_section_oob_metric_list))
 
 		print(section_oob_dict[model])
 
-		for idx in sort_index[:MIN_COUNT] :
+		for rank, idx in enumerate(sort_index[:MIN_COUNT], 1) :
 			pos_x = frame_label.index(section_oob_dict['Frame_start_idx'][idx]) # x position
-			present_text_for_section(ax[0], text_bar, pos_x, '{:.3f}'.format(model_section_oob_metric_list[idx]))
+			present_text_for_section(ax[0], text_bar, pos_x, ' {} | {:.3f}'.format(rank, model_section_oob_metric_list[idx]))
+
+		# exception check
+		
 
 
 	# total section OOB Metric Results
@@ -390,7 +405,7 @@ def main():
 	oob_section_metric_plt(Total_Evaluation_per_section_df, yticks, ax[1])
 
 	#### 4. title 설정
-	fig.suptitle(args.title_name, fontsize=18)
+	fig.suptitle(args.title_name, fontsize=16)
 	ax[0].set_title(args.sub_title_name)
 
 	#### 6. x축 세부설정
@@ -422,7 +437,21 @@ def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax) :
 	x_value = Total_Evaluation_per_section_df['Frame_start_idx']
 
 	for model in model_list :
-		plt.plot(x_value, Total_Evaluation_per_section_df[model], marker='o')
+		# -1.0 일경우 1로 처리
+		ax.plot(x_value, [1.0 if val==-1.0 else val for val in Total_Evaluation_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
+
+		# exception mark (-1.0일 경우 1로 처리하여 ^ 표시)
+		'''
+		exception_index = Total_Evaluation_per_section_df[model]== -1.0
+		print(exception_index)
+		print(x_value[exception_index])
+		print(Total_Evaluation_per_section_df[model][exception_index])
+		markersize=15
+		
+		print([1.0]*len(x_value[exception_index]))
+		ax.scatter(x_value[exception_index], [1.2]*len(x_value[exception_index]), marker='^', s=15)
+		'''
+
 
 	# sup title 설정
 	ax.set_title('OOB Metric Per Section')
