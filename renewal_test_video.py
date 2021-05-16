@@ -52,7 +52,7 @@ def test_video() :
     parser.add_argument('--results_save_dir', type=str, help='inference results save path')
 
     parser.add_argument('--mode', type=str,
-                        default='robot', choices=['robot', 'lapa'], help='inference results save path')
+                        default='robot', choices=['ROBOT', 'LAPA'], help='inference results save path')
     
     ## trained model (you should put same model as trained model)
     parser.add_argument('--model', type=str,
@@ -127,7 +127,7 @@ def test_video() :
     
 
     # dirscirbe exception, inference setting for each mode
-    if args.mode == 'lapa' :        
+    if args.mode == 'LAPA' :        
         # test_video_for_lapa()
         exit(0) # not yet support
         pass
@@ -261,6 +261,153 @@ def save_log(log_txt, save_dir) :
     with open(save_dir, 'a') as f :
         f.write(log_txt)
 
+
+# Annotation Sanity Check
+def check_anno_sequence(anno_info:list): # annotation sequence에 이상없을 경우 = True, 이상 있을경우 = False
+
+    if len(anno_info) == 1 :
+        p_start, p_end = anno_info[0][0], anno_info[0][1]
+        is_block_seq_ok = False
+
+        if p_start < p_end : 
+            is_block_seq_ok = True
+
+        if not(is_block_seq_ok) :
+            return False
+
+
+    elif len(anno_info) >  1 :
+        p_start, p_end = anno_info[0][0], anno_info[0][1]
+        for start, end in anno_info[1:] :
+            is_block_seq_ok = False
+            is_total_seq_ok = False
+
+            if start < end : 
+                is_block_seq_ok = True
+
+            if p_end < start : 
+                is_total_seq_ok = True 
+
+            if not(is_block_seq_ok) or not(is_total_seq_ok) :
+                return False
+
+            p_start, p_end = start, end
+
+    return True
+
+# check over frame and modify last annotation info
+def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False  
+    has_not_over_frame = False
+    
+    last_start, last_end = anno_info[-1]
+    
+    if last_end < video_len : 
+        has_not_over_frame = True
+
+    # modify
+    if not(has_not_over_frame) :
+        anno_info[-1] = [last_start, video_len-1]
+        print('\t\t\t *** ANNO LAST FRAME END : {} | VIDEO_LEN : {}'.format(last_end, video_len))
+
+    return has_not_over_frame, anno_info
+
+def check_anno_int(anno_info:list): # anno int = True, anno Float = False
+    is_int = True
+    
+    for start, end in anno_info : 
+        if (not isinstance(start, int)) and (not isinstance(end, int)) :
+            is_int = False
+            break
+    
+    # modify
+    if not(is_int) :
+        for i, (start, end) in enumerate(anno_info) :
+            anno_info[i] = [int(math.floor(start)), int(math.floor(end))]
+            print('\t\t\t *** ANNO FLOAT FRAME : [{}, {}] | REFINED FRAME : {}'.format(start, end, anno_info[i]))
+
+    return is_int, anno_info
+
+
+# 불러온 annotation file 정보가 정확한지 체크 및 수정
+def sanity_check_info_dict(info_dict) :
+    # loop from total_videoset_cnt
+    for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
+        videoset_name = '{}_{}'.format(op_method, patient_idx)
+
+        for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
+            
+            video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
+            print('----- ANNOTATION CHECK => \t VIDEO\t {} \t-----'.format(video_name))
+            print(info_dict['anno'][i][j])
+            
+            
+            ##### video info and ####
+            # open video cap for parse frame
+            video = cv2.VideoCapture(video_path)
+            video_fps = video.get(cv2.CAP_PROP_FPS)
+            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+            video.release()
+            del video
+        
+            # open VideoReader
+            '''
+            with open(video_path, 'rb') as f :
+                # open VideoReader
+                video = VideoReader(f, ctx=cpu(0))
+            
+            # total frame
+            video_len = len(video) 
+
+            del video
+            '''
+
+            print('\tTarget video : {} | Total Frame : {} | Video FPS : {} '.format(video_name, video_len, video_fps))
+            print('\tAnnotation Info : {}'.format(anno_info))
+
+
+            ##### annotation sanity check #####
+            ### check idx -> time
+            if anno_info : # not empty list
+                # init 
+                over_ret = None
+                int_ret = None
+                val = None
+                
+                print('\t BEFORE ANNOTATION => {}\n'.format(anno_info))
+
+                # seq check
+                if not(check_anno_sequence(anno_info)) : 
+                    print('ANNTATION SEQ ERROR | video : {} | anno {}'.format(video_path, anno_info))
+                    exit(1)
+                
+                # last frmae annotation check
+                over_ret, val = check_anno_over_frame(anno_info, video_len) # over frame이 아닐경우 True, over frame 일 경우 False
+                anno_info = anno_info if over_ret else val # update anno_info | over frame일 경우 refined 된 val 값으로 update
+                val = None # clean
+                
+                # check anntation frame is int
+                int_ret, val = check_anno_int(anno_info) # int 일 경우 True, int가 아닐경우 False
+                anno_info = anno_info if int_ret else val # update anno_info | frame이 int가 아닐경우 모두 int 로 refined 된 값으로 update
+
+                print('\n\t AFTER ANNOTATION => {}'.format(anno_info))
+
+                ##### update redefined annotation info #### 
+                info_dict['anno'][i][j] = anno_info
+                print(info_dict['anno'][i][j])
+
+            else : # empty
+                print(anno_info)
+                print('=====> NO EVENT')
+            
+            print('')
+
+    return info_dict # redefined info_dict
+
+
+
+
+
 ### union def ### 
 
 
@@ -305,7 +452,22 @@ def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_
     ### ### ###
 
     # gettering information step
-    info_dict = gettering_information_for_robot(data_dir, anno_dir, infernece_assets_dir, valset, fps, video_ext)
+    info_dict = gettering_information_for_oob(data_dir, anno_dir, infernece_assets_dir, valset, mode='ROBOT')
+
+    print('\n\n\t ==== RESULTS OF GETTERING INFORMATION==== ')
+    print('\tSUCESS GETTERING VIDEO SET: ', len(info_dict['video']))
+    print('\tSUCESS GETTERING ANNOTATION SET: ', len(info_dict['anno']))
+    print('\tSUCESS GETTERING INFERENCE SET: ', len(info_dict['inference_assets']))
+    print('\t=== === === ===\n\n')
+
+    print('\n\n\t ==== RESULTS OF GETTERING INFORMATION==== ')
+    print(info_dict['video'])
+    print(info_dict['anno'])
+    print(info_dict['inference_assets'])
+    print('\t=== === === ===\n\n')
+
+    #### sanity check and modify info_dict ###
+    info_dict = sanity_check_info_dict(info_dict)
 
     print('\n\n\t ==== RESULTS OF GETTERING INFORMATION==== ')
     print('\tSUCESS GETTERING VIDEO SET: ', len(info_dict['video']))
@@ -323,11 +485,10 @@ def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_
     inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=fps)
 
 
-def gettering_information_for_robot (video_root_path, anno_root_path, inference_assets_root_path, video_set, fps=30, video_ext='.mp4') : # paring video from annotation info
+def gettering_information_for_oob(video_root_path, anno_root_path, inference_assets_root_path, video_set, mode) : # paring video from annotation info
 
     
     print('\n\n\n\t\t\t ### STARTING DEF [gettering_information_for_robot] ### \n\n')
-    
 
     info_dict = {
         'video': [],
@@ -335,10 +496,34 @@ def gettering_information_for_robot (video_root_path, anno_root_path, inference_
         'inference_assets' : []
     }
 
-    all_video_path = glob.glob(video_root_path +'/*{}'.format(video_ext)) # all video file list
-    all_anno_path = glob.glob(anno_root_path + '/*.csv') # all annotation file list
+    all_video_path = []
+    all_anno_path = []
 
+    if mode == 'ROBOT' : 
+        fps = 30
+        
+        video_ext_list = ['mp4']
+        for ext in video_ext_list :
+            all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
+        
+        all_anno_path = glob.glob(anno_root_path + '/*.csv') # all annotation file list
     
+    elif mode == 'LAPA' :
+        fps = 60
+        video_ext_list = ['mp4', 'MP4', 'mpg']
+        
+        for ext in video_ext_list :
+            all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
+        
+        all_anno_path = glob.glob(anno_root_path + '/*.json') # all annotation file list
+
+        ##### except video file ######
+        all_video_path.remove(os.path.join(video_root_path, '01_G_01_L_423_xx0_01.MP4'))
+        all_anno_path.remove(os.path.join(anno_root_path, '01_G_01_L_423_xx0_01_OOB_16.json'))
+
+    else :
+        assert False, 'ONLY SUPPORT MODE [ROBOT, LAPA] | Input mode : {}'.format(mode)
+
     # dpath = os.path.join(video_root_path) # video_root path
 
     print('NUMBER OF TOTAL VIDEO FILE : ', len(all_video_path))
@@ -367,7 +552,7 @@ def gettering_information_for_robot (video_root_path, anno_root_path, inference_
         # video & annotation pairing
         for i in range(len(video_path_df)) : 
             video_file_name = os.path.splitext(os.path.basename(video_path_df['video_path'].iloc[i]))[0] # video_name with out extension
-            anno_path_series = all_anno_path_df[all_anno_path_df['anno_path'].str.contains(video_file_name+'_NIR')]['anno_path'] # find annotation file based in video_file_name
+            anno_path_series = all_anno_path_df[all_anno_path_df['anno_path'].str.contains(video_file_name+'_OOB')]['anno_path'] # find annotation file based in video_file_name
             video_path_series = video_path_df.iloc[i]
 
             info = {
@@ -545,10 +730,10 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
             print('\tAnnotation Info : {}'.format(anno_info))
 
             ### check idx -> time
-            if anno_info != '' :
+            if not anno_info : # event 
                 for start, end in anno_info :
                     print([idx_to_time(start, fps), idx_to_time(end, fps)])
-            else :
+            else : # no evnet
                 print(anno_info)
                 print('=====> NO EVENT')
                 pass
@@ -560,7 +745,7 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
             IB_CLASS, OOB_CLASS = [0, 1]
             truth_list = np.zeros(video_len, dtype='uint8') if IB_CLASS == 0 else np.ones(video_len, dtype='uint8')
 
-            if anno_info != '' : # only has event
+            if not anno_info : # only has event
                 for start, end in anno_info :
                     truth_list[start:end+1] = OOB_CLASS # OOB Section
 
