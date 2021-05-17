@@ -26,10 +26,12 @@ model_array=("wide_resnet50_2" \
             "mobilenet_v3_small" \
             "squeezenet1_0")
 
+# model_array=("squeezenet1_0")
+
 for (( i = 0 ; i < ${#model_array[@]} ; i++ ))
 do
     python train_camIO.py \
-    --project_name "robot-oob-0423-fold_1" \
+    --project_name "robot-oob-temp" \
     --max_epoch 50 \
     --log_path "/OOB_RECOG/logs" \
     --batch_size 32 \
