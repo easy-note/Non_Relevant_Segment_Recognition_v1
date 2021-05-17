@@ -14,6 +14,9 @@ from tqdm import tqdm
 import json
 import math
 
+from decord import VideoReader
+from decord import cpu, gpu
+
 # cal vedio frame
 def time_to_idx(time, fps):
     t_segment = time.split(':')
@@ -41,6 +44,71 @@ def save_log(log_txt, save_dir) :
         with open(save_dir, 'a') as f :
             f.write(log_txt)
 
+# Annotation Sanity Check
+def check_anno_sequence(anno_info:list): # annotation sequence에 이상없을 경우 = True, 이상 있을경우 = False
+
+    if len(anno_info) == 1 :
+        p_start, p_end = anno_info[0][0], anno_info[0][1]
+        is_block_seq_ok = False
+
+        if p_start < p_end : 
+            is_block_seq_ok = True
+
+        if not(is_block_seq_ok) :
+            return False
+
+
+    elif len(anno_info) >  1 :
+        p_start, p_end = anno_info[0][0], anno_info[0][1]
+        for start, end in anno_info[1:] :
+            is_block_seq_ok = False
+            is_total_seq_ok = False
+
+            if start < end : 
+                is_block_seq_ok = True
+
+            if p_end < start : 
+                is_total_seq_ok = True 
+
+            if not(is_block_seq_ok) or not(is_total_seq_ok) :
+                return False
+
+            p_start, p_end = start, end
+
+    return True
+
+# check over frame and modify last annotation info
+def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False  
+    has_not_over_frame = False
+    
+    last_start, last_end = anno_info[-1]
+    
+    if last_end < video_len : 
+        has_not_over_frame = True
+
+    # modify
+    if not(has_not_over_frame) :
+        anno_info[-1] = [last_start, video_len-1]
+        print('\t\t\t *** ANNO LAST FRAME END : {} | VIDEO_LEN : {}'.format(last_end, video_len))
+
+    return has_not_over_frame, anno_info
+
+def check_anno_int(anno_info:list): # anno int = True, anno Float = False
+    is_int = True
+    
+    for start, end in anno_info : 
+        if (not isinstance(start, int)) and (not isinstance(end, int)) :
+            is_int = False
+            break
+    
+    # modify
+    if not(is_int) :
+        for i, (start, end) in enumerate(anno_info) :
+            anno_info[i] = [int(math.floor(start)), int(math.floor(end))]
+            print('\t\t\t *** ANNO FLOAT FRAME : [{}, {}] | REFINED FRAME : {}'.format(start, end, anno_info[i]))
+
+    return is_int, anno_info
+
 
 # data paring with csv
 def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mode) : # paring video from annotation info
@@ -62,11 +130,15 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
             all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
         all_anno_path = glob.glob(anno_root_path + '/*.csv') # all annotation file list
     elif mode == 'LAPA' :
-        fps = 30
+        fps = 60
         video_ext_list = ['mp4', 'MP4', 'mpg']
         for ext in video_ext_list :
             all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
         all_anno_path = glob.glob(anno_root_path + '/*.json') # all annotation file list
+
+        ##### except video file ######
+        all_video_path.remove(os.path.join(video_root_path, '01_G_01_L_423_xx0_01.MP4'))
+        all_anno_path.remove(os.path.join(anno_root_path, '01_G_01_L_423_xx0_01_OOB_16.json'))
 
         # print(set(os.path.splitext(os.path.basename(path))[1] for path in glob.glob(video_root_path + '/*'))) # all file ext check
         # ext_video = [path for path in glob.glob(video_root_path + '/*') if os.path.splitext(os.path.basename(path))[1]!='.MP4'] # video ext file
@@ -150,8 +222,8 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
 
                     # time -> frame idx
                     for i in range(len(anno_df)) :
-                        t_start = anno_df.iloc[i]['start']
-                        t_end = anno_df.iloc[i]['end']
+                        t_start = anno_df.iloc[i]['start'] # time
+                        t_end = anno_df.iloc[i]['end'] # time
                         
                         target_idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)]) # temp_idx_list = [[start, end], [start, end]..]
                     
@@ -172,11 +244,11 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
 
                     # annotation frame
                     for anno_data in json_data['annotations'] :
-                        t_start = anno_data['start']
-                        t_end = anno_data['end']
+                        t_start = anno_data['start'] # frame
+                        t_end = anno_data['end'] # frame
                         
                         # truncate
-                        target_idx_list.append([int(math.floor(t_start)), int(math.floor(t_end))]) # temp_idx_list = [[start, end], [start, end]..]
+                        target_idx_list.append([t_start, t_end]) # temp_idx_list = [[start, end], [start, end]..]
 
                     print('-----'*3)
                     print(target_video_dir)
@@ -203,6 +275,85 @@ def gettering_information_for_oob(video_root_path, anno_root_path, video_set, mo
         print(info_dict)
     
     return info_dict
+
+# 불러온 annotation file 정보가 정확한지 체크 및 수정
+def sanity_check_info_dict(info_dict) :
+    # loop from total_videoset_cnt
+    for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
+        videoset_name = '{}_{}'.format(op_method, patient_idx)
+
+        for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
+            
+            video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
+            print('----- ANNOTATION CHECK => \t VIDEO\t {} \t-----'.format(video_name))
+            print(info_dict['anno'][i][j])
+            
+            
+            ##### video info and ####
+            # open video cap for parse frame
+            video = cv2.VideoCapture(video_path)
+            video_fps = video.get(cv2.CAP_PROP_FPS)
+            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+            video.release()
+            del video
+        
+            # open VideoReader
+            '''
+            with open(video_path, 'rb') as f :
+                # open VideoReader
+                video = VideoReader(f, ctx=cpu(0))
+            
+            # total frame
+            video_len = len(video) 
+
+            del video
+            '''
+
+            print('\tTarget video : {} | Total Frame : {} | Video FPS : {} '.format(video_name, video_len, video_fps))
+            print('\tAnnotation Info : {}'.format(anno_info))
+
+
+            ##### annotation sanity check #####
+            ### check idx -> time
+            if anno_info : # not empty list
+                # init 
+                over_ret = None
+                int_ret = None
+                val = None
+                
+                print('\t BEFORE ANNOTATION => {}\n'.format(anno_info))
+
+                # seq check
+                if not(check_anno_sequence(anno_info)) : 
+                    print('ANNTATION SEQ ERROR | video : {} | anno {}'.format(video_path, anno_info))
+                    exit(1)
+                
+                # last frmae annotation check
+                over_ret, val = check_anno_over_frame(anno_info, video_len) # over frame이 아닐경우 True, over frame 일 경우 False
+                anno_info = anno_info if over_ret else val # update anno_info | over frame일 경우 refined 된 val 값으로 update
+                val = None # clean
+                
+                # check anntation frame is int
+                int_ret, val = check_anno_int(anno_info) # int 일 경우 True, int가 아닐경우 False
+                anno_info = anno_info if int_ret else val # update anno_info | frame이 int가 아닐경우 모두 int 로 refined 된 값으로 update
+
+                print('\n\t AFTER ANNOTATION => {}'.format(anno_info))
+
+                ##### update redefined annotation info #### 
+                info_dict['anno'][i][j] = anno_info
+                print(info_dict['anno'][i][j])
+
+            else : # empty
+                print(anno_info)
+                print('=====> NO EVENT')
+            
+            print('')
+
+    return info_dict # redefined info_dict
+
+        
+
 
 
 def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capture_step, mode):
@@ -262,6 +413,11 @@ def gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capt
     else :
         assert False, 'ONLY SUPPORT MODE [ROBOT, LAPA] | Input mode : {}'.format(mode) 
     
+    ### check info_dict and redifined
+    info_dict = sanity_check_info_dict(info_dict)
+
+    exit(0)
+
     total_videoset_cnt = len(info_dict['video']) # total number of video set
     print('{} VIDEO SET WILL BE CAPUERTRED ... '.format(total_videoset_cnt))
 
@@ -399,10 +555,11 @@ if __name__ == '__main__' :
     # anno_root_dir = '/data/CAM_IO/robot/OOB'
     # save_root_dir = '/data/CAM_IO/robot/OOB_images_temp'
 
+
     video_root_dir = '/data/LAPA/Video'
     anno_root_dir = '/data/OOB'
-    save_root_dir = '/data/LAPA/Img'
+    save_root_dir = '/data/LAPA/Img_Anno'
 
-    capture_step = 60 # frame
+    capture_step = 30 # frame
     # mode = ['ROBOT', 'LAPA']
     gen_image_dataset_for_oob(video_root_dir, anno_root_dir, save_root_dir, capture_step, mode='LAPA')
