@@ -13,6 +13,8 @@ import math
 import copy
 
 
+EXCEPTION_NUM = -100 # full TN
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--title_name', type=str, help='plot title, and save file name')
@@ -108,19 +110,19 @@ def apply_filter(assets, filter_type:str, kernel_size) : # input = numpy, kernel
 
 
 # for text on bar
-def present_text(ax, bar, text):
+def present_text(ax, bar, text, color='black'):
 	for rect in bar:
 		posx = rect.get_x()
 		posy = rect.get_y() - rect.get_height()*0.3
 		print(posx, posy)
-		ax.text(posx, posy, text, rotation=0, ha='left', va='bottom')
+		ax.text(posx, posy, text, color=color, rotation=0, ha='left', va='bottom')
 
-def present_text_for_section(ax, bar, pos_x, text):
+def present_text_for_section(ax, bar, pos_x, text, color='black'):
 	for rect in bar:
 		posx = pos_x
 		posy = rect.get_y() + rect.get_height()*1.3
 		print(posx, posy)
-		ax.text(posx, posy, text, rotation=0, ha='left', va='top', fontsize=8)
+		ax.text(posx, posy, text, rotation=0, color=color, ha='left', va='top', fontsize=8)
 
 def present_text_for_sub_section(ax, bar, pos_x, text):
 	for rect in bar:
@@ -135,39 +137,50 @@ def present_text_for_sub_section(ax, bar, pos_x, text):
 # calc FN, FP, TP, TN
 # out|{} = FN, FP, TP, TN frame
 def return_metric_frame(result_df, GT_col_name, predict_col_name) :
-    IB_CLASS, OOB_CLASS = 0,1
+	IB_CLASS, OOB_CLASS = 0,1
 
-    print(result_df)
+	print(result_df)
     
     # FN    
-    FN_df = result_df[(result_df[GT_col_name]==OOB_CLASS) & (result_df[predict_col_name]==IB_CLASS)]
+	FN_df = result_df[(result_df[GT_col_name]==OOB_CLASS) & (result_df[predict_col_name]==IB_CLASS)]
     
     # FP
-    FP_df = result_df[(result_df[GT_col_name]==IB_CLASS) & (result_df[predict_col_name]==OOB_CLASS)]
+	FP_df = result_df[(result_df[GT_col_name]==IB_CLASS) & (result_df[predict_col_name]==OOB_CLASS)]
 
     # TN
-    TN_df = result_df[(result_df[GT_col_name]==IB_CLASS) & (result_df[predict_col_name]==IB_CLASS)]
+	TN_df = result_df[(result_df[GT_col_name]==IB_CLASS) & (result_df[predict_col_name]==IB_CLASS)]
     
     # TP
-    TP_df = result_df[(result_df[GT_col_name]==OOB_CLASS) & (result_df[predict_col_name]==OOB_CLASS)]
+	TP_df = result_df[(result_df[GT_col_name]==OOB_CLASS) & (result_df[predict_col_name]==OOB_CLASS)]
+	
+	print('RESULT DF')
+	print(result_df)
+	print('FN',len(FN_df), 'FP',len(FP_df), 'TN',len(TN_df), 'TP', len(TP_df))	
 
-    return {
-        'FN_df' : FN_df,
-        'FP_df' : FP_df,
-        'TN_df' : TN_df,
-        'TP_df' : TP_df,
-    }
+
+	print(FN_df)
+	print(FP_df)
+	print(TN_df)
+	print(TP_df)
+	
+	return {
+		'FN_df' : FN_df,
+		'FP_df' : FP_df,
+		'TN_df' : TN_df,
+		'TP_df' : TP_df,
+		}
+
 
 # calc OOB Evaluation Metric
 def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
 	base_denominator = FP_cnt + TP_cnt + FN_cnt	
 	# init
 	EVAL_metric = {
-		'OOB_metric' : -1,
-		'correspondence' : -1,
-		'UN_correspondence' : -1,
-		'OVER_estimation' : -1,
-		'UNDER_estimtation' : -1,
+		'OOB_metric' : EXCEPTION_NUM,
+		'correspondence' : EXCEPTION_NUM,
+		'UN_correspondence' : EXCEPTION_NUM,
+		'OVER_estimation' : EXCEPTION_NUM,
+		'UNDER_estimtation' : EXCEPTION_NUM,
 		'FN' : FN_cnt,
 		'FP' : FP_cnt,
 		'TN' : TN_cnt,
@@ -175,13 +188,14 @@ def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
 		'TOTAL' : FN_cnt + FP_cnt + TN_cnt + TP_cnt
 	}
 
+
 	if base_denominator > 0 : # zero devision except check, FN == full
 		EVAL_metric['OOB_metric'] = (TP_cnt - FP_cnt) / base_denominator
 		EVAL_metric['correspondence'] = TP_cnt /  base_denominator
 		EVAL_metric['UN_correspondence'] = (FP_cnt + FN_cnt) /  base_denominator
 		EVAL_metric['OVER_estimation'] = FP_cnt / base_denominator
 		EVAL_metric['UNDER_estimtation'] = FN_cnt / base_denominator
-		
+	
 	return EVAL_metric
 
 
@@ -356,40 +370,55 @@ def main():
 		model_section_oob_metric_list = []
 
 		for start, end in slide_window_start_end_idx : # slicing
+			print('start : {}, end : {}, model : {}'.format(start,end,model))
 			metric_frame_df = return_metric_frame(total_info_df.iloc[start:end, :], 'GT', model)
-
-			print(metric_frame_df)
+			
+			print(metric_frame_df['FN_df'])
+			print(metric_frame_df['FP_df'])
+			print(metric_frame_df['TN_df'])
+			print(metric_frame_df['TP_df'])
 			
 			Evaluation_metric = calc_OOB_Evaluation_metric(len(metric_frame_df['FN_df']), len(metric_frame_df['FP_df']), len(metric_frame_df['TN_df']), len(metric_frame_df['TP_df']))
 			Evaluation_df = df(Evaluation_metric, index=[0])
 
+			print(Evaluation_metric['OOB_metric'])
+
 			model_section_oob_metric_list.append(Evaluation_metric['OOB_metric']) # section oob metric
+
+
 		
 		# model save oob_metric 
 		section_oob_dict[model] = copy.deepcopy(model_section_oob_metric_list) # deep copy 
 
 		text_bar = ax[0].barh(i, 0, height=height) # dummy data
 
-		# oob_metric -> -1==>1변경 // TN 만 있을경우		
+		# oob_metric -> EXCEPTION_NUM == > 1.0 변경 // TN 만 있을경우		
 		for k in range(len(model_section_oob_metric_list)) :
-			if model_section_oob_metric_list[k] == -1.0 :
+			if model_section_oob_metric_list[k] == EXCEPTION_NUM :
 				model_section_oob_metric_list[k] = 1.0
 
+				# 해당 부분 표시 (Exception)
 				pos_x = frame_start_idx[k]
-				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n★')
+				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n☆')
+
+			elif model_section_oob_metric_list[k] == -1.0 : # 실제 -1.0
+				# 해당 부분 표시 (Exception)
+				pos_x = frame_start_idx[k]
+				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n★', color='red')
+		
 				
 		
-		# ranking // 가장 낮은 부분 3곳(MIN_NUM) 체크 및 표시 (-1 ==> 1변경 기준)
+		# ranking // 가장 낮은 부분 3곳(MIN_NUM) 체크 및 표시 (EXCEPTION_NUM ==> 1변경 기준)
 		MIN_COUNT = 3
-		sort_index = np.argsort(np.array(model_section_oob_metric_list))
+		model_section_oob_metric_numpy = np.array(model_section_oob_metric_list)
+		model_section_oob_metric_numpy[np.where(model_section_oob_metric_numpy == -1.0)] = 100 # -1.0은 sort에서 제거
+		sort_index = np.argsort(model_section_oob_metric_numpy)
 
 		print(section_oob_dict[model])
 
 		for rank, idx in enumerate(sort_index[:MIN_COUNT], 1) :
 			pos_x = frame_label.index(section_oob_dict['Frame_start_idx'][idx]) # x position
 			present_text_for_section(ax[0], text_bar, pos_x, ' {} | {:.3f}'.format(rank, model_section_oob_metric_list[idx]))
-
-		# exception check
 		
 
 
@@ -438,7 +467,7 @@ def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax) :
 
 	for model in model_list :
 		# -1.0 일경우 1로 처리
-		ax.plot(x_value, [1.0 if val==-1.0 else val for val in Total_Evaluation_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
+		ax.plot(x_value, [1.0 if val==EXCEPTION_NUM else val for val in Total_Evaluation_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
 
 		# exception mark (-1.0일 경우 1로 처리하여 ^ 표시)
 		'''
