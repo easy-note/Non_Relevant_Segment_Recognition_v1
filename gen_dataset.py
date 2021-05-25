@@ -37,7 +37,7 @@ data_transforms = {
 IB_CLASS, OOB_CLASS = (0,1)
 
 
-def make_robot_csv(data_dir, save_dir) : 
+def make_oob_csv(data_dir, save_dir) : 
     
     IB_dir_name, OOB_dir_name = ['InBody', 'OutBody']
 
@@ -74,7 +74,7 @@ def make_robot_csv(data_dir, save_dir) :
         'class_idx' : class_list })    # 모든 이미지 path와 class 정보 저장
 
 
-    save_df.to_csv(os.path.join(save_dir, 'robot_oob_assets_path.csv'), mode='w', index=False)
+    save_df.to_csv(os.path.join(save_dir, 'oob_assets_path.csv'), mode='w', index=False)
 
 
 
