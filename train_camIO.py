@@ -8,7 +8,7 @@ from pytorch_lightning.plugins import DDPPlugin
 
 from Model import CAMIO
 from gen_dataset import CAMIO_Dataset
-from gen_dataset import make_robot_csv
+from gen_dataset import make_oob_csv
 
 import pandas as pd
 import shutil
@@ -40,7 +40,7 @@ def train():
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
-                        default='/data/ROBOT/Img', help='Data path :)')
+                        default='/data/LAPA/Img', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -58,13 +58,19 @@ def train():
     parser.add_argument('--train_videos', type=str, nargs='*',
                         choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
                 'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
-                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'], help='train video')
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'] + 
+                ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676'], help='train video')
 
     ## val dataset video
     parser.add_argument('--val_videos', type=str, nargs='*',
                         choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
                 'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
-                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'], help='val video')
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'] + 
+                ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676'], help='val video')
 
     ## random seed
     parser.add_argument('--random_seed', type=int, help='dataset ranbom seed')
@@ -73,8 +79,7 @@ def train():
     parser.add_argument('--IB_ratio', type=int, help='IB = OOB * IB_ratio')
 
     ## Robot Lapa
-    parser.add_argument('--dataset', type=str,
-                        default='robot', choices=['robot', 'lapa'], help='[robot, lapa] choice on dataset')
+    parser.add_argument('--dataset', type=str, choices=['ROBOT', 'LAPA'], help='[robot, lapa] choice on dataset')
 
     ## OOB NIR
     parser.add_argument('--task', type=str,
@@ -103,6 +108,8 @@ def train():
     }
 
     print('\n\n')
+    print('dataset : ', args.dataset)
+    print('fold : ', args.fold)
     print('batch size : ', args.batch_size)
     print('init lr : ', config_hparams['optimizer_lr'])
     print('backborn model : ', config_hparams['backborn_model'])
@@ -132,7 +139,8 @@ def train():
     base_path = args.data_path
     
     # make img info csv path
-    # make_robot_csv(base_path, base_path)
+    # make_oob_csv(base_path, base_path)
+
 
     # bath size
     BATCH_SIZE = args.batch_size
@@ -163,33 +171,60 @@ def train():
     # fold 별 train, validation video 설정
     train_videos = []
     val_videos = []
-    
-    if args.fold == '1' :
-        train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_18', 
-                'R_19', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_117', 'R_201', 'R_202', 'R_203', 
-                'R_204', 'R_205', 'R_206', 'R_207', 'R_209', 'R_210', 'R_301', 'R_302', 'R_304', 'R_305', 'R_313']
-        val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
 
-    elif args.fold == '2' :
-        train_videos = ['R_1', 'R_2', 'R_5', 'R_7', 'R_10', 'R_14', 'R_15', 'R_17', 
-                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
-                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
-        val_videos = ['R_3', 'R_4', 'R_6', 'R_13', 'R_18']
-    
-    elif args.fold == '3' :
-        train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
-                'R_22', 'R_48', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
-                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
-        val_videos = ['R_7', 'R_10', 'R_19', 'R_56', 'R_74']
+    if args.dataset == 'ROBOT' :
+        if args.fold == '1' :
+            train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_18', 
+                    'R_19', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_117', 'R_201', 'R_202', 'R_203', 
+                    'R_204', 'R_205', 'R_206', 'R_207', 'R_209', 'R_210', 'R_301', 'R_302', 'R_304', 'R_305', 'R_313']
+            val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
 
-    elif args.fold == 'free' : # from argument
-        train_videos = args.train_videos
-        val_videos = args.val_videos
+        elif args.fold == '2' :
+            train_videos = ['R_1', 'R_2', 'R_5', 'R_7', 'R_10', 'R_14', 'R_15', 'R_17', 
+                    'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                    'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
+            val_videos = ['R_3', 'R_4', 'R_6', 'R_13', 'R_18']
+        
+        elif args.fold == '3' :
+            train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                    'R_22', 'R_48', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                    'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
+            val_videos = ['R_7', 'R_10', 'R_19', 'R_56', 'R_74']
+
+        elif args.fold == 'free' : # from argument
+            train_videos = args.train_videos
+            val_videos = args.val_videos
+
+    elif args.dataset == 'LAPA' :
+        if args.fold == '1' :
+            train_videos = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_534', 'L_535',
+                'L_586', 'L_595', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676']
+            val_videos = ['L_522', 'L_605', 'L_553', 'L_550', 'L_412']
+
+        elif args.fold == '2' :
+            train_videos = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_450', 'L_458', 'L_465', 'L_491', 'L_496', 'L_522', 'L_534', 'L_535', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_669', 'L_676']
+            val_videos = ['L_325', 'L_507', 'L_443', 'L_661', 'L_493']
+        
+        elif args.fold == '3' :
+            train_videos = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_458', 'L_465', 'L_491', 'L_493', 'L_507', 'L_522', 'L_534', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661']
+            val_videos = ['L_450', 'L_669', 'L_676', 'L_535', 'L_496']
+
+        elif args.fold == 'free' : # from argument
+            train_videos = args.train_videos
+            val_videos = args.val_videos
+    
+    else :
+        assert False, 'ONLY SUPPORT DATASET [ROBOT, LAPA] | Input DATASET : {}'.format(args.dataset) 
 
     # dataset 설정
     # IB_ratio = [1,2,3,..] // IB개수 = OOB개수*IB_ratio
-    trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=train_videos, is_train=True, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
-    valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=val_videos, is_train=False, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
+    trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=train_videos, is_train=True, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
+    valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=val_videos, is_train=False, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
     
 
     print('trainset len : ', len(trainset))
