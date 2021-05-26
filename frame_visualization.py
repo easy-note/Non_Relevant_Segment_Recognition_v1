@@ -293,7 +293,7 @@ def main():
 	print(runlength_model)
 
 	#### 2. matplotlib의 figure 및 axis 설정
-	fig, ax = plt.subplots(2,1,figsize=(18,12)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
+	fig, ax = plt.subplots(2,1,figsize=(18,15)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
 	print(fig)
 	
 	##### initalize label for legned, this code should be write before writing barchart #####
@@ -354,16 +354,26 @@ def main():
 	total_len = len(total_info_df)
 	
 	# init_variable
-	WINDOW_SIZE = 3000
+	WINDOW_SIZE = 1000
 	INFERENCE_STEP = 5
-	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+1) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
-	slide_window_start_end_idx[-1][1] = total_len # last frame of last pickle
+	WINDOW_NUM = 3
+	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+WINDOW_NUM) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
+
+	# affine end_idx (last)
+	for z in range(1, WINDOW_NUM+1) : 
+		slide_window_start_end_idx[z*-1][1] = total_len
+	
 	print(slide_window_start_end_idx)
+	print(total_len)
+	
 	
 	frame_start_idx = [start_idx * INFERENCE_STEP for start_idx, end_idx in slide_window_start_end_idx]
 	time_start_idx = [time_label[frame_label.index(idx)] for idx in frame_start_idx]
+	
+	frame_end_idx = [(end_idx-1) * INFERENCE_STEP for start_idx, end_idx in slide_window_start_end_idx]
+	time_end_idx = [time_label[frame_label.index(idx)] for idx in frame_end_idx]
 
-	section_oob_dict = {'Frame_start_idx': frame_start_idx, 'Time_start_idx': time_start_idx}
+	section_oob_dict = {'Frame_start_idx': frame_start_idx, 'Time_start_idx': time_start_idx, 'Frame_end_idx': frame_end_idx, 'Time_end_idx': time_end_idx}
 
 	for i, model in enumerate(yticks) :
 		print(i, model)
@@ -431,7 +441,7 @@ def main():
 	Total_Evaluation_per_section_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Section_Evaluation.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
 		
 	# OOB Section Metric Plot
-	oob_section_metric_plt(Total_Evaluation_per_section_df, yticks, ax[1])
+	oob_section_metric_plt(Total_Evaluation_per_section_df, yticks, ax[1], title='Confidence Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
 
 	#### 4. title 설정
 	fig.suptitle(args.title_name, fontsize=16)
@@ -462,7 +472,7 @@ def main():
 	plt.savefig(os.path.join(args.results_save_dir, '{}-{}.png'.format(args.title_name, args.sub_title_name)), format='png', dpi=500)
 	plt.show()
 
-def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax) :
+def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax, title) :
 	x_value = Total_Evaluation_per_section_df['Frame_start_idx']
 
 	for model in model_list :
@@ -483,7 +493,7 @@ def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax) :
 
 
 	# sup title 설정
-	ax.set_title('OOB Metric Per Section')
+	ax.set_title(title)
 
 	# x 축 세부설정
 	ax.set_xticks(x_value)
