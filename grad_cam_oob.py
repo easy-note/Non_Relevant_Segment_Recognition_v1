@@ -21,7 +21,9 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from tqdm import tqdm
+import argparse
+
+import json
 
 data_transforms = {
     'test': transforms.Compose([
@@ -37,21 +39,32 @@ data_transforms = {
     ]),
 }
 
+IB_CLASS, OOB_CLASS = [0,1]
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--title_name', type=str, help='plot title, and save file name')
+
+parser.add_argument('--model_path', type=str, help='model ckpt path')
+
+parser.add_argument('--model_name', type=str,
+					choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model, it will be yticks name')
+
+parser.add_argument('--inference_img_dir', type=str, help='root dir for inference img')
+
+parser.add_argument('--save_dir', type=str, help='gradcam results save path')
+
+args, _ = parser.parse_known_args()
+
 
 # for text on bar
 def present_text(ax, bar, text, color='black'):
 	for rect in bar:
 		posx = rect.get_x()
 		posy = rect.get_y()
-		print(posx, posy)
 		ax.text(posx, posy, text, size=17, color=color, rotation=0, ha='left', va='bottom')
 
-def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) : 
-
-
-    print(model_path)
-    print(inference_img_dir)
-    print(save_dir)
+def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir) : 
 
     ### 0. inference img to input tensor and log img to numpy
     all_inference_img_path = sorted(glob.glob(inference_img_dir +'/*{}'.format('jpg'))) # all inference file list
@@ -75,7 +88,7 @@ def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) :
     ### 1. load model
     test_hparams = {
         'optimizer_lr' : 0, # dummy (this option use only for training)
-        'backborn_model' : 'squeezenet1_0' # (for train, test)
+        'backborn_model' : model_name # (for train, test)
     }
 
     models = CAMIO.load_from_checkpoint(model_path, config=test_hparams)
@@ -93,35 +106,104 @@ def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) :
     with torch.no_grad() :
         outputs = models(input_tensor.cuda())
 
+
     predict = torch.nn.Softmax(dim=1)(outputs.cpu()) # softmax
+    print(torch.argmax(predict.cpu(), 1)) # predict class
     
-    print(predict)
 
     ### 3. select gradcam layer
-    target_layer = models.model.classifier[0] # final conv (squeezenet)
+    if (model_name.find('resnet') != -1) or (model_name.find('resnext') != -1) :
+        if model_name == 'resnet18' :
+            print('MODEL = RESNET18')
+            target_layer = None
+
+        elif model_name == 'resnet34' :
+            print('MODEL = RESNET34')
+            target_layer = None
+            
+        elif model_name == 'resnet50' :
+            print('MODEL = RESNET50')
+            target_layer = None
+            
+        elif model_name == 'wide_resnet50_2':
+            print('MODEL = WIDE_RESNET50_2')
+            target_layer = models.model.layer4[-1] # layer4 // bottleneck(2) // conv3
+
+        elif model_name == 'resnext50_32x4d':
+            print('MODEL = RESNEXT50_32x4D')
+            target_layer = models.model.layer4[-1] # layer4 // bottleneck(2) // conv3
+            
+        else : 
+            assert(False, '=== Not supported Resnet model ===')
+
+    elif model_name.find('mobilenet') != -1 :
+        if model_name == 'mobilenet_v2' :
+            print('MODEL = MOBILENET_V2')
+            target_layer = None
+
+        elif model_name == 'mobilenet_v3_small' :
+            print('MODEL = MOBILENET_V3_SMALL')
+            target_layer = models.model.features[-1][-1] # ConvBNActivation // Hardwish
+            
+        else :
+            assert(False, '=== Not supported MobileNet model ===')
+    
+    elif model_name.find('squeezenet') != -1 :
+        if model_name == 'squeezenet1_0' :
+            print('MODEL = squeezenet1_0')
+            target_layer = models.model.classifier[0]
+
+        else :
+            assert(False, '=== Not supported Squeezenet model ===')
+
+    
+    else :
+        assert(False, '=== Not supported Model === ')
+
+    ### 3. select gradcam layer
+    # target_layer = models.model.classifier[0] # final conv (squeezenet)
+    print('\n\n==== TARGET LAYER ====\n\n')
     print(target_layer)
+
 
     ### 4. GradCAM
     cam = GradCAM(model=models.model, target_layer=target_layer, use_cuda=True)
 
-    IB_CLASS, OOB_CLASS = [0,1]
-
     # target_category = OOB_CLASS
     #### 4_1. CLASS_IDX 별 Gradcam
-    grayscale_cam_IB = cam(input_tensor=input_tensor.cuda(), target_category=IB_CLASS)
-    grayscale_cam_OOB = cam(input_tensor=input_tensor.cuda(), target_category=OOB_CLASS)
+
+    # init batch size and Gradcam output
+    BATCH_SIZE = 32
+    grayscale_cam_IB = np.empty((1,224,224)) # (batch, w, h) or (batch, h, w)
+    grayscale_cam_OOB = np.empty((1,224,224))
+
+    for i in range((len(input_tensor) + BATCH_SIZE - 1) // BATCH_SIZE ) :
+        batch_input_tensor = input_tensor[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]
+        
+        batch_grayscale_cam_IB = cam(input_tensor=batch_input_tensor.cuda(), target_category=IB_CLASS)
+        batch_grayscale_cam_OOB = cam(input_tensor=batch_input_tensor.cuda(), target_category=OOB_CLASS)
+
+        grayscale_cam_IB = np.append(grayscale_cam_IB, batch_grayscale_cam_IB, axis=0)
+        grayscale_cam_OOB = np.append(grayscale_cam_OOB, batch_grayscale_cam_OOB, axis=0)
+
+        print(batch_grayscale_cam_IB)
+        print(type(batch_grayscale_cam_IB))
+        print(batch_grayscale_cam_IB.shape)
+        print(batch_grayscale_cam_IB.dtype)
+        
+
 
     ### 5. gradscale cam
     print(grayscale_cam_IB)
-    print(grayscale_cam_IB.shape)
     print(type(grayscale_cam_IB))
-
-    ### 6. visualization
-    ## plt setting
-    # fig, ax = plt.subplots(1,3,figsize=(16,7)) # 1x1 figure matrix 생성, 가로(16인치)x세로(12인치) 크기지정
-
+    print(grayscale_cam_IB.shape)
+    print(grayscale_cam_IB.dtype)
+    
 
     # grayscale_cam = grayscale_cam[0, :] # 0번째 batch
+    
+    ### 6. visualization
+
     for img_idx, img_path in enumerate(all_inference_img_path) : 
         img_name = os.path.splitext(os.path.basename(img_path))[0]
         
@@ -142,7 +224,7 @@ def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) :
         colors = ('cadetblue', 'orange')
         
         #### 1. fig title
-        fig.suptitle('{}'.format('R006_Squeezenet_FP'), fontsize=20)
+        fig.suptitle('{}'.format(args.title_name), fontsize=20)
 
         #### 2. shape, location, rowspan, colspane
         ax1 = plt.subplot2grid((3,6), (0,0), rowspan=2, colspan=2) # Input 
@@ -193,6 +275,8 @@ def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) :
         ### 11. save img
         plt.show()
         plt.savefig(os.path.join(save_dir, '{}_GRADCAM.jpg'.format(img_name)), format='jpg', dpi=200)
+        plt.clf() # clear figure
+        plt.cla() # clear axis
 
         # pil_image=Image.fromarray(visualization_IB)
         # pil_image.save(os.path.join(save_dir, 'grad_temp-{}.jpg'.format(idx)), format='JPEG')
@@ -203,12 +287,24 @@ def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) :
 
 if __name__ == '__main__' :
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
 
-    model_path = './logs/ROBOT/OOB/robot-oob-0423-fold_2/ckpoint_robot-oob-0423-fold_2-model=squeezenet1_0-batch=32-lr=0.001-fold=2-ratio=3-epoch=49-last.ckpt'
-    inference_img_dir = './results-robot_oob-squeezenet1_0-fold_2-last/R006/R006_ch1_video_01/fp_frame'
+    '''
+    model_path = './logs/ROBOT/OOB/robot-oob-0423-fold_2/ckpoint_robot-oob-0423-fold_2-model=wide_resnet50_2-batch=32-lr=0.001-fold=2-ratio=3-epoch=49-last.ckpt'
+    model_name = 'wide_resnet50_2'
+    inference_img_dir = './results-robot_oob-wide_resnet50_2-fold_2-last/R006/R006_ch1_video_01/fp_frame'
     save_dir = './gradcam_results'
+    '''
 
-    get_oob_grad_cam_img(model_path, inference_img_dir, save_dir)
+    # print args
+    print(json.dumps(args.__dict__, indent=2))
+
+    model_path = args.model_path
+    model_name = args.model_name
+    inference_img_dir = args.inference_img_dir
+    save_dir = args.save_dir
+    
+
+    get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir)
     
 
