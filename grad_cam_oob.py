@@ -37,6 +37,15 @@ data_transforms = {
     ]),
 }
 
+
+# for text on bar
+def present_text(ax, bar, text, color='black'):
+	for rect in bar:
+		posx = rect.get_x()
+		posy = rect.get_y()
+		print(posx, posy)
+		ax.text(posx, posy, text, size=17, color=color, rotation=0, ha='left', va='bottom')
+
 def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) : 
 
 
@@ -111,24 +120,6 @@ def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) :
     ## plt setting
     # fig, ax = plt.subplots(1,3,figsize=(16,7)) # 1x1 figure matrix 생성, 가로(16인치)x세로(12인치) 크기지정
 
-    fig = plt.figure(figsize=(20,15))
-    ## fig title
-    fig.suptitle('{}'.format('R006_Squeezenet_FP'), fontsize=16)
-    '''
-    ax1 = plt.subplot(231) # Input
-    ax2 = plt.subplot(232) # IB
-    ax3 = plt.subplot(233) # OOB
-    ax4 = plt.subplot(234) # softmax
-    '''
-
-    # shape, location, rowspan, colspane
-    ax1 = plt.subplot2grid((3,6), (0,0), rowspan=2, colspan=2) # Input 
-    ax2 = plt.subplot2grid((3,6), (0,2), rowspan=2, colspan=2) # IB
-    ax3 = plt.subplot2grid((3,6), (0,4), rowspan=2, colspan=2) # OOB
-    ax4 = plt.subplot2grid((3,6), (2,0), colspan=6) # Softmax
-
-    ## fig 설정
-    fig.tight_layout() # subbplot 간격 줄이기
 
     # grayscale_cam = grayscale_cam[0, :] # 0번째 batch
     for img_idx, img_path in enumerate(all_inference_img_path) : 
@@ -145,30 +136,66 @@ def get_oob_grad_cam_img(model_path, inference_img_dir, save_dir) :
         print(visualization_IB.shape)
         print(visualization_IB.dtype)
 
-        # imshow
+        #######  plt setting #######
+        fig = plt.figure(figsize=(20,15))
+        label_names = ('IB', 'OOB')
+        colors = ('cadetblue', 'orange')
+        
+        #### 1. fig title
+        fig.suptitle('{}'.format('R006_Squeezenet_FP'), fontsize=20)
+
+        #### 2. shape, location, rowspan, colspane
+        ax1 = plt.subplot2grid((3,6), (0,0), rowspan=2, colspan=2) # Input 
+        ax2 = plt.subplot2grid((3,6), (0,2), rowspan=2, colspan=2) # IB
+        ax3 = plt.subplot2grid((3,6), (0,4), rowspan=2, colspan=2) # OOB
+        ax4 = plt.subplot2grid((3,6), (2,0), colspan=5) # Softmax        
+
+        #### 3. imshow
         ax1.imshow(rgb_img_list[img_idx])
         ax2.imshow(visualization_IB)
         ax3.imshow(visualization_OOB)
 
-        # barh | softmax
-        bar = ax4.barh(IB_CLASS, predict[img_idx][IB_CLASS], label='IB', color='red')
-        bar = ax4.barh(OOB_CLASS, predict[img_idx][OOB_CLASS], label='OOB', color='blue')
+        #### 4. barh | softmax
+        bar = ax4.barh(IB_CLASS, predict[img_idx][IB_CLASS], label='IB', color=colors[IB_CLASS], height=0.5)
+        present_text(ax4, bar, '{:.3f}'.format(float(predict[img_idx][IB_CLASS])))
+        bar = ax4.barh(OOB_CLASS, predict[img_idx][OOB_CLASS], label='OOB', color=colors[OOB_CLASS], height=0.5)
+        present_text(ax4, bar, '{:.3f}'.format(float(predict[img_idx][OOB_CLASS])))
 
-        # 개별 title 설정
-        ax1.set_title('Input')
-        ax2.set_title('IB')
-        ax3.set_title('OOB')
-        ax4.set_title('{}'.format(img_name))
+        #### 5. x축 세부설정
+        ax4.set_xticks(np.arange(0, 1, step=0.1))
+        ax4.set_xticklabels(['{:.1f}'.format(x) for x in np.arange(0, 1, step=0.1)])
+        ax4.xaxis.set_tick_params(labelsize=10)
+        ax4.set_xlabel('SOFTMAX OUTPUT', fontsize=12)
 
-        ### 7. save img
+        #### 6. y축 세부설정
+        ax4.set_yticks((IB_CLASS, OOB_CLASS))
+        ax4.set_yticklabels(label_names, fontsize=10)	
+        ax4.set_ylabel('CLASS', fontsize=12)
+
+        #### 7. 보조선(눈금선) 나타내기
+        ax4.set_axisbelow(True)
+        ax4.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
+
+        #### 8. 범례 나타내기
+        box = ax4.get_position() # 범례를 그래프상자 밖에 그리기위해 상자크기를 조절
+        ax4.set_position([box.x0, box.y0, box.width * 0.9, box.height])
+        ax4.legend(label_names, loc='center left', bbox_to_anchor=(1,0.5), shadow=True, ncol=1)
+
+        #### 9. 개별 title 설정
+        ax1.set_title('Input',  fontsize=15)
+        ax2.set_title('IB',  fontsize=15)
+        ax3.set_title('OOB',  fontsize=15)
+        ax4.set_title('{}'.format(img_name),  fontsize=18)
+
+        ## 10. fig tight 설정
+        fig.tight_layout() # subbplot 간격 줄이기
+
+        ### 11. save img
         plt.show()
-        plt.savefig(os.path.join(save_dir, 'GRADCAM_{}.jpg'.format(img_name)), format='jpg', dpi=200)
+        plt.savefig(os.path.join(save_dir, '{}_GRADCAM.jpg'.format(img_name)), format='jpg', dpi=200)
 
         # pil_image=Image.fromarray(visualization_IB)
         # pil_image.save(os.path.join(save_dir, 'grad_temp-{}.jpg'.format(idx)), format='JPEG')
-
-    
-
     
     
 
