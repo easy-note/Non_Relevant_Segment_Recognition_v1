@@ -176,7 +176,7 @@ def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
 	base_denominator = FP_cnt + TP_cnt + FN_cnt	
 	# init
 	EVAL_metric = {
-		'OOB_metric' : EXCEPTION_NUM,
+		'CONFIDENCE_metric' : EXCEPTION_NUM,
 		'correspondence' : EXCEPTION_NUM,
 		'UN_correspondence' : EXCEPTION_NUM,
 		'OVER_estimation' : EXCEPTION_NUM,
@@ -190,7 +190,7 @@ def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
 
 
 	if base_denominator > 0 : # zero devision except check, FN == full
-		EVAL_metric['OOB_metric'] = (TP_cnt - FP_cnt) / base_denominator
+		EVAL_metric['CONFIDENCE_metric'] = (TP_cnt - FP_cnt) / base_denominator
 		EVAL_metric['correspondence'] = TP_cnt /  base_denominator
 		EVAL_metric['UN_correspondence'] = (FP_cnt + FN_cnt) /  base_denominator
 		EVAL_metric['OVER_estimation'] = FP_cnt / base_denominator
@@ -224,7 +224,6 @@ def main():
 	yticks += args.model_name
 
 	predict_data = {'GT': GT_df['truth']} #### origin
-	section_oob_dict = {}
 	
 	# pairwise read
 	for y_name, inf_path in zip(args.model_name, args.model_infernce_path) :
@@ -293,7 +292,7 @@ def main():
 	print(runlength_model)
 
 	#### 2. matplotlib의 figure 및 axis 설정
-	fig, ax = plt.subplots(2,1,figsize=(18,15)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
+	fig, ax = plt.subplots(3,1,figsize=(18,22)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
 	print(fig)
 	
 	##### initalize label for legned, this code should be write before writing barchart #####
@@ -321,7 +320,7 @@ def main():
 
 	
 	#### 3_1. Evaluation Metric calc 및 barchart oob metric 삽입
-	Total_Evaluation_df = df(index=range(0, 0), columns=['Model', 'kernel_size', 'OOB_metric', 'correspondence', 'UN_correspondence', 'OVER_estimation', 'UNDER_estimtation', 'FN', 'FP', 'TN', 'TP', 'TOTAL'])
+	Total_Evaluation_df = df(index=range(0, 0), columns=['Model', 'kernel_size', 'CONFIDENCE_metric', 'correspondence', 'UN_correspondence', 'OVER_estimation', 'UNDER_estimtation', 'FN', 'FP', 'TN', 'TP', 'TOTAL'])
 
 	for i, model in enumerate(yticks) :
 		print(i, model)
@@ -339,8 +338,8 @@ def main():
 		Total_Evaluation_df = pd.concat([Total_Evaluation_df, Evaluation_df], ignore_index=True)
 
 		text_bar = ax[0].barh(i, 0, height=height) # dummy data
-		# present_text(ax, text_bar, ' OOB_METRIC : {:.3f} | OVER_ESTIMATION : {:.3f} | UNDER_ESTIMATION : {:.3f} \n FN : {} | FP : {} | TN : {} | TP : {} | TOTAL : {}'.format(Evaluation_metric['OOB_metric'], Evaluation_metric['OVER_estimation'], Evaluation_metric['UNDER_estimtation'], Evaluation_metric['FN'], Evaluation_metric['FP'], Evaluation_metric['TN'], Evaluation_metric['TP'], Evaluation_metric['TOTAL']))
-		present_text(ax[0], text_bar, 'OOB_METRIC : {:.3f}'.format(Evaluation_metric['OOB_metric']))
+		# present_text(ax, text_bar, ' CONFIDENCE_METRIC : {:.3f} | OVER_ESTIMATION : {:.3f} | UNDER_ESTIMATION : {:.3f} \n FN : {} | FP : {} | TN : {} | TP : {} | TOTAL : {}'.format(Evaluation_metric['CONFIDENCE_metric'], Evaluation_metric['OVER_estimation'], Evaluation_metric['UNDER_estimtation'], Evaluation_metric['FN'], Evaluation_metric['FP'], Evaluation_metric['TN'], Evaluation_metric['TP'], Evaluation_metric['TOTAL']))
+		present_text(ax[0], text_bar, 'CONFIDENCE_METRIC : {:.3f} | OVER_ESTIMATION : {:.3f}'.format(Evaluation_metric['CONFIDENCE_metric'], Evaluation_metric['OVER_estimation']))
 	
 	print(Total_Evaluation_df)
 
@@ -348,15 +347,17 @@ def main():
 	Total_Evaluation_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Evaluation.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
 
 	##### 3.2 section OOB Metric
-	section_oob_dict = {}
+	section_confidence_dict = {}
+	section_over_dict = {}
+
 
 	total_info_df = df(predict_data)
 	total_len = len(total_info_df)
 	
 	# init_variable
-	WINDOW_SIZE = 1000
+	WINDOW_SIZE = 3000
 	INFERENCE_STEP = 5
-	WINDOW_NUM = 3
+	WINDOW_NUM = 3 # overlap window number, if you set WINDOW_NUM = 1, it means non overlap
 	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+WINDOW_NUM) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
 
 	# affine end_idx (last)
@@ -373,15 +374,22 @@ def main():
 	frame_end_idx = [(end_idx-1) * INFERENCE_STEP for start_idx, end_idx in slide_window_start_end_idx]
 	time_end_idx = [time_label[frame_label.index(idx)] for idx in frame_end_idx]
 
-	section_oob_dict = {'Frame_start_idx': frame_start_idx, 'Time_start_idx': time_start_idx, 'Frame_end_idx': frame_end_idx, 'Time_end_idx': time_end_idx}
+	section_confidence_dict = {'Frame_start_idx': frame_start_idx, 'Time_start_idx': time_start_idx, 'Frame_end_idx': frame_end_idx, 'Time_end_idx': time_end_idx}
+	section_over_dict = {'Frame_start_idx': frame_start_idx, 'Time_start_idx': time_start_idx, 'Frame_end_idx': frame_end_idx, 'Time_end_idx': time_end_idx}
 
+	print(section_confidence_dict)
+	
+
+	# calc section metric per model
 	for i, model in enumerate(yticks) :
 		print(i, model)
-		model_section_oob_metric_list = []
+		model_section_confidence_metric_list = []
+		model_section_over_metric_list = []
 
 		for start, end in slide_window_start_end_idx : # slicing
 			print('start : {}, end : {}, model : {}'.format(start,end,model))
 			metric_frame_df = return_metric_frame(total_info_df.iloc[start:end, :], 'GT', model)
+
 			
 			print(metric_frame_df['FN_df'])
 			print(metric_frame_df['FP_df'])
@@ -391,27 +399,29 @@ def main():
 			Evaluation_metric = calc_OOB_Evaluation_metric(len(metric_frame_df['FN_df']), len(metric_frame_df['FP_df']), len(metric_frame_df['TN_df']), len(metric_frame_df['TP_df']))
 			Evaluation_df = df(Evaluation_metric, index=[0])
 
-			print(Evaluation_metric['OOB_metric'])
+			print(Evaluation_metric['CONFIDENCE_metric'])
 
-			model_section_oob_metric_list.append(Evaluation_metric['OOB_metric']) # section oob metric
+			model_section_confidence_metric_list.append(Evaluation_metric['CONFIDENCE_metric']) # section Confidence metric
+			model_section_over_metric_list.append(Evaluation_metric['OVER_estimation']) # section Over metric
 
 
 		
 		# model save oob_metric 
-		section_oob_dict[model] = copy.deepcopy(model_section_oob_metric_list) # deep copy 
+		section_confidence_dict[model] = copy.deepcopy(model_section_confidence_metric_list) # deep copy 
+		section_over_dict[model] = copy.deepcopy(model_section_over_metric_list) # deep copy 
 
 		text_bar = ax[0].barh(i, 0, height=height) # dummy data
 
 		# oob_metric -> EXCEPTION_NUM == > 1.0 변경 // TN 만 있을경우		
-		for k in range(len(model_section_oob_metric_list)) :
-			if model_section_oob_metric_list[k] == EXCEPTION_NUM :
-				model_section_oob_metric_list[k] = 1.0
+		for k in range(len(model_section_confidence_metric_list)) :
+			if model_section_confidence_metric_list[k] == EXCEPTION_NUM :
+				model_section_confidence_metric_list[k] = 1.0
 
 				# 해당 부분 표시 (Exception)
 				pos_x = frame_start_idx[k]
 				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n☆')
 
-			elif model_section_oob_metric_list[k] == -1.0 : # 실제 -1.0
+			elif model_section_confidence_metric_list[k] == -1.0 : # 실제 -1.0
 				# 해당 부분 표시 (Exception)
 				pos_x = frame_start_idx[k]
 				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n★', color='red')
@@ -420,28 +430,33 @@ def main():
 		
 		# ranking // 가장 낮은 부분 3곳(MIN_NUM) 체크 및 표시 (EXCEPTION_NUM ==> 1변경 기준)
 		MIN_COUNT = 3
-		model_section_oob_metric_numpy = np.array(model_section_oob_metric_list)
+		model_section_oob_metric_numpy = np.array(model_section_confidence_metric_list)
 		model_section_oob_metric_numpy[np.where(model_section_oob_metric_numpy == -1.0)] = 100 # -1.0은 sort에서 제거
 		sort_index = np.argsort(model_section_oob_metric_numpy)
 
-		print(section_oob_dict[model])
+		print(section_confidence_dict[model])
 
 		for rank, idx in enumerate(sort_index[:MIN_COUNT], 1) :
-			pos_x = frame_label.index(section_oob_dict['Frame_start_idx'][idx]) # x position
-			present_text_for_section(ax[0], text_bar, pos_x, ' {} | {:.3f}'.format(rank, model_section_oob_metric_list[idx]))
+			pos_x = frame_label.index(section_confidence_dict['Frame_start_idx'][idx]) # x position
+			present_text_for_section(ax[0], text_bar, pos_x, ' R-{} | C-{:.3f} | O-{:.3f}'.format(rank, model_section_confidence_metric_list[idx], model_section_over_metric_list[idx]))
 		
 
 
-	# total section OOB Metric Results
-	Total_Evaluation_per_section_df = df(section_oob_dict)
+	# total section Confidence Metric Results
+	Confidence_metric_per_section_df = df(section_confidence_dict) # confidence metric
+	Over_metric_per_section_df = df(section_over_dict) # over metric
 
-	print(Total_Evaluation_per_section_df)
+
+	print(Confidence_metric_per_section_df)
+	print(Over_metric_per_section_df)
 
 	# OOB Section Metric Save
-	Total_Evaluation_per_section_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Section_Evaluation.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
+	Confidence_metric_per_section_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Section_Confidence_metric.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
+	Over_metric_per_section_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Section_Over_metric.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
 		
 	# OOB Section Metric Plot
-	oob_section_metric_plt(Total_Evaluation_per_section_df, yticks, ax[1], title='Confidence Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
+	section_confidence_metric_plt(Confidence_metric_per_section_df, yticks, ax[1], title='Confidence Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
+	section_over_metric_plt(Over_metric_per_section_df, yticks, ax[2], title='Over Estimation Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
 
 	#### 4. title 설정
 	fig.suptitle(args.title_name, fontsize=16)
@@ -472,19 +487,19 @@ def main():
 	plt.savefig(os.path.join(args.results_save_dir, '{}-{}.png'.format(args.title_name, args.sub_title_name)), format='png', dpi=500)
 	plt.show()
 
-def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax, title) :
-	x_value = Total_Evaluation_per_section_df['Frame_start_idx']
+def section_confidence_metric_plt(Confidence_metric_per_section_df, model_list, ax, title) :
+	x_value = Confidence_metric_per_section_df['Frame_start_idx']
 
 	for model in model_list :
 		# -1.0 일경우 1로 처리
-		ax.plot(x_value, [1.0 if val==EXCEPTION_NUM else val for val in Total_Evaluation_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
+		ax.plot(x_value, [1.0 if val==EXCEPTION_NUM else val for val in Confidence_metric_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
 
 		# exception mark (-1.0일 경우 1로 처리하여 ^ 표시)
 		'''
-		exception_index = Total_Evaluation_per_section_df[model]== -1.0
+		exception_index = Confidence_metric_per_section_df[model]== -1.0
 		print(exception_index)
 		print(x_value[exception_index])
-		print(Total_Evaluation_per_section_df[model][exception_index])
+		print(Confidence_metric_per_section_df[model][exception_index])
 		markersize=15
 		
 		print([1.0]*len(x_value[exception_index]))
@@ -497,12 +512,12 @@ def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax, titl
 
 	# x 축 세부설정
 	ax.set_xticks(x_value)
-	ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Total_Evaluation_per_section_df['Time_start_idx'])]) # xtick change
+	ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Confidence_metric_per_section_df['Time_start_idx'])]) # xtick change
 	ax.xaxis.set_tick_params(labelsize=7)
 	ax.set_xlabel('Start Frame / Time (h:m:s:fps)', fontsize=12)
 
 	# y 축 세부설정
-	ax.set_ylabel('OOB Metric', fontsize=12)
+	ax.set_ylabel('Confidence Metric', fontsize=12)
 
 	# 보조선(눈금선) 나타내기
 	ax.set_axisbelow(True)
@@ -514,6 +529,47 @@ def oob_section_metric_plt(Total_Evaluation_per_section_df, model_list, ax, titl
 	ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
 	ax.legend(model_list, loc='center left', bbox_to_anchor=(1,0.5), shadow=True, ncol=1)
 
+def section_over_metric_plt(Over_metric_per_section_df, model_list, ax, title) :
+	x_value = Over_metric_per_section_df['Frame_start_idx']
+
+	for model in model_list :
+		# -1.0 일경우 1로 처리
+		ax.plot(x_value, [1.0 if val==EXCEPTION_NUM else val for val in Over_metric_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
+
+		# exception mark (-1.0일 경우 1로 처리하여 ^ 표시)
+		'''
+		exception_index = Over_metric_per_section_df[model]== -1.0
+		print(exception_index)
+		print(x_value[exception_index])
+		print(Over_metric_per_section_df[model][exception_index])
+		markersize=15
+		
+		print([1.0]*len(x_value[exception_index]))
+		ax.scatter(x_value[exception_index], [1.2]*len(x_value[exception_index]), marker='^', s=15)
+		'''
+
+
+	# sup title 설정
+	ax.set_title(title)
+
+	# x 축 세부설정
+	ax.set_xticks(x_value)
+	ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Over_metric_per_section_df['Time_start_idx'])]) # xtick change
+	ax.xaxis.set_tick_params(labelsize=7)
+	ax.set_xlabel('Start Frame / Time (h:m:s:fps)', fontsize=12)
+
+	# y 축 세부설정
+	ax.set_ylabel('Over estimation Metric', fontsize=12)
+
+	# 보조선(눈금선) 나타내기
+	ax.set_axisbelow(True)
+	ax.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
+
+
+	# 범례
+	box = ax.get_position() # 범례를 그래프상자 밖에 그리기위해 상자크기를 조절
+	ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
+	ax.legend(model_list, loc='center left', bbox_to_anchor=(1,0.5), shadow=True, ncol=1)
 
 if __name__=='__main__':
 	main()
