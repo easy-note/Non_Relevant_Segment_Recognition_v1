@@ -47,18 +47,18 @@ patient_array=("R_17")
 
 for (( i = 0 ; i < ${#patient_array[@]} ; i++ ))
 do
-    model_inf_path_1="./results-robot-oob-0514-wide_resnet50_2-fold_1-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
-    model_inf_path_2="./results-robot-oob-0514-resnext50_32x4d-fold_1-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
-    model_inf_path_3="./results-robot-oob-0514-mobilenet_v3_small-fold_1-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
-    model_inf_path_4="./results-robot-oob-0514-wide_resnet50_2-fold_1-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
+    model_inf_path_1="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
+    model_inf_path_2="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
+    model_inf_path_3="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
+    model_inf_path_4="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
 
     python frame_visualization.py \
-    --title_name "New_Dataset_Inference-FOLD_1" \
+    --title_name "tmp_New_Dataset_Inference-FOLD_1" \
     --sub_title_name ${patient_array[$i]} \
     --GT_path $model_inf_path_1 \
     --model_name "wide_resnet50_2" "resnext50_32x4d" "mobilenet_v3_small" "squeezenet1_0" \
     --model_infernce_path $model_inf_path_1 $model_inf_path_2 $model_inf_path_3 $model_inf_path_4 \
-    --results_save_dir "./visual_results/fold1"
+    --results_save_dir "./visual_results/temp"
 done
 
 # --filter "median" --kernel_size 19
