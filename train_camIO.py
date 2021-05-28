@@ -150,10 +150,13 @@ def train():
 
     # model param save
     print('\n\n==== MODEL SUMMARY ====\n\n')
-    summary(model.cuda(), (3,224,224))
+    model_status = summary(model.cuda(), (3,224,224), verbose=0)
+    print(model_status)
 
     log_txt = '\n\n==== MODEL SUMMARY ====\n\n'
-    log_txt+= 'MODEL PARAMS : \t {}'.format(sum([param.nelement() for param in model.parameters()]))
+    log_txt+= 'MODEL PARAMS : \t {}'.format(str(model_status))
+
+    # log_txt+= 'MODEL PARAMS : \t {}'.format(sum([param.nelement() for param in model.parameters()])) # when not suppoerted torch summary
 
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
 
