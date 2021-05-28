@@ -1,10 +1,13 @@
 import os
+import glob2
 import glob
 import cv2
 from PIL import Image
 import random
 import numpy as np
 import pandas as pd
+from pandas import DataFrame as df
+
 from tqdm import tqdm
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -31,102 +34,126 @@ data_transforms = {
     ]),
 }
 
+IB_CLASS, OOB_CLASS = (0,1)
+
+
+def make_oob_csv(data_dir, save_dir) : 
+    
+    IB_dir_name, OOB_dir_name = ['InBody', 'OutBody']
+
+    class_dir_name = ['InBody', 'OutBody']
+
+    print(data_dir)
+    print(save_dir)
+    
+    img_path_list = []
+    class_list = []
+
+    # calc path, class
+    for class_path in class_dir_name :
+        print('processing... ', os.path.join(data_dir, class_path))
+
+        # init
+        temp_path = []
+        temp_class = []
+
+        temp_path = glob.glob(os.path.join(data_dir, class_path, '*.jpg'))
+
+        if class_path == IB_dir_name :
+            temp_class = [IB_CLASS]*len(temp_path)
+
+        if class_path == OOB_dir_name :
+            temp_class = [OOB_CLASS]*len(temp_path)
+
+        img_path_list += temp_path
+        class_list += temp_class
+
+    # save 
+    save_df = df({
+        'img_path' : img_path_list,
+        'class_idx' : class_list })    # 모든 이미지 path와 class 정보 저장
+
+
+    save_df.to_csv(os.path.join(save_dir, 'oob_assets_path.csv'), mode='w', index=False)
+
+
 
 class CAMIO_Dataset(Dataset):
-    def __init__(self, base_path, is_train, test_mode=False, data_ratio=0.1):
+    def __init__(self, csv_path, patient_name, is_train, random_seed, IB_ratio):
         self.is_train = is_train
-        self.test_mode = test_mode # ./test parser   
-        self.img_list = []
-        self.label_list = []
+        self.csv_path = csv_path 
+        self.aug = data_transforms['train'] if is_train else data_transforms['val']
+        
+        self.img_list = [] # img
+        self.label_list = [] # label
 
-        '''
-        if self.test_mode: # test mode
-            tar_path = base_path + '/test'
-            self.aug = data_transforms['test']
-        '''
-        if self.test_mode : # test_mode (it will be check all of data /train and /val)
-            # tar_path_list = [base_path + '/test'] # if you want to other test set, try this
-            tar_path_list = [base_path + '/train', base_path + '/val']
-            self.aug = data_transforms['test']
-
-        else : # train_mode : default
-            if self.is_train:
-                tar_path_list = [base_path + '/train']
-                self.aug = data_transforms['train']
-            else:
-                tar_path_list = [base_path + '/val']
-                self.aug = data_transforms['val']
-
-        for tar_path in tar_path_list : # ['/train', '/val', 'test'] whatever you want
-            
-            dir_list = os.listdir(tar_path) # [InBody, OutBody]
-            
-            for dir_name in dir_list: # [InBody, OutBody]
-                dpath = os.path.join(tar_path, dir_name) # [train, val, test] / [InBody, OutBody]
-                t_img_list = glob.glob(dpath + '/*.jpg') # all .jpg file in [train, val, test] / [InBody, OutBody] / *.jpg
-                # sorting because of apply  random seed fairly
-                # t_img_list = sorted(t_img_list)
-
-                print("Load Dataset at \t {} \t ====> {} file Exsisted ".format(dpath, len(t_img_list)))
-                
-                if 'In' in dir_name: # Inbody
-                    # tar_label = np.array([1, 0])
-                    tar_label = 0
-                else: # Outbody
-                    tar_label = 1
-                    # tar_label = np.array([0, 1])
-
-                # init temp ==> it will be added into self.img_list, self.label
-                temp_img_list = []
-                temp_label_list = []
-
-                ###  this is for balacing train_set 3(In body) : 1(out body) ==> temp code ### 
-                if 'In' in dir_name and 'train' in tar_path : # train
-                    print('\t @@@ in / train')
-                    # img
-                    ## 중복허용하지 않고 sampling
-                    random.seed(100) # seed fix
-                    temp_img_list = random.sample(t_img_list, 14506) # out body의 3배 (43518)
-                    
-
-                elif 'In' in dir_name and 'val' in tar_path : # val
-                    print('\t @@@ in / val')
-                    # img
-                    ## 중복허용하지 않고 sampling
-                    random.seed(100) # seed fix
-                    temp_img_list = random.sample(t_img_list, 3717) # out body의 3배 (11151)
-
-                else : 
-                    # img
-                    temp_img_list = t_img_list
-                    
-                # label
-                # label will be configurationed of temp_img_list count 
-                temp_label_list = [tar_label] * len(temp_img_list)
-
-                # update dataset (append temp data) 
-                self.img_list += temp_img_list # img
-                self.label_list += temp_label_list # label 
-                    
-                # check updataing rightly
-                print('\t Dataset Updated from ==> {} | Updated File Count ==> {} ", Updated Label Count ==> {} | Label Info ==> {} '.format(dpath, len(temp_img_list), len(temp_label_list), np.unique(temp_label_list)))
-                print('')
+        read_assets_df = pd.read_csv(csv_path) # read csv
+        
+        print('\n\n')
+        print('==> \tPATIENT')
+        print('|'.join(patient_name))
+        patient_name_for_parser = [patient + '_' for patient in patient_name]
+        print('|'.join(patient_name_for_parser))
+        
+        print('==> \tREAD_CSV')
+        print(read_assets_df)
+        print('\n\n')
 
 
-        # modify number of dataset from data_ratio parameter
-        indices = list(range(len(self.img_list)))
-        random.seed(10) # seed fix
-        random.shuffle(indices)
-        split = int(len(indices) * data_ratio)
+        # select patient video
+        self.assets_df = read_assets_df[read_assets_df['img_path'].str.contains('|'.join(patient_name_for_parser))]
 
-        self.img_list = [self.img_list[i] for i in indices[:split]]
-        self.label_list = [self.label_list[i] for i in indices[:split]]
+        # seperate df by class
+        self.ib_df = self.assets_df[self.assets_df['class_idx']==IB_CLASS]
+        self.oob_df = self.assets_df[self.assets_df['class_idx']==OOB_CLASS]
 
-        # final check dataset info
-        print('\t\t ===== '*2, 'DATASET REPORT', '\t\t ===== '*2)
-        print('\t\t @ Dataset composed from ==> {} | target count ==> {} ", label count ==> {} '.format(tar_path_list, len(self.img_list), len(self.label_list)))
-        print('\t\t @ label composite info', np.unique(self.label_list, return_counts=True))
-        print('\t\t ===== '*2, '==============', '\t\t ===== '*2)
+        print('\n\n')
+        print('==> \tINBODY_CSV')
+        print(self.ib_df)
+        print('\t'* 4)
+        print('==> \tOUTBODY_CSV')
+        print(self.oob_df)
+        print('\n\n')
+
+        # sort
+        self.ib_df = self.ib_df.sort_values(by=['img_path'])
+        self.oob_df = self.oob_df.sort_values(by=['img_path'])
+
+        print('\n\n')
+        print('==> \tSORT INBODY_CSV')
+        print(self.ib_df)
+        print('\t'* 4)
+        print('==> \tSORT OUTBODY_CSV')
+        print(self.oob_df)
+        print('\n\n')
+
+        # random_sampling and setting IB:OOB data ratio
+        self.ib_df = self.ib_df.sample(n=len(self.oob_df)*IB_ratio, replace=False, random_state=random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+        self.oob_df = self.oob_df.sample(frac=1, replace=False, random_state=random_seed)
+
+        print('\n\n')
+        print('==> \tRANDOM SAMPLING INBODY_CSV')
+        print(self.ib_df)
+        print('\t'* 4)
+        print('==> \tRANDOM SAMPLING OUTBODY_CSV')
+        print(self.oob_df)
+        print('\n\n')
+
+        # suffle 0,1
+        self.assets_df = pd.concat([self.ib_df, self.oob_df]).sample(frac=1, random_state=random_seed).reset_index(drop=True)
+        print('\n\n')
+        print('==> \tFINAL ASSETS')
+        print(self.assets_df)
+        print('\n\n')
+
+        print('\n\n')
+        print('==> \tFINAL HEAD')
+        print(self.assets_df.head(20))
+        print('\n\n')
+
+        # last processing
+        self.img_list = self.assets_df.img_path.tolist()
+        self.label_list = self.assets_df.class_idx.tolist()
         
         
 
@@ -140,6 +167,9 @@ class CAMIO_Dataset(Dataset):
         img = self.aug(img)
 
         return img, label
+
+
+
 
 
 # TODO 데이터 생성하는 부분(robot/lapa) 둘다 통합하는 코드로 변경 필요함
