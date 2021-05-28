@@ -25,14 +25,20 @@ do
 done
 END
 
-model_array=("resnet18" \
-            "resnet34")
+model_array=("wide_resnet50_2" \
+            "resnext50_32x4d" \
+            "mobilenet_v3_small" \
+            "squeezenet1_0")
 
-model_path_array=("./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=resnet18-batch=32-lr=0.001-epoch=49-last.ckpt" \
-                "./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=resnet34-batch=32-lr=0.001-epoch=49-last.ckpt")
+model_path_array=("./logs/robot/OOB/robot-oob-0423-fold_1/ckpoint_robot-oob-0423-fold_1-model=wide_resnet50_2-batch=32-lr=0.001-fold=1-ratio=3-epoch=49-last.ckpt" \
+                "./logs/robot/OOB/robot-oob-0423-fold_1/ckpoint_robot-oob-0423-fold_1-model=resnext50_32x4d-batch=32-lr=0.001-fold=1-ratio=3-epoch=49-last.ckpt" \
+                "./logs/robot/OOB/robot-oob-0423-fold_1/ckpoint_robot-oob-0423-fold_1-model=mobilenet_v3_small-batch=32-lr=0.001-fold=1-ratio=3-epoch=49-last.ckpt" \
+                "./logs/robot/OOB/robot-oob-0423-fold_1/ckpoint_robot-oob-0423-fold_1-model=squeezenet1_0-batch=32-lr=0.001-fold=3-ratio=1-epoch=49-last.ckpt")
 
-results_save_dir_array=("./new_results-robot_oob_resnet18-1_3-last" \
-                "./new_results-robot_oob_resnet34-1_3-last")
+results_save_dir_array=("./results-robot_oob-wide_resnet50_2-fold_1-last" \
+                "./results-robot_oob-resnext50_32x4d-fold_1-last" \
+                "./results-robot_oob-mobilenet_v3_small-fold_1-last" \
+                "./results-robot_oob-squeezenet1_0-fold_1-last")
 
 
 for (( i = 0 ; i < ${#model_path_array[@]} ; i++ ))
