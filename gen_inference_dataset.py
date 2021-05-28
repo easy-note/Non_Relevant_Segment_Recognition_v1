@@ -32,24 +32,29 @@ def npy_to_tensor(npy_img):
 
 
 def gen_data():
-    video_dir = '/data/CAM_IO/robot/video/'
+    save_root_dir = '/data/ROBOT/Inference'
+
+    video_dir = '/data/ROBOT/Video'
     video_list = os.listdir(video_dir)
 
 
 
-    # patient_list = ['R003', 'R004', 'R006', 'R013', 'R018'] + ['R007', 'R010', 'R019', 'R056', 'R074']
-    patient_list = ['R019', 'R056', 'R074']
 
-    # patient_list = ['R017']
+    patient_list = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303'] + ['R_3', 'R_4', 'R_6', 'R_13', 'R_18'] + ['R_7', 'R_10', 'R_19', 'R_56', 'R_74']
+
+    patient_for_parser = [patient + '_' for patient in patient_list]
+    
     target_video = []
 
-    for patient in patient_list:
+    for patient in patient_for_parser:
         for video in video_list:
             if patient in video:
                 target_video.append(video)
 
+    print('count of target_video : ', len(target_video))
+
     for target in target_video:
-        vidcap = cv2.VideoCapture(video_dir + target)
+        vidcap = cv2.VideoCapture(os.path.join(video_dir, target))
         video_length = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         a, b = divmod(video_length, 30000)
@@ -62,6 +67,7 @@ def gen_data():
         
         for e, n in enumerate(video_frame_list):
             print(e, ', ', n)
+            hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(target)[0].split('_')
 
             # success, image = vidcap.read()
             
@@ -80,14 +86,13 @@ def gen_data():
                 t[i] = img
 
                 if i % 10000 == 0:
-                    cv2.imwrite("image/cv2_img_" + target[:-4] + str(e) + '_' + str(i) + ".jpg", image)
+                    cv2.imwrite("image/cv2_img_" + os.path.splitext(target)[0] + '_' + str(e) + '_' + str(i) + ".jpg", image)
 
-            
-            path = '/data/CAM_IO/robot/inference_dataset/' + target[:4] + '/' + target[:-4] + '/'
+            path = os.path.join(save_root_dir, '{}_{}'.format(op_method, patient_idx), os.path.splitext(target)[0])
             if not os.path.isdir(path):
                 os.makedirs(path)
 
-            with open(path + target[:-4] + '_' + str(e), "wb") as f:
+            with open(os.path.join(path, os.path.splitext(target)[0]+'_'+str(e)), "wb") as f:
                 pickle.dump(t, f)
 
             t = None

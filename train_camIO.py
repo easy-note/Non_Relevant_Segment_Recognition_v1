@@ -8,7 +8,7 @@ from pytorch_lightning.plugins import DDPPlugin
 
 from Model import CAMIO
 from gen_dataset import CAMIO_Dataset
-from gen_dataset import make_robot_csv
+from gen_dataset import make_oob_csv
 
 import pandas as pd
 import shutil
@@ -17,6 +17,8 @@ from tqdm import tqdm
 import time
 
 import json
+
+from torchsummary import summary
 
 def train():
     parser = argparse.ArgumentParser()
@@ -38,7 +40,7 @@ def train():
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
-                        default='/data/CAM_IO/robot/images', help='Data path :)')
+                        default='/data/LAPA/Img', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -54,15 +56,21 @@ def train():
 
     ## trian dataset video
     parser.add_argument('--train_videos', type=str, nargs='*',
-                        choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
-                                'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                                'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='train video')
+                        choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'] + 
+                ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676'], help='train video')
 
     ## val dataset video
     parser.add_argument('--val_videos', type=str, nargs='*',
-                        choices=['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R017', 'R018', 
-                                'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                                'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313'], help='val video')
+                        choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'] + 
+                ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676'], help='val video')
 
     ## random seed
     parser.add_argument('--random_seed', type=int, help='dataset ranbom seed')
@@ -71,8 +79,7 @@ def train():
     parser.add_argument('--IB_ratio', type=int, help='IB = OOB * IB_ratio')
 
     ## Robot Lapa
-    parser.add_argument('--dataset', type=str,
-                        default='robot', choices=['robot', 'lapa'], help='[robot, lapa] choice on dataset')
+    parser.add_argument('--dataset', type=str, choices=['ROBOT', 'LAPA'], help='[robot, lapa] choice on dataset')
 
     ## OOB NIR
     parser.add_argument('--task', type=str,
@@ -101,6 +108,8 @@ def train():
     }
 
     print('\n\n')
+    print('dataset : ', args.dataset)
+    print('fold : ', args.fold)
     print('batch size : ', args.batch_size)
     print('init lr : ', config_hparams['optimizer_lr'])
     print('backborn model : ', config_hparams['backborn_model'])
@@ -121,65 +130,101 @@ def train():
     # save args log
     log_txt='\n\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n\n'
     log_txt+=json.dumps(args.__dict__, indent=2)
-
-    # start time stamp
-    startTime = time.time()
-    s_tm = time.localtime(startTime)
-    
-    log_txt+='\n\n=============== \t\t TRAIN TIME \t\t ============= \n\n'
-    log_txt+='STARTED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', s_tm)
-    
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
-
-    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
     
-    
-
     # 사용할 GPU 디바이스 번호들
     os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
 
     # images path (.csv dir)
     base_path = args.data_path
+    
+    # make img info csv path
+    # make_oob_csv(base_path, base_path)
+
 
     # bath size
     BATCH_SIZE = args.batch_size
 
-    # make img info csv path
-    # make_robot_csv(base_path, base_path)
-
     # model load
     model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
+
+    # model param save
+    print('\n\n==== MODEL SUMMARY ====\n\n')
+    summary(model.cuda(), (3,224,224))
+
+    log_txt = '\n\n==== MODEL SUMMARY ====\n\n'
+    log_txt+= 'MODEL PARAMS : \t {}'.format(sum([param.nelement() for param in model.parameters()]))
+
+    save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
+
+    # start time stamp
+    startTime = time.time()
+    s_tm = time.localtime(startTime)
+    
+    log_txt='\n\n=============== \t\t TRAIN TIME \t\t ============= \n\n'
+    log_txt+='STARTED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', s_tm)
+    
+    save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
+
+    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
     # fold 별 train, validation video 설정
     train_videos = []
     val_videos = []
-    
-    if args.fold == '1' :
-        train_videos = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R007', 'R010', 'R013', 'R014', 'R015', 'R018', 
-                    'R019', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R117', 'R201', 'R202', 'R203', 
-                    'R204', 'R205', 'R206', 'R207', 'R209', 'R210', 'R301', 'R302', 'R304', 'R305', 'R313']
-        val_videos = ['R017', 'R022', 'R116', 'R208', 'R303']
 
-    elif args.fold == '2' :
-        train_videos = ['R001', 'R002', 'R005', 'R007', 'R010', 'R014', 'R015', 'R017', 
-                    'R019', 'R022', 'R048', 'R056', 'R074', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                    'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313']
-        val_videos = ['R003', 'R004', 'R006', 'R013', 'R018']
-    
-    elif args.fold == '3' :
-        train_videos = ['R001', 'R002', 'R003', 'R004', 'R005', 'R006', 'R013', 'R014', 'R015', 'R017', 'R018', 
-                    'R022', 'R048', 'R076', 'R084', 'R094', 'R100', 'R116', 'R117', 'R201', 'R202', 'R203', 
-                    'R204', 'R205', 'R206', 'R207', 'R208', 'R209', 'R210', 'R301', 'R302', 'R303', 'R304', 'R305', 'R313']
-        val_videos = ['R007', 'R010', 'R019', 'R056', 'R074']
+    if args.dataset == 'ROBOT' :
+        if args.fold == '1' :
+            train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_18', 
+                    'R_19', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_117', 'R_201', 'R_202', 'R_203', 
+                    'R_204', 'R_205', 'R_206', 'R_207', 'R_209', 'R_210', 'R_301', 'R_302', 'R_304', 'R_305', 'R_313']
+            val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
 
-    elif args.fold == 'free' : # from argument
-        train_videos = args.train_videos
-        val_videos = args.val_videos
+        elif args.fold == '2' :
+            train_videos = ['R_1', 'R_2', 'R_5', 'R_7', 'R_10', 'R_14', 'R_15', 'R_17', 
+                    'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                    'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
+            val_videos = ['R_3', 'R_4', 'R_6', 'R_13', 'R_18']
+        
+        elif args.fold == '3' :
+            train_videos = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                    'R_22', 'R_48', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                    'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313']
+            val_videos = ['R_7', 'R_10', 'R_19', 'R_56', 'R_74']
+
+        elif args.fold == 'free' : # from argument
+            train_videos = args.train_videos
+            val_videos = args.val_videos
+
+    elif args.dataset == 'LAPA' :
+        if args.fold == '1' :
+            train_videos = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_534', 'L_535',
+                'L_586', 'L_595', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676']
+            val_videos = ['L_522', 'L_605', 'L_553', 'L_550', 'L_412']
+
+        elif args.fold == '2' :
+            train_videos = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_450', 'L_458', 'L_465', 'L_491', 'L_496', 'L_522', 'L_534', 'L_535', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_669', 'L_676']
+            val_videos = ['L_325', 'L_507', 'L_443', 'L_661', 'L_493']
+        
+        elif args.fold == '3' :
+            train_videos = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                'L_443', 'L_458', 'L_465', 'L_491', 'L_493', 'L_507', 'L_522', 'L_534', 'L_550',
+                'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661']
+            val_videos = ['L_450', 'L_669', 'L_676', 'L_535', 'L_496']
+
+        elif args.fold == 'free' : # from argument
+            train_videos = args.train_videos
+            val_videos = args.val_videos
+    
+    else :
+        assert False, 'ONLY SUPPORT DATASET [ROBOT, LAPA] | Input DATASET : {}'.format(args.dataset) 
 
     # dataset 설정
     # IB_ratio = [1,2,3,..] // IB개수 = OOB개수*IB_ratio
-    trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=train_videos, is_train=True, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
-    valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'robot_oob_assets_path.csv'), patient_name=val_videos, is_train=False, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
+    trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=train_videos, is_train=True, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
+    valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=val_videos, is_train=False, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
     
 
     print('trainset len : ', len(trainset))
@@ -191,6 +236,8 @@ def train():
                                             shuffle=False, num_workers=8)
     vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
                                             shuffle=False, num_workers=8)
+
+    
 
     
     
@@ -257,7 +304,7 @@ def train():
     checkpoint_filename = checkpoint_filename + '{epoch}-{val_loss:.4f}'
     checkpoint_callback = ModelCheckpoint(
             dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
-            save_top_k=1, save_last=True, verbose=True, monitor="OOB_false_metric", mode="min"
+            save_top_k=1, save_last=True, verbose=True, monitor="OOB_metric", mode="min"
     )
 
     # change last checkpoint name
