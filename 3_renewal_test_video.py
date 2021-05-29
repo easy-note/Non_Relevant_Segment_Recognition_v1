@@ -33,7 +33,100 @@ import pickle
 import time
 import json
 
+
+
+# check results for binary metric
+def calc_confusion_matrix(gts, preds):
+    IB_CLASS, OOB_CLASS = [0, 1]
+    
+    classification_report_result = classification_report(gts, preds, labels=[IB_CLASS, OOB_CLASS], target_names=['IB', 'OOB'], zero_division=0)
+    
+    prec = precision_score(gts, preds, average='binary',pos_label=1, zero_division=0) # pos = [1]
+    recall = recall_score(gts, preds, average='binary',pos_label=1, zero_division=0) # pos = [1]
+
+    metric = pd.crosstab(pd.Series(gts), pd.Series(preds), rownames=['True'], colnames=['Predicted'], margins=True)
+    
+    saved_text = '{} \nprecision \t : \t {} \nrecall \t\t : \t {} \n\n{}'.format(classification_report_result, prec, recall, metric)
+
+    return saved_text
+
+def idx_to_time(idx, fps) :
+    time_s = idx // fps
+    frame = idx % fps
+
+    converted_time = str(datetime.timedelta(seconds=time_s))
+    converted_time = converted_time + ':' + str(frame)
+
+    return converted_time
+
+# input|DataFrame = 'frame' 'time' truth' 'predict'
+# calc FN, FP, TP, TN
+# out|{} = FN, FP, TP, TN frame
+def return_metric_frame(result_df) :
+    IB_CLASS, OOB_CLASS = 0,1
+
+    print(result_df)
+    
+    # FN    
+    FN_df = result_df[(result_df['truth']==OOB_CLASS) & (result_df['predict']==IB_CLASS)]
+    
+    # FP
+    FP_df = result_df[(result_df['truth']==IB_CLASS) & (result_df['predict']==OOB_CLASS)]
+
+    # TN
+    TN_df = result_df[(result_df['truth']==IB_CLASS) & (result_df['predict']==IB_CLASS)]
+    
+    # TP
+    TP_df = result_df[(result_df['truth']==OOB_CLASS) & (result_df['predict']==OOB_CLASS)]
+
+    return {
+        'FN_df' : FN_df,
+        'FP_df' : FP_df,
+        'TN_df' : TN_df,
+        'TP_df' : TP_df,
+    }
+
+# save video frame from frame_list | it will be saved in {save_path}/{video_name}-{frame_idx}.jpg
+def save_video_frame(video_path, frame_list, save_path, video_name) :
+    video = cv2.VideoCapture(video_path)
+    
+    print('TARGET VIDEO_PATH : ', video_path)
+    print('TARGET FRAME : ', frame_list)
+
+    for frame_idx in tqdm(frame_list, desc='Saving Frame From {} ... '.format(video_path)) :
+        video.set(1, frame_idx) # frame setting
+        _, img = video.read() # read frame
+
+        cv2.imwrite(os.path.join(save_path, '{}-{:010d}.jpg'.format(video_name, frame_idx)), img)
+    
+    video.release()
+    print('======> DONE.')
+
+# calc OOB_false Metric
+def calc_OOB_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt, TOTAL_cnt) :
+    OOB_metric = -1
+
+    try : # zero devision except
+        OOB_metric = (TP_cnt - FP_cnt) / (FP_cnt + TP_cnt + FN_cnt) # positie = OOB
+    except :
+        OOB_metric = -1
+
+    return OOB_metric
+
+# save log 
+def save_log(log_txt, save_dir) :
+    print('=========> SAVING LOG ... | {}'.format(save_dir))
+    with open(save_dir, 'a') as f :
+        f.write(log_txt)
+
+
+
+
 def test_video() :
+    '''
+    인자 받음.
+
+    '''
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--model_path', type=str, help='trained model_path')
@@ -142,6 +235,7 @@ def test_video() :
         print('')
         print(test_hparams)
 
+        # model 불러오기.
         model = CAMIO.load_from_checkpoint(args.model_path, config=test_hparams)
 
         model.cuda()
@@ -160,288 +254,10 @@ def test_video() :
     log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
     save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
 
-
-
-
-
-### @@@ union def @@@ ###
-# cal vedio frame
-def time_to_idx(time, fps):
-    t_segment = time.split(':')
-    # idx = int(t_segment[0]) * 3600 * fps + int(t_segment[1]) * 60 * fps + int(t_segment[2]) 
-    idx = (int(t_segment[0]) * 3600 * fps) + (int(t_segment[1]) * 60 * fps) + (int(t_segment[2]) * fps) + int(t_segment[3]) # [h, m, s, frame] 
-
-
-    return idx
-
-def idx_to_time(idx, fps) :
-    time_s = idx // fps
-    frame = idx % fps
-
-    converted_time = str(datetime.timedelta(seconds=time_s))
-    converted_time = converted_time + ':' + str(frame)
-
-    return converted_time
-
-
-# input|DataFrame = 'frame' 'time' truth' 'predict'
-# calc FN, FP, TP, TN
-# out|{} = FN, FP, TP, TN frame
-def return_metric_frame(result_df) :
-    IB_CLASS, OOB_CLASS = 0,1
-
-    print(result_df)
-    
-    # FN    
-    FN_df = result_df[(result_df['truth']==OOB_CLASS) & (result_df['predict']==IB_CLASS)]
-    
-    # FP
-    FP_df = result_df[(result_df['truth']==IB_CLASS) & (result_df['predict']==OOB_CLASS)]
-
-    # TN
-    TN_df = result_df[(result_df['truth']==IB_CLASS) & (result_df['predict']==IB_CLASS)]
-    
-    # TP
-    TP_df = result_df[(result_df['truth']==OOB_CLASS) & (result_df['predict']==OOB_CLASS)]
-
-    return {
-        'FN_df' : FN_df,
-        'FP_df' : FP_df,
-        'TN_df' : TN_df,
-        'TP_df' : TP_df,
-    }
-
-
-# save video frame from frame_list | it will be saved in {save_path}/{video_name}-{frame_idx}.jpg
-def save_video_frame(video_path, frame_list, save_path, video_name) :
-    video = cv2.VideoCapture(video_path)
-    
-    print('TARGET VIDEO_PATH : ', video_path)
-    print('TARGET FRAME : ', frame_list)
-
-    for frame_idx in tqdm(frame_list, desc='Saving Frame From {} ... '.format(video_path)) :
-        video.set(1, frame_idx) # frame setting
-        _, img = video.read() # read frame
-
-        cv2.imwrite(os.path.join(save_path, '{}-{:010d}.jpg'.format(video_name, frame_idx)), img)
-    
-    video.release()
-    print('======> DONE.')
-
-# calc OOB_false Metric
-def calc_OOB_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt, TOTAL_cnt) :
-    OOB_metric = -1
-
-    try : # zero devision except
-        OOB_metric = (TP_cnt - FP_cnt) / (FP_cnt + TP_cnt + FN_cnt) # positie = OOB
-    except :
-        OOB_metric = -1
-
-    return OOB_metric
-
-
-# check results for binary metric
-def calc_confusion_matrix(gts, preds):
-    IB_CLASS, OOB_CLASS = [0, 1]
-    
-    classification_report_result = classification_report(gts, preds, labels=[IB_CLASS, OOB_CLASS], target_names=['IB', 'OOB'], zero_division=0)
-    
-    prec = precision_score(gts, preds, average='binary',pos_label=1, zero_division=0) # pos = [1]
-    recall = recall_score(gts, preds, average='binary',pos_label=1, zero_division=0) # pos = [1]
-
-    metric = pd.crosstab(pd.Series(gts), pd.Series(preds), rownames=['True'], colnames=['Predicted'], margins=True)
-    
-    saved_text = '{} \nprecision \t : \t {} \nrecall \t\t : \t {} \n\n{}'.format(classification_report_result, prec, recall, metric)
-
-    return saved_text
-
-# save log 
-def save_log(log_txt, save_dir) :
-    print('=========> SAVING LOG ... | {}'.format(save_dir))
-    with open(save_dir, 'a') as f :
-        f.write(log_txt)
-
-
-# Annotation Sanity Check
-def check_anno_sequence(anno_info:list): # annotation sequence에 이상없을 경우 = True, 이상 있을경우 = False
-
-    if len(anno_info) == 1 :
-        p_start, p_end = anno_info[0][0], anno_info[0][1]
-        is_block_seq_ok = False
-
-        if p_start < p_end : 
-            is_block_seq_ok = True
-
-        if not(is_block_seq_ok) :
-            return False
-
-
-    elif len(anno_info) >  1 :
-        p_start, p_end = anno_info[0][0], anno_info[0][1]
-        for start, end in anno_info[1:] :
-            is_block_seq_ok = False
-            is_total_seq_ok = False
-
-            if start < end : 
-                is_block_seq_ok = True
-
-            if p_end < start : 
-                is_total_seq_ok = True 
-
-            if not(is_block_seq_ok) or not(is_total_seq_ok) :
-                return False
-
-            p_start, p_end = start, end
-
-    return True
-
-# check over frame and modify last annotation info
-def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False  
-    has_not_over_frame = False
-    
-    last_start, last_end = anno_info[-1]
-    
-    if last_end < video_len : 
-        has_not_over_frame = True
-
-    # modify
-    if not(has_not_over_frame) :
-        anno_info[-1] = [last_start, video_len-1]
-        print('\t\t\t *** ANNO LAST FRAME END : {} | VIDEO_LEN : {}'.format(last_end, video_len))
-
-    return has_not_over_frame, anno_info
-
-def check_anno_int(anno_info:list): # anno int = True, anno Float = False
-    is_int = True
-    
-    for start, end in anno_info : 
-        if (not isinstance(start, int)) and (not isinstance(end, int)) :
-            is_int = False
-            break
-    
-    # modify
-    if not(is_int) :
-        for i, (start, end) in enumerate(anno_info) :
-            anno_info[i] = [int(math.floor(start)), int(math.floor(end))]
-            print('\t\t\t *** ANNO FLOAT FRAME : [{}, {}] | REFINED FRAME : {}'.format(start, end, anno_info[i]))
-
-    return is_int, anno_info
-
-
-# 불러온 annotation file 정보가 정확한지 체크 및 수정
-def sanity_check_info_dict(info_dict) :
-    # loop from total_videoset_cnt
-    for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
-        videoset_name = '{}_{}'.format(op_method, patient_idx)
-
-        for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
-            
-            video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
-            print('----- ANNOTATION CHECK => \t VIDEO\t {} \t-----'.format(video_name))
-            print(info_dict['anno'][i][j])
-            
-            
-            ##### video info and ####
-            # open video cap for parse frame
-            video = cv2.VideoCapture(video_path)
-            video_fps = video.get(cv2.CAP_PROP_FPS)
-            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-            video.release()
-            del video
-        
-            # open VideoReader
-            '''
-            with open(video_path, 'rb') as f :
-                # open VideoReader
-                video = VideoReader(f, ctx=cpu(0))
-            
-            # total frame
-            video_len = len(video) 
-
-            del video
-            '''
-
-            print('\tTarget video : {} | Total Frame : {} | Video FPS : {} '.format(video_name, video_len, video_fps))
-            print('\tAnnotation Info : {}'.format(anno_info))
-
-
-            ##### annotation sanity check #####
-            ### check idx -> time
-            if anno_info : # not empty list
-                # init 
-                over_ret = None
-                int_ret = None
-                val = None
-                
-                print('\t BEFORE ANNOTATION => {}\n'.format(anno_info))
-
-                # seq check
-                if not(check_anno_sequence(anno_info)) : 
-                    print('ANNTATION SEQ ERROR | video : {} | anno {}'.format(video_path, anno_info))
-                    exit(1)
-                
-                # last frmae annotation check
-                over_ret, val = check_anno_over_frame(anno_info, video_len) # over frame이 아닐경우 True, over frame 일 경우 False
-                anno_info = anno_info if over_ret else val # update anno_info | over frame일 경우 refined 된 val 값으로 update
-                val = None # clean
-                
-                # check anntation frame is int
-                int_ret, val = check_anno_int(anno_info) # int 일 경우 True, int가 아닐경우 False
-                anno_info = anno_info if int_ret else val # update anno_info | frame이 int가 아닐경우 모두 int 로 refined 된 값으로 update
-
-                print('\n\t AFTER ANNOTATION => {}'.format(anno_info))
-
-                ##### update redefined annotation info #### 
-                info_dict['anno'][i][j] = anno_info
-                print(info_dict['anno'][i][j])
-
-            else : # empty
-                print(anno_info)
-                print('=====> NO EVENT')
-            
-            print('')
-
-    return info_dict # redefined info_dict
-
-
-
-
-
-### union def ### 
-
-
-
-
-### @@@ for robot def @@@ ###
-# sanitiy check of test_assets per 1 video
-def sanity_of_inference_assets(video_path, infernece_assets_path_list) :
-    video = cv2.VideoCapture(video_path)
-    video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-    video.release()
-
-    infernece_assets_len = 0
-
-    for i, infernece_assets in tqdm(enumerate(infernece_assets_path_list), desc='Sanity Checking of Inferecnce assets... VIDEO_PATH : {} | INFERENCE ASSETS : {} '.format(video_path, infernece_assets_path_list)) :
-        print(infernece_assets)
-        with open(infernece_assets, 'rb') as file :
-            infernece_assets_len += pickle.load(file).size()[0]
-    
-    assert video_len == infernece_assets_len, 'Original Video and Inference Assets is not matching in frame length\n VIDEO LEN : {} | INFERECE ASSETS LEN : {} | video_path : {} | assets_path : {}'.format(video_len, infernece_assets_len, video_path, infernece_assets_path_list)
-
-    print('\n\n=============== \tSANITY RESULTS\t ============= \n\n')
-    print('VIDEO FRAME COUNT {} | INFERENCE ASSETS TENSOR LEN : {}'.format(video_len ,infernece_assets_len))
-    print('\n\n=============== \t\t ============= \n\n')
-
-
-    return True
-
-
 def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step) :
     
     ### base setting ###
     # val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
-    # val_videos = ['R_17']
     valset = patient_list
 
     video_ext = '.mp4'
@@ -483,167 +299,6 @@ def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_
 
     # inference step
     inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=fps)
-
-
-def gettering_information_for_oob(video_root_path, anno_root_path, inference_assets_root_path, video_set, mode) : # paring video from annotation info
-
-    
-    print('\n\n\n\t\t\t ### STARTING DEF [gettering_information_for_robot] ### \n\n')
-
-    info_dict = {
-        'video': [],
-        'anno': [],
-        'inference_assets' : []
-    }
-
-    all_video_path = []
-    all_anno_path = []
-
-    if mode == 'ROBOT' : 
-        fps = 30
-        
-        video_ext_list = ['mp4']
-        for ext in video_ext_list :
-            all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
-        
-        all_anno_path = glob.glob(anno_root_path + '/*.csv') # all annotation file list
-    
-    elif mode == 'LAPA' :
-        fps = 60
-        video_ext_list = ['mp4', 'MP4', 'mpg']
-        
-        for ext in video_ext_list :
-            all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
-        
-        all_anno_path = glob.glob(anno_root_path + '/*.json') # all annotation file list
-
-        ##### except video file ######
-        all_video_path.remove(os.path.join(video_root_path, '01_G_01_L_423_xx0_01.MP4'))
-        all_anno_path.remove(os.path.join(anno_root_path, '01_G_01_L_423_xx0_01_OOB_16.json'))
-
-    else :
-        assert False, 'ONLY SUPPORT MODE [ROBOT, LAPA] | Input mode : {}'.format(mode)
-
-    # dpath = os.path.join(video_root_path) # video_root path
-
-    print('NUMBER OF TOTAL VIDEO FILE : ', len(all_video_path))
-    print('NUMBER OF TOTAL ANNOTATION FILE : ', len(all_anno_path))
-    print('')
-
-    all_video_path_df = df(all_video_path, columns=['video_path'])
-    all_anno_path_df = df(all_anno_path, columns=['anno_path'])
-
-    print(all_video_path_df)
-    print(all_anno_path_df)
-
-    for video_no in video_set : # get target video
-        # video_path_list = sorted([vfile for vfile in all_video_path if os.path.basename(vfile).startswith(video_no)])
-        # anno_path_list = sorted([anno_file for anno_file in all_anno_path if os.path.basename(anno_file).startswith(video_no)])
-
-        # find video_no in video_file
-        video_path_df = all_video_path_df[all_video_path_df['video_path'].str.contains(video_no + '_')]
-
-        # sort video_path_df for sync for video slice
-        video_path_df = video_path_df.sort_values(by=['video_path'], axis=0, ascending=True)
-
-        # init video and annotation paring path info
-        pair_info = df(range(0,0), columns=['video_path', 'anno_path'])
-
-        # video & annotation pairing
-        for i in range(len(video_path_df)) : 
-            video_file_name = os.path.splitext(os.path.basename(video_path_df['video_path'].iloc[i]))[0] # video_name with out extension
-            anno_path_series = all_anno_path_df[all_anno_path_df['anno_path'].str.contains(video_file_name+'_OOB')]['anno_path'] # find annotation file based in video_file_name
-            video_path_series = video_path_df.iloc[i]
-
-            info = {
-                'video_path':list(video_path_series)[0],
-                'anno_path':np.nan if len(list(anno_path_series))==0 else list(anno_path_series)[0]
-            }
-
-            pair_info=pair_info.append(info, ignore_index=True)
-        
-        pair_info = pair_info.fillna('') # fill na -> ""
-        
-        print(pair_info)
-
-        # df -> list 
-        video_path_list = list(pair_info['video_path'])
-        anno_path_list = list(pair_info['anno_path'])
-
-
-        # inference assets base dir
-        inference_assets_base_dir = os.path.join(inference_assets_root_path, video_no)
-        
-        
-        print('\t ==== GETTERING INFO ====')
-        print('\t VIDEO NO | ', video_no) 
-        print('\t video_path', video_path_list) # target videos path
-        print('\t anno_path', anno_path_list) # target annotaion path
-        print('\t inference assets base path | ', inference_assets_base_dir)
-        print('\t ', glob.glob(inference_assets_base_dir + '/*'))
-        print('\t ==== ==== ==== ====\n')
-
-        # it will be append to info_dict
-        target_video_list = []
-        target_anno_list = []
-        target_inference_assets_list = []
-        
-        for target_video_path, target_anno_path in (zip(video_path_list, anno_path_list)) :
-            # init
-            temp_inference_assets_list = []
-            # it will be append to temp_anno_list
-            target_idx_list = []
-
-
-            # consist infernce assets
-            temp_inference_assets_list = glob.glob(os.path.join(inference_assets_base_dir, os.path.splitext(os.path.basename(target_video_path))[0], '*')) # [video1_1_0, video1_1_1, ...]
-
-            # video and inference assets frame sanity check
-            '''
-            if not sanity_of_inference_assets(target_video_path, temp_inference_assets_list, slide_frame=30000) : 
-                eixt(1)
-            '''
-
-
-            # only target_video_path 
-            if target_anno_path != '' :
-                anno_df = pd.read_csv(target_anno_path)
-                anno_df = anno_df.dropna(axis=0) # 결측행 제거
-
-                # time -> frame idx
-                for i in range(len(anno_df)) :
-                    t_start = anno_df.iloc[i]['start']
-                    t_end = anno_df.iloc[i]['end']
-                    
-                    target_idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)]) # temp_idx_list = [[start, end], [start, end]..]
-                
-                print('-----'*3)
-                print('target_video_path \t | ', target_video_path)
-                print('inf_assets \t\t |', temp_inference_assets_list)
-                print('anno_path \t\t | ', target_anno_path)
-                print(anno_df)
-
-            else : # no event
-                print('-----'*3)
-                print('target_video_path \t | ', target_video_path)
-                print('inf_assets \t\t |', temp_inference_assets_list)
-                print('anno_path \t\t | ', target_anno_path)
-            
-            # save gettering info
-            target_video_list.append(target_video_path) # [video1_1, video_1_2, ...]
-            target_anno_list.append(target_idx_list) # [temp_idx_list_1_1, temp_idx_list_1_2, ... ]
-            target_inference_assets_list.append(temp_inference_assets_list) # [video1_1_0, video_1_1_1, video_1_1_2, ..]
-
-        # info_dict['video'], info_dict['anno'] length is same as valset
-        info_dict['video'].append(target_video_list) # [[video1_1, video1_2], [video2_1, video_2_2], ...]
-        info_dict['anno'].append(target_anno_list) # [[temp_idx_list_1_1, temp_idx_list_1_2], [temp_idx_list_2_1, temp_idx_list_2_2,], ...]
-        info_dict['inference_assets'].append(target_inference_assets_list) # [[[video1_1_0, video1_1_1, video1_1_2,..], [video1_2_0, ...]], ... ]
-        
-        print('\n\n')
-        
-    return info_dict
-    
-
 
 def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) : # project_name is only for use for title in total_metric_df.csv
     print('\n\n\n\t\t\t ### STARTING DEF [inference_for_robot] ### \n\n')
@@ -867,11 +522,6 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
 
                             # inferencing model
                             outputs = model(BATCH_INPUT_TENSOR)
-
-                            # results of predict
-                            # print('------- ==== output | predict ==== -------')
-                            # print(outputs.cpu())
-                            # print(outputs.cpu().size())
 
                             predict = torch.argmax(outputs.cpu(), 1) # predict 
                             predict = predict.tolist() # tensot -> list
@@ -1133,6 +783,7 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
         patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}.csv'.format(os.path.basename(results_save_dir))), mode="w") # save on project direc
     
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
+
 
     
 if __name__ == "__main__":
