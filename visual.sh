@@ -52,7 +52,7 @@ do
     model_inf_path_3="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
     model_inf_path_4="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
 
-    python frame_visualization.py \
+    python visual_frame.py \
     --title_name "tmp_New_Dataset_Inference-FOLD_1" \
     --sub_title_name ${patient_array[$i]} \
     --GT_path $model_inf_path_1 \
