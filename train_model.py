@@ -1,3 +1,7 @@
+"""
+Define backborn model for train.
+"""
+
 import torch
 import torchvision.models as models
 import pytorch_lightning as pl
@@ -16,6 +20,8 @@ from torchsummary import summary
 '''
 
 class CAMIO(pl.LightningModule):
+    """ Define backborn model. """
+
     def __init__(self, config:dict):
         super(CAMIO, self).__init__()
 
@@ -31,7 +37,7 @@ class CAMIO(pl.LightningModule):
         print(self.backborn)
 
         # model setting
-        # model // choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d']
+        # model // choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet', 'mobilenet_v3_small']
 
         if (self.backborn.find('resnet') != -1) or (self.backborn.find('resnext') != -1) :
             if self.backborn == 'resnet18' :

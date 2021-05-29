@@ -1,14 +1,15 @@
+"""
+Change image dataset to trainable form of dataset.
+Input for train_loader (vali_loader).
+"""
+
 import os
-import glob2
 import glob
-import cv2
 from PIL import Image
 import random
-import numpy as np
 import pandas as pd
 from pandas import DataFrame as df
 
-from tqdm import tqdm
 from torch.utils.data import Dataset
 from torchvision import transforms
 
@@ -37,8 +38,18 @@ data_transforms = {
 IB_CLASS, OOB_CLASS = (0,1)
 
 
-def make_oob_csv(data_dir, save_dir) : 
-    
+def make_oob_csv(data_dir, save_dir) :
+    """
+    Making oob_csv file. 
+
+    Creating csv file that form of [img_path, class_idx].
+    Csv file helps to generate training dataset.  
+
+    Args:
+        data_dir: Annotaion file directory path.
+        save_dir: Path to save output csv file.
+    """
+ 
     IB_dir_name, OOB_dir_name = ['InBody', 'OutBody']
 
     class_dir_name = ['InBody', 'OutBody']
@@ -77,8 +88,22 @@ def make_oob_csv(data_dir, save_dir) :
     save_df.to_csv(os.path.join(save_dir, 'oob_assets_path.csv'), mode='w', index=False)
 
 
-
 class CAMIO_Dataset(Dataset):
+    """
+    This is an example of Google style.
+
+    Args:
+        csv_path: oob_assets_path.csv file path.
+        patient_name: patients number to train.
+        is_train: True -> for train, False -> for validation.
+        random_seed: random_seed
+        IB_ratio: Ratio of OutofBody to InBody.
+
+    Returns:
+        img: Train image of tensor form. 
+        label: Labeling for each image.
+    """
+
     def __init__(self, csv_path, patient_name, is_train, random_seed, IB_ratio):
         self.is_train = is_train
         self.csv_path = csv_path 
@@ -156,7 +181,6 @@ class CAMIO_Dataset(Dataset):
         self.label_list = self.assets_df.class_idx.tolist()
         
         
-
     def __len__(self):
         return len(self.img_list)
 

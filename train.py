@@ -1,26 +1,33 @@
+"""
+Training model for Out of Body Recognition.
+
+Usage:
+    train.sh
+"""
+
 import os
 import argparse
+import pandas as pd
+import time
+import json
+import shutil
+from tqdm import tqdm
+
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.plugins import DDPPlugin
-
-from Model import CAMIO
-from gen_dataset import CAMIO_Dataset
-from gen_dataset import make_oob_csv
-
-import pandas as pd
-import shutil
-from tqdm import tqdm
-
-import time
-
-import json
-
 from torchsummary import summary
 
+from train_model import CAMIO
+from train_dataset import CAMIO_Dataset
+from train_dataset import make_oob_csv
+
+
 def train():
+    """ Train model for OOB Recognition. """
+
     parser = argparse.ArgumentParser()
     ## train file and log file are saving in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
@@ -155,8 +162,6 @@ def train():
 
     log_txt = '\n\n==== MODEL SUMMARY ====\n\n'
     log_txt+= 'MODEL PARAMS : \t {}'.format(str(model_status))
-
-    # log_txt+= 'MODEL PARAMS : \t {}'.format(sum([param.nelement() for param in model.parameters()])) # when not suppoerted torch summary
 
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
 
@@ -295,11 +300,11 @@ def train():
 
     ##### ### ###
 
-    """
+    '''
         dirpath : log 저장되는 위치
         filename : 저장되는 checkpoint file 이름
         monitor : 저장할 metric 기준
-    """
+    '''
     checkpoint_filename = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio)
     checkpoint_filename = checkpoint_filename + '{epoch}-{Confidence_ratio:.4f}'
     checkpoint_callback = ModelCheckpoint(
@@ -310,22 +315,22 @@ def train():
     # change last checkpoint name
     checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio) + '{epoch}-last'
 
-    """
+    '''
         tensorboard logger
         save_dir : checkpoint log 저장 위치처럼 tensorboard log 저장위치
         name : tensorboard log 저장할 폴더 이름 (이 안에 하위폴더로 version_0, version_1, ... 이런식으로 생김)
         default_hp_metric : 뭔지 모르는데 거슬려서 False
-    """
+    '''
     tb_logger = pl_loggers.TensorBoardLogger(save_dir=os.path.join(log_base_path, args.project_name),
                                             name='TB_log',
                                             default_hp_metric=False)
-    """
+    '''
         gpus : GPU 몇 개 사용할건지, 1개면 ddp 안함
         max_epochs : 최대 몇 epoch 할지
         checkpoint_callback : 위에 정의한 callback 함수
         logger : tensorboard logger, 다른 custom logger도 사용가능
         accelerator : 멀티 GPU 모드 설정
-    """
+    '''
 
     # pytorch lightning Trainer Class
     ## train    
@@ -352,14 +357,11 @@ def train():
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
 
 
-
 # save log 
 def save_log(log_txt, save_dir) :
     print('=========> SAVING LOG ... | {}'.format(save_dir))
     with open(save_dir, 'a') as f :
         f.write(log_txt)
-
-
 
 
 if __name__ == "__main__":
