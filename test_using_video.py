@@ -1,3 +1,9 @@
+"""
+For model test using real video.
+
+Currently, we are using a pre-created test dataset, so we don't use it now.  
+"""
+
 import os
 import cv2
 from PIL import Image
@@ -7,29 +13,24 @@ import pandas as pd
 import glob
 import matplotlib
 import argparse
+import time
+import json
+import datetime
 
 from pandas import DataFrame as df
 from tqdm import tqdm
-
-matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
 
 import torch
-
-from Model import CAMIO
-from torchvision import transforms
-
-import datetime
-
 from sklearn.metrics import classification_report
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
-import time
-import json
+from train_model import CAMIO
+from torchvision import transforms
+
+matplotlib.use('Agg')
 
 
 
@@ -37,12 +38,7 @@ def test_video() :
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--model_path', type=str, help='trained model_path')
-    # robot_3 | /logs/robot/OOB/robot_oob_train_3/epoch=2-val_loss=0.0541.ckpt
-    # robot_4 | /logs/robot/OOB/robot_oob_train_4/epoch=9-val_loss=0.0597.ckpt
-    
 
-    # os.getcwd() + '/logs/robot/OOB/robot_oob_train_1/epoch=12-val_loss=0.0303.ckpt' // OOB = 1
-    # os.getcwd() + '/logs/OOB_robot_test7/epoch=6-val_loss=0.0323.ckpt' // OOB = 0
     parser.add_argument('--data_dir', type=str,
                         default='/data/CAM_IO/robot/video', help='video_path :) ')
 
@@ -103,7 +99,6 @@ def test_video() :
 
     ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
-
     data_transforms = {
         'val': transforms.Compose([
             transforms.Resize(256),
@@ -153,7 +148,6 @@ def time_to_idx(time, fps):
     t_segment = time.split(':')
     # idx = int(t_segment[0]) * 3600 * fps + int(t_segment[1]) * 60 * fps + int(t_segment[2]) 
     idx = (int(t_segment[0]) * 3600 * fps) + (int(t_segment[1]) * 60 * fps) + (int(t_segment[2]) * fps) + int(t_segment[3]) # [h, m, s, frame] 
-
 
     return idx
 

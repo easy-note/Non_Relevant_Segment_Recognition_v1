@@ -1,38 +1,35 @@
+"""
+For model test using pre-created test datset in tensor form.
+"""
+
 import os
 import cv2
-from PIL import Image
 import torch
 import numpy as np
 import pandas as pd
-import glob
 import matplotlib
 import argparse
+import time
+import json
+import datetime
 
 from pandas import DataFrame as df
 from tqdm import tqdm
-
-matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+import pickle
 
 import torch
-
-from Model import CAMIO
 from torchvision import transforms
-
-import datetime
-
+import pytorch_lightning as pl
 from sklearn.metrics import classification_report
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
-import pickle
+from train_model import CAMIO
+from test_info_dic import gettering_information_for_oob
+from test_info_dic import sanity_check_info_dict
 
-import time
-import json
-
+matplotlib.use('Agg')
 
 
 # check results for binary metric
@@ -120,22 +117,17 @@ def save_log(log_txt, save_dir) :
         f.write(log_txt)
 
 
-
-
 def test_video() :
-    '''
-    인자 받음.
+    """
+    - Received args.
+    - Logging.
+    - Start test code.
+    """
 
-    '''
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--model_path', type=str, help='trained model_path')
-    # robot_3 | /logs/robot/OOB/robot_oob_train_3/epoch=2-val_loss=0.0541.ckpt
-    # robot_4 | /logs/robot/OOB/robot_oob_train_4/epoch=9-val_loss=0.0597.ckpt
-    
 
-    # os.getcwd() + '/logs/robot/OOB/robot_oob_train_1/epoch=12-val_loss=0.0303.ckpt' // OOB = 1
-    # os.getcwd() + '/logs/OOB_robot_test7/epoch=6-val_loss=0.0323.ckpt' // OOB = 0
     parser.add_argument('--data_dir', type=str,
                         default='/data/ROBOT/Video', help='video_path :) ')
 
@@ -218,7 +210,6 @@ def test_video() :
     }
     '''
     
-
     # dirscirbe exception, inference setting for each mode
     if args.mode == 'LAPA' :        
         # test_video_for_lapa()
@@ -245,7 +236,6 @@ def test_video() :
 
         # starting inference
         test_video_for_robot(args.data_dir, args.anno_dir, args.inference_assets_dir, args.results_save_dir, model, args.test_videos, args.inference_step)
-        
 
     # finish time stamp
     finishTime = time.time()
@@ -254,18 +244,27 @@ def test_video() :
     log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
     save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
 
-def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step) :
+def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step):
+    """
+    - Create info_dict (gettering_information_for_oob, sanity_check_info_dict) 
+    - Execute test_for_robot.py 
+
+    Args:
+        data_dir: Video root path.
+        anno_dir: Annotation root path.
+        infernece_assets_dir: Inference assets root path.
+        results_save_dir: Path for save directory.
+        model: Backborn model.
+        patient_list: patients to test.
+        inference_step: Frame unit for test.
+    """
     
     ### base setting ###
     # val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
     valset = patient_list
-
     video_ext = '.mp4'
     fps = 30
-
     tar_surgery = 'robot'
-
-    ### ### ###
 
     # gettering information step
     info_dict = gettering_information_for_oob(data_dir, anno_dir, infernece_assets_dir, valset, mode='ROBOT')
@@ -298,10 +297,25 @@ def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_
     print('\t=== === === ===\n\n')
 
     # inference step
-    inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=fps)
+    test_for_robot(info_dict, model, results_save_dir, inference_step, fps=fps)
 
-def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) : # project_name is only for use for title in total_metric_df.csv
-    print('\n\n\n\t\t\t ### STARTING DEF [inference_for_robot] ### \n\n')
+def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) : # project_name is only for use for title in total_metric_df.csv
+    """
+    - Model test (inference).
+
+    Args:
+        info_dict: The final form of 'info_dict'.
+            info_dict = {
+            'video': [video1_path, video2_path, ... ],
+            'anno': [ 1-[[start, end],[start, end]], 2-[[start,end],[start,end]], 3-... ],
+            'inference_assets' : [test_dataset1_path, test_dataset2_path, ...]
+            }
+        results_save_dir: Path for save directory.
+        inference_step: Frame unit for test.
+        fps: Video fps.
+    """
+
+    print('\n\n\n\t\t\t ### STARTING DEF [test_for_robot] ### \n\n')
 
     # create results folder
     try :
@@ -462,7 +476,6 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
                 print('======> TRUTH_LIST LENGTH')
                 print(len(truth_list))
 
-
                 print('======> NUMBER OF INFERENCE ASSETS')
                 print(len(each_video_infernece_assets_path_list))
 
@@ -477,7 +490,6 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
 
                 print('')
                 
-
                 print('\n\n=============== \t\t ============= \n\n')
 
                 # load inference assets from pickle
@@ -490,7 +502,6 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
                     infernce_asset = torch.Tensor(inference_assets_start_end_frame_idx[temp_cnt][-1], 3, 224, 224) # zero, float32
                     temp_cnt += 1
                 print('\n\n=============== \t\t ============= \n\n')
-                
                 
                 
                 # infernceing 
@@ -507,15 +518,8 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
                         if FRAME_INDICES != []:
                             TORCH_INDIES = [f_idx-start_idx for f_idx in FRAME_INDICES] # convert to torch idx
 
-                            # print(FRAME_INDICES)
-                            # print(TORCH_INDIES)
-
                             # make batch input tensor
                             BATCH_INPUT_TENSOR = torch.index_select(infernce_asset, 0, torch.tensor(TORCH_INDIES, dtype=torch.int32))
-                            
-                            # print('= = = = = = = = = = = = = =')
-                            # print(BATCH_INPUT_TENSOR.size())
-                            # print(BATCH_INPUT_TENSOR)
                             
                             # upload on cuda
                             BATCH_INPUT_TENSOR = BATCH_INPUT_TENSOR.cuda()
@@ -789,5 +793,4 @@ def inference_for_robot(info_dict, model, results_save_dir, inference_step, fps=
 if __name__ == "__main__":
     ###  base setting for model testing ### 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
-
     test_video()

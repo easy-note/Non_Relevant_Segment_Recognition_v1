@@ -1,41 +1,27 @@
+"""
+Create final form of 'info_dict' for model test.
+
+Check list
+    1. Is the annotation frame longer than the video frame?
+    2. Are frames all integers?
+"""
+
 import os
 import cv2
-from PIL import Image
 import torch
 import numpy as np
 import pandas as pd
 import glob
 import matplotlib
-import argparse
-
-from pandas import DataFrame as df
-from tqdm import tqdm
-
-matplotlib.use('Agg')
-
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
-
-import torch
-
-from Model import CAMIO
-from torchvision import transforms
-
-import datetime
-
-from sklearn.metrics import classification_report
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-
-import pickle
-
 import time
 import json
 
+from pandas import DataFrame as df
 
+import torch
+import pytorch_lightning as pl
 
-
+matplotlib.use('Agg')
 
 
 # check over frame and modify last annotation info
@@ -71,87 +57,26 @@ def check_anno_int(anno_info:list): # anno int = True, anno Float = False
     return is_int, anno_info
 
 
-# 불러온 annotation file 정보가 정확한지 체크 및 수정
-def sanity_check_info_dict(info_dict) :
-    # loop from total_videoset_cnt
-    for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
-        videoset_name = '{}_{}'.format(op_method, patient_idx)
-
-        for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
-            
-            video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
-            print('----- ANNOTATION CHECK => \t VIDEO\t {} \t-----'.format(video_name))
-            print(info_dict['anno'][i][j])
-            
-            
-            ##### video info and ####
-            # open video cap for parse frame
-            video = cv2.VideoCapture(video_path)
-            video_fps = video.get(cv2.CAP_PROP_FPS)
-            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-            video.release()
-            del video
-        
-            # open VideoReader
-            '''
-            with open(video_path, 'rb') as f :
-                # open VideoReader
-                video = VideoReader(f, ctx=cpu(0))
-            
-            # total frame
-            video_len = len(video) 
-
-            del video
-            '''
-
-            print('\tTarget video : {} | Total Frame : {} | Video FPS : {} '.format(video_name, video_len, video_fps))
-            print('\tAnnotation Info : {}'.format(anno_info))
-
-
-            ##### annotation sanity check #####
-            ### check idx -> time
-            if anno_info : # not empty list
-                # init 
-                over_ret = None
-                int_ret = None
-                val = None
-                
-                print('\t BEFORE ANNOTATION => {}\n'.format(anno_info))
-
-
-                
-                # last frmae annotation check
-                over_ret, val = check_anno_over_frame(anno_info, video_len) # over frame이 아닐경우 True, over frame 일 경우 False
-                anno_info = anno_info if over_ret else val # update anno_info | over frame일 경우 refined 된 val 값으로 update
-                val = None # clean
-                
-                # check anntation frame is int
-                int_ret, val = check_anno_int(anno_info) # int 일 경우 True, int가 아닐경우 False
-                anno_info = anno_info if int_ret else val # update anno_info | frame이 int가 아닐경우 모두 int 로 refined 된 값으로 update
-
-                print('\n\t AFTER ANNOTATION => {}'.format(anno_info))
-
-                ##### update redefined annotation info #### 
-                info_dict['anno'][i][j] = anno_info
-                print(info_dict['anno'][i][j])
-
-            else : # empty
-                print(anno_info)
-                print('=====> NO EVENT')
-            
-            print('')
-
-    return info_dict # redefined info_dict
-
-
-
-
-
-
 def gettering_information_for_oob(video_root_path, anno_root_path, inference_assets_root_path, video_set, mode) : # paring video from annotation info
+    """
+    Generate 'info_dict' (Incomplete form of 'info_dict') 
 
-    
+    Args:
+        video_root_path: Video root path.
+        anno_root_path: Annotation file root path.
+        inference_assets_root_path: Tensor form test dataset root path.
+        video_set: Video set for test.
+        mode: For Robot or Lapa? Default - Robot.
+
+    Returns:
+        info_dict: 
+            info_dict = {
+                'video': [],
+                'anno': [],
+                'inference_assets' : []
+            }
+    """
+
     print('\n\n\n\t\t\t ### STARTING DEF [gettering_information_for_robot] ### \n\n')
 
     info_dict = {
@@ -258,11 +183,8 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
             # it will be append to temp_anno_list
             target_idx_list = []
 
-
             # consist infernce assets
             temp_inference_assets_list = glob.glob(os.path.join(inference_assets_base_dir, os.path.splitext(os.path.basename(target_video_path))[0], '*')) # [video1_1_0, video1_1_1, ...]
-
-
 
             # only target_video_path 
             if target_anno_path != '' :
@@ -302,4 +224,74 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
         
     return info_dict
     
+# 불러온 annotation file 정보가 정확한지 체크 및 수정
+def sanity_check_info_dict(info_dict) :
+    """
+    Generate 'info_dict' (Complete form of 'info_dict') 
 
+    Args:
+        info_dict: info_dict from 'gettering_information_for_oob'
+
+    Returns:
+        info_dict: The final form of 'info_dict'.
+            info_dict = {
+            'video': [video1_path, video2_path, ... ],
+            'anno': [ 1-[[start, end],[start, end]], 2-[[start,end],[start,end]], 3-... ],
+            'inference_assets' : [test_dataset1_path, test_dataset2_path, ...]
+            }
+    """
+
+    # loop from total_videoset_cnt
+    for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
+        videoset_name = '{}_{}'.format(op_method, patient_idx)
+
+        for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
+            
+            video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
+            print('----- ANNOTATION CHECK => \t VIDEO\t {} \t-----'.format(video_name))
+            print(info_dict['anno'][i][j])
+            
+            ##### video info and ####
+            # open video cap for parse frame
+            video = cv2.VideoCapture(video_path)
+            video_fps = video.get(cv2.CAP_PROP_FPS)
+            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+            video.release()
+            del video
+
+            print('\tTarget video : {} | Total Frame : {} | Video FPS : {} '.format(video_name, video_len, video_fps))
+            print('\tAnnotation Info : {}'.format(anno_info))
+
+            ##### annotation sanity check #####
+            ### check idx -> time
+            if anno_info : # not empty list
+                # init 
+                over_ret = None
+                int_ret = None
+                val = None
+                
+                print('\t BEFORE ANNOTATION => {}\n'.format(anno_info))
+
+                # last frmae annotation check
+                over_ret, val = check_anno_over_frame(anno_info, video_len) # over frame이 아닐경우 True, over frame 일 경우 False
+                anno_info = anno_info if over_ret else val # update anno_info | over frame일 경우 refined 된 val 값으로 update
+                val = None # clean
+                
+                # check anntation frame is int
+                int_ret, val = check_anno_int(anno_info) # int 일 경우 True, int가 아닐경우 False
+                anno_info = anno_info if int_ret else val # update anno_info | frame이 int가 아닐경우 모두 int 로 refined 된 값으로 update
+
+                print('\n\t AFTER ANNOTATION => {}'.format(anno_info))
+
+                ##### update redefined annotation info #### 
+                info_dict['anno'][i][j] = anno_info
+                print(info_dict['anno'][i][j])
+
+            else : # empty
+                print(anno_info)
+                print('=====> NO EVENT')
+            
+            print('')
+
+    return info_dict # redefined info_dict
