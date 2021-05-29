@@ -30,7 +30,7 @@ model_array=("squeezenet1_0")
 
 for (( i = 0 ; i < ${#model_array[@]} ; i++ ))
 do
-    python train_camIO.py \
+    python train.py \
     --project_name "lapa-oob-temp" \
     --dataset "LAPA" \
     --max_epoch 50 \

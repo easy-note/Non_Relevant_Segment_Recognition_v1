@@ -47,7 +47,7 @@ results_save_dir_array=("./temp3_results-robot_oob-wide_resnet50_2-fold_2-last")
 
 for (( i = 0 ; i < ${#model_path_array[@]} ; i++ ))
 do
-    python renewal_test_video.py \
+    python test.py \
     --model_path ${model_path_array[$i]} \
     --data_dir "/data/ROBOT/Video" \
     --anno_dir "/data/OOB" \
