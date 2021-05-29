@@ -241,9 +241,6 @@ def train():
                                             shuffle=False, num_workers=8)
 
     
-
-    
-    
     ###### this section is for check that dataset gets img and label correctly ####
     ### 해당 section은 단지 모델이 학습하는 데이터셋이 무엇인지 확인하기 위해 구성된 Dataset의 image와 label정보를 모두 /get_dataset_results에 저장하는 부분
     ### 학습시 꼭 필요한 부분이 아님.
@@ -304,10 +301,10 @@ def train():
         monitor : 저장할 metric 기준
     """
     checkpoint_filename = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio)
-    checkpoint_filename = checkpoint_filename + '{epoch}-{val_loss:.4f}'
+    checkpoint_filename = checkpoint_filename + '{epoch}-{Confidence_ratio:.4f}'
     checkpoint_callback = ModelCheckpoint(
             dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
-            save_top_k=1, save_last=True, verbose=True, monitor="OOB_metric", mode="min"
+            save_top_k=1, save_last=True, verbose=True, monitor="Confidence_ratio", mode="min"
     )
 
     # change last checkpoint name

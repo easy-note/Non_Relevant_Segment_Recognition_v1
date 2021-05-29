@@ -173,9 +173,9 @@ class CAMIO(pl.LightningModule):
         self.log("val_TN", TN, on_epoch=True, prog_bar=True)
         self.log("val_FP", FP, on_epoch=True, prog_bar=True)
         self.log("val_FN", FN, on_epoch=True, prog_bar=True)
-        self.log("OOB_metric", OOB_metric, on_epoch=True, prog_bar=True)
-        self.log("Over_estimation", Over_estimation, on_epoch=True, prog_bar=True)
-        self.log("Under_estimation", Under_estimation, on_epoch=True, prog_bar=True)
+        self.log("Confidence_ratio", OOB_metric, on_epoch=True, prog_bar=True)
+        self.log("Over_estimation_ratio", Over_estimation, on_epoch=True, prog_bar=True)
+        self.log("Under_estimation_ratio", Under_estimation, on_epoch=True, prog_bar=True)
         self.log("Correspondence", Correspondence_estimation, on_epoch=True, prog_bar=True)
         self.log("UNCorrespondence", UNCorrespondence_estimation, on_epoch=True, prog_bar=True)
 
