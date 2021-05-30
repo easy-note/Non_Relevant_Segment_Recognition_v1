@@ -18,6 +18,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.plugins import DDPPlugin
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from torchsummary import summary
 
 from train_model import CAMIO
@@ -312,6 +313,14 @@ def train():
             save_top_k=1, save_last=True, verbose=True, monitor="Confidence_ratio", mode="min"
     )
 
+    # early stopping
+    early_stop_callback = EarlyStopping(
+        monitor='Confidence_ratio',
+        patience = 5,
+        verbose = True,
+        mode = 'max'
+    )
+
     # change last checkpoint name
     checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio) + '{epoch}-last'
 
@@ -336,7 +345,8 @@ def train():
     ## train    
     trainer = pl.Trainer(gpus=args.num_gpus, 
                         max_epochs=args.max_epoch, 
-                        checkpoint_callback=checkpoint_callback,
+                        #checkpoint_callback=checkpoint_callback,
+                        callbacks = [checkpoint_callback, early_stop_callback]
                         logger=tb_logger,
                         plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
                         accelerator='ddp')
