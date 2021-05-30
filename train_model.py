@@ -96,7 +96,6 @@ class CAMIO(pl.LightningModule):
             else :
                 assert(False, '=== Not supported Squeezenet model ===')
 
-        
         else :
             assert(False, '=== Not supported Model === ')
 
@@ -145,8 +144,6 @@ class CAMIO(pl.LightningModule):
         self.log("val_recall", rc, on_epoch=True, prog_bar=True)
         self.log("val_f1", f1, on_epoch=True, prog_bar=True)
         
-
-
         # return loss
         return {'val_loss':loss, 'val_acc':acc,
             'val_precision':prec,'val_recall':rc, 
@@ -188,55 +185,6 @@ class CAMIO(pl.LightningModule):
         # print info, and initializae self.gts, preds
         self.print_pycm()
 
-
-    def test_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self.forward(x)
-        loss = self.criterion(y_hat, y)
-
-        c_hat = to_categorical(y_hat)
-        acc = self.accuracy(c_hat, y)
-        prec = self.prec(c_hat, y)
-        rc = self.rc(c_hat, y)
-        f1 = self.f1(c_hat, y)
-
-        for _y, _y_hat in zip(y, c_hat):
-            self.preds.append(_y_hat.cpu().item())
-            self.gts.append(_y.cpu().item())
-
-        self.log('test_loss', loss, on_epoch=True, prog_bar=True)
-        self.log("test_acc", acc, on_epoch=True, prog_bar=True)
-        self.log("test_precision", prec, on_epoch=True, prog_bar=True)
-        self.log("test_recall", rc, on_epoch=True, prog_bar=True)
-        self.log("test_f1", f1, on_epoch=True, prog_bar=True)
-
-        # return {'test_loss': loss}
-        return {'test_loss':loss, 'test_acc':acc,
-            'test_precision':prec,'test_recall':rc, 
-            'test_f1': f1}
-
-    def test_epoch_end(self, outputs):
-        f_loss = 0
-        f_acc = 0
-        f_prec = 0
-        f_rc = 0
-        f_f1 = 0
-        cnt = 0
-
-        for output in outputs:
-            f_loss += output['test_loss'].cpu().data.numpy()
-            f_acc += output['test_acc'].cpu().data.numpy()
-            f_prec += output['test_precision'].cpu().data.numpy()
-            f_rc += output['test_recall'].cpu().data.numpy()
-            f_f1 += output['test_f1'].cpu().data.numpy()
-            cnt += 1
-        
-        print('[Test Results] Loss : {:.4f}, Acc : {:.4f}, Prec : {:.4f}, \
-            Recall : {:.4f},  F1 : {:.4f}'.format(
-            f_loss/cnt, f_acc/cnt, f_prec/cnt, f_rc/cnt,f_f1/cnt
-        ))
-
-        self.print_pycm()
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.init_lr) # hyper parameterized
