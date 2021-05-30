@@ -49,9 +49,9 @@ for (( i = 0 ; i < ${#model_path_array[@]} ; i++ ))
 do
     python test.py \
     --model_path ${model_path_array[$i]} \
-    --data_dir "/data/ROBOT/Video" \
-    --anno_dir "/data/OOB" \
-    --inference_assets_dir "/data/ROBOT/Inference" \
+    --data_dir "/data/ROBOT/Video" \ #/data/LAPA/Video
+    --anno_dir "/data/OOB" \ # /data/OOB
+    --inference_assets_dir "/data/ROBOT/Inference" \ # /data/LAPA/Inference
     --results_save_dir ${results_save_dir_array[$i]} \
     --model ${model_array[$i]} \
     --inference_step 5 \

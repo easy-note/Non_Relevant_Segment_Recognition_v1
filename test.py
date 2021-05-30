@@ -32,6 +32,37 @@ from test_info_dic import sanity_check_info_dict
 matplotlib.use('Agg')
 
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--model_path', type=str, help='trained model_path')
+parser.add_argument('--data_dir', type=str,
+                    default='/data/ROBOT/Video', help='video_path :) ')
+parser.add_argument('--anno_dir', type=str,
+                    default='/data/OOB', help='annotation_path :) ')
+parser.add_argument('--results_save_dir', type=str, help='inference results save path')
+
+parser.add_argument('--mode', type=str,
+                    default='robot', choices=['ROBOT', 'LAPA'], help='inference results save path')
+
+## trained model (you should put same model as trained model)
+parser.add_argument('--model', type=str,
+                    choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model')
+# inference frame step
+parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
+
+# inference video
+parser.add_argument('--test_videos', type=str, nargs='+',
+                    choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
+                            'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
+                            'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'],
+                    help='inference video')
+
+# infernece assets root path
+parser.add_argument('--inference_assets_dir', type=str, help='inference assets root path')
+
+args, _ = parser.parse_known_args()
+
+
 # check results for binary metric
 def calc_confusion_matrix(gts, preds):
     IB_CLASS, OOB_CLASS = [0, 1]
@@ -117,54 +148,11 @@ def save_log(log_txt, save_dir) :
         f.write(log_txt)
 
 
-def test_video() :
+def test_start() :
     """
-    - Received args.
     - Logging.
     - Start test code.
     """
-
-    parser = argparse.ArgumentParser()
-    
-    parser.add_argument('--model_path', type=str, help='trained model_path')
-
-    parser.add_argument('--data_dir', type=str,
-                        default='/data/ROBOT/Video', help='video_path :) ')
-
-    parser.add_argument('--anno_dir', type=str,
-                        default='/data/OOB', help='annotation_path :) ')
-
-    parser.add_argument('--results_save_dir', type=str, help='inference results save path')
-
-    parser.add_argument('--mode', type=str,
-                        default='robot', choices=['ROBOT', 'LAPA'], help='inference results save path')
-    
-    ## trained model (you should put same model as trained model)
-    parser.add_argument('--model', type=str,
-                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model')
-    
-    # inference frame step
-    parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
-
-    # inference video
-    '''
-    trainset = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_18', 
-                'R_19', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_117', 'R_201', 'R_202', 'R_203', 
-                'R_204', 'R_205', 'R_206', 'R_207', 'R_209', 'R_210', 'R_301', 'R_302', 'R_304', 'R_305', 'R_313']
-
-    valset = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
-    '''
-    parser.add_argument('--test_videos', type=str, nargs='+',
-                        choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
-                'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
-                'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'],
-                         help='inference video')
-    
-    # infernece assets root path
-    parser.add_argument('--inference_assets_dir', type=str, help='inference assets root path')
-
-    args, _ = parser.parse_known_args()
-
     ### ### create results folder for save args and log.txt ### ###
     try :
         if not os.path.exists(args.results_save_dir) :
@@ -190,7 +178,6 @@ def test_video() :
 
     ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
     
-
     '''
     # load args log
     parser = ArgumentParser()
@@ -198,44 +185,32 @@ def test_video() :
     with open('commandline_args.txt', 'r') as f:
         args.__dict__ = json.load(f)
     '''
-
-    '''    
-    data_transforms = {
-        'val': transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-    }
-    '''
     
-    # dirscirbe exception, inference setting for each mode
-    if args.mode == 'LAPA' :        
-        # test_video_for_lapa()
-        exit(0) # not yet support
-        pass
+    # inference setting for each mode
+    test_hparams = {
+        'optimizer_lr' : 0, # dummy (this option use only for training)
+        'backborn_model' : args.model # (for train, test)
+    }
 
-    else : # robot
-        test_hparams = {
-            'optimizer_lr' : 0, # dummy (this option use only for training)
-            'backborn_model' : args.model # (for train, test)
-        }
+    print('')
+    print('')
+    print(test_hparams)
 
-        print('')
-        print('')
-        print(test_hparams)
+    # model 불러오기.
+    model = CAMIO.load_from_checkpoint(args.model_path, config=test_hparams)
 
-        # model 불러오기.
-        model = CAMIO.load_from_checkpoint(args.model_path, config=test_hparams)
+    model.cuda()
+    model.eval()
 
-        model.cuda()
-        model.eval()
+    print('\n\t=== model_loded for {} ===\n'.format(args.mode))
 
-        print('\n\t=== model_loded for ROBOT ===\n')
-
+    if args.mode == 'LAPA' : 
         # starting inference
-        test_video_for_robot(args.data_dir, args.anno_dir, args.inference_assets_dir, args.results_save_dir, model, args.test_videos, args.inference_step)
+        test_for_lapa(args.data_dir, args.anno_dir, args.inference_assets_dir, args.results_save_dir, model, args.test_videos, args.inference_step)
+
+    else: # robot
+        # starting inference
+        test_for_robot(args.data_dir, args.anno_dir, args.inference_assets_dir, args.results_save_dir, model, args.test_videos, args.inference_step)
 
     # finish time stamp
     finishTime = time.time()
@@ -244,10 +219,10 @@ def test_video() :
     log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
     save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
 
-def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step):
+def test_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step):
     """
     - Create info_dict (gettering_information_for_oob, sanity_check_info_dict) 
-    - Execute test_for_robot.py 
+    - Execute test.py 
 
     Args:
         data_dir: Video root path.
@@ -262,9 +237,7 @@ def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_
     ### base setting ###
     # val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
     valset = patient_list
-    video_ext = '.mp4'
     fps = 30
-    tar_surgery = 'robot'
 
     # gettering information step
     info_dict = gettering_information_for_oob(data_dir, anno_dir, infernece_assets_dir, valset, mode='ROBOT')
@@ -297,9 +270,62 @@ def test_video_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_
     print('\t=== === === ===\n\n')
 
     # inference step
-    test_for_robot(info_dict, model, results_save_dir, inference_step, fps=fps)
+    test(info_dict, model, results_save_dir, inference_step, fps=fps)
 
-def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) : # project_name is only for use for title in total_metric_df.csv
+def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step):
+    """
+    - Create info_dict (gettering_information_for_oob, sanity_check_info_dict) 
+    - Execute test.py 
+
+    Args:
+        data_dir: Video root path.
+        anno_dir: Annotation root path.
+        infernece_assets_dir: Inference assets root path.
+        results_save_dir: Path for save directory.
+        model: Backborn model.
+        patient_list: patients to test.
+        inference_step: Frame unit for test.
+    """
+    
+    ### base setting ###
+    # val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
+    valset = patient_list
+    fps = 60
+
+    # gettering information step
+    info_dict = gettering_information_for_oob(data_dir, anno_dir, infernece_assets_dir, valset, mode='LAPA')
+
+    print('\n\n\t ==== RESULTS OF GETTERING INFORMATION==== ')
+    print('\tSUCESS GETTERING VIDEO SET: ', len(info_dict['video']))
+    print('\tSUCESS GETTERING ANNOTATION SET: ', len(info_dict['anno']))
+    print('\tSUCESS GETTERING INFERENCE SET: ', len(info_dict['inference_assets']))
+    print('\t=== === === ===\n\n')
+
+    print('\n\n\t ==== RESULTS OF GETTERING INFORMATION==== ')
+    print(info_dict['video'])
+    print(info_dict['anno'])
+    print(info_dict['inference_assets'])
+    print('\t=== === === ===\n\n')
+
+    #### sanity check and modify info_dict ###
+    info_dict = sanity_check_info_dict(info_dict)
+
+    print('\n\n\t ==== RESULTS OF GETTERING INFORMATION==== ')
+    print('\tSUCESS GETTERING VIDEO SET: ', len(info_dict['video']))
+    print('\tSUCESS GETTERING ANNOTATION SET: ', len(info_dict['anno']))
+    print('\tSUCESS GETTERING INFERENCE SET: ', len(info_dict['inference_assets']))
+    print('\t=== === === ===\n\n')
+
+    print('\n\n\t ==== RESULTS OF GETTERING INFORMATION==== ')
+    print(info_dict['video'])
+    print(info_dict['anno'])
+    print(info_dict['inference_assets'])
+    print('\t=== === === ===\n\n')
+
+    # inference step
+    test(info_dict, model, results_save_dir, inference_step, fps=fps)
+
+def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project_name is only for use for title in total_metric_df.csv
     """
     - Model test (inference).
 
@@ -315,7 +341,7 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
         fps: Video fps.
     """
 
-    print('\n\n\n\t\t\t ### STARTING DEF [test_for_robot] ### \n\n')
+    print('\n\n\n\t\t\t ### STARTING DEF [test] ### \n\n')
 
     # create results folder
     try :
@@ -327,8 +353,8 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
     total_videoset_cnt = len(info_dict['video']) # total number of video set
 
     # init total metric df
-    total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_Metric']) # row cnt is same as checking vidoes length
-    patient_total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_Metric']) # row cnt is same as total_videoset_cnt
+    total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio']) # row cnt is same as checking vidoes length
+    patient_total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio']) # row cnt is same as total_videoset_cnt
 
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list, infernece_assets_path_list) in enumerate(zip(info_dict['video'], info_dict['anno'], info_dict['inference_assets']), 1):
@@ -459,7 +485,6 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
             for start, end in inference_assets_start_end_frame_idx :
                 inference_frame_idx_list.append([idx for idx in range(start, end+1) if idx % inference_step == 0])
                 
-
             BATCH_SIZE = 512
 
             temp_cnt = 0 ### dummy for test
@@ -505,7 +530,10 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
                 
                 
                 # infernceing 
-                with torch.no_grad() :
+                with torch.no_grad() : #autograd 끔 - 메모리 사용량 줄이고, 연산 속도 높힘. 사실상 안 쓸 gradient 라서 inference 시에 굳이 계산할 필요 없음. 
+
+                    model.eval() # 21.05.30 JH 추가 - layer 의 동작을 inference(eval) mode로 변경, 모델링 시 training과 inference 시에 다르게 동작하는 layer 들이 존재함. (e.g. Dropout layer, BatchNorm)
+
                     # batch slice from infernece_frame_idx
                     start_pos = 0
                     end_pos = len(inference_frame_idx)
@@ -574,7 +602,7 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
             inference_results_df = pd.DataFrame(result_dict)
         
             print('Result Saved at \t ====> ', each_video_result_dir)
-            inference_results_df.to_csv(os.path.join(each_video_result_dir, 'Inference-{}.csv'.format(video_name)), mode="w")
+            inference_results_df.to_csv(os.path.join(each_video_result_dir, 'Inference-{}-{}.csv'.format(args.mode, video_name)), mode="w")
             
             # calc FN, FP, TP, TN frame and TOTAL
             metric_frame = return_metric_frame(inference_results_df)
@@ -638,7 +666,7 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
                 'PREDICT_IB' : [predict_list.count(IB_CLASS)],
                 'GT_OOB_1FPS' : [truth_oob_count],
                 'GT_IB_1FPS' : [video_len-truth_oob_count],
-                'OOB_Metric' : [OOB_metric]
+                'Confidence_Ratio' : [OOB_metric]
             }
 
             # each metric per video
@@ -646,16 +674,16 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
             
             # save
             print('Metric Saved at \t ====> ', each_video_result_dir)
-            result_metric_df.to_csv(os.path.join(each_video_result_dir, 'OOB_Metric-{}.csv'.format(video_name)), mode="w")
+            result_metric_df.to_csv(os.path.join(each_video_result_dir, 'Confidence_Ratio-{}-{}.csv'.format(args.mode, video_name)), mode="w")
 
             # append metric
-            # columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_Metric'])           
+            # columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio'])           
             # total_metric_df = total_metric_df.append(result_metric_df)
             total_metric_df = pd.concat([total_metric_df, result_metric_df], ignore_index=True) # shoul shink columns
 
             print('')
             print(total_metric_df)
-            total_metric_df.to_csv(os.path.join(results_save_dir, 'Video_Total_metric-{}.csv'.format(os.path.basename(results_save_dir))), mode="w") # save on project direc
+            total_metric_df.to_csv(os.path.join(results_save_dir, 'Video_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
 
             # saving plot
             fig = plt.figure(figsize=(16,8))
@@ -665,7 +693,7 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
             plt.scatter(np.array(frame_idx_list), np.array(predict_list), color='red', marker='o', s=5, label='Predict') # predict
 
             plt.title('Inference Results By per {} Frame | Video : {} | Results : {} '.format(inference_step, video_name, os.path.basename(results_save_dir)));
-            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | TP : {} | FN : {} | TN : {} | TOTAL : {} | OOB_Metric : {} '.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, TOTAL_frame_cnt, OOB_metric));
+            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | TP : {} | FN : {} | TN : {} | TOTAL : {} | Confidence_Ratio : {} '.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, TOTAL_frame_cnt, OOB_metric));
             plt.ylabel('class'); plt.xlabel('frame');
             plt.legend(loc='center right');
 
@@ -676,9 +704,9 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
             saved_text = calc_confusion_matrix(gt_list, predict_list)
             saved_text += '\n\nFP\t\tTP\t\tFN\t\tTN\t\tTOTAL\n'
             saved_text += '{}\t\t{}\t\t{}\t\t{}\t\t{}\n\n'.format(FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, TOTAL_frame_cnt)
-            saved_text += 'OOB_metric : {:.4f}'.format(OOB_metric)
+            saved_text += 'Confidence_Ratio : {:.4f}'.format(OOB_metric)
 
-            with open(os.path.join(each_video_result_dir, 'Metric-{}.txt'.format(video_name)), 'w') as f :
+            with open(os.path.join(each_video_result_dir, 'Metric-{}-{}.txt'.format(args.mode, video_name)), 'w') as f :
                 f.write(saved_text)
 
             print('\n\n-------------- \t\t -------------- \n\n')
@@ -716,7 +744,7 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
 
         # save
         print('Patient Result Saved at \t ====> ', each_videoset_result_dir)
-        patient_inference_results_df.to_csv(os.path.join(each_videoset_result_dir, 'Inference-{}.csv'.format(videoset_name)), mode="w")
+        patient_inference_results_df.to_csv(os.path.join(each_videoset_result_dir, 'Inference-{}-{}.csv'.format(args.mode, videoset_name)), mode="w")
 
         # each metric per patient
         result_metric_df_per_patient = return_metric_frame(patient_inference_results_df)
@@ -769,14 +797,14 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
         'PREDICT_IB' : [patient_FN_frame_cnt + patient_TN_frame_cnt],
         'GT_OOB_1FPS' : [patient_truth_oob_count],
         'GT_IB_1FPS' : [patient_truth_ib_count],
-        'OOB_Metric' : [patient_OOB_metric]
+        'Confidence_Ratio' : [patient_OOB_metric]
         }
 
         # each metric per patient
         patient_result_metric_df = pd.DataFrame(patient_results_metric)
 
         print('Patient Metric Saved at \t ====> ', each_videoset_result_dir)
-        patient_result_metric_df.to_csv(os.path.join(each_videoset_result_dir, 'OOB_Metric-{}.csv'.format(videoset_name)), mode="w")
+        patient_result_metric_df.to_csv(os.path.join(each_videoset_result_dir, 'Confidence_Ratio-{}-{}.csv'.format(args.mode, videoset_name)), mode="w")
 
         # append to total metric per patient
         patient_total_metric_df = pd.concat([patient_total_metric_df, patient_result_metric_df], ignore_index=True)
@@ -784,7 +812,7 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
         # columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_Metric'])
         print('')
         print(patient_total_metric_df)
-        patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}.csv'.format(os.path.basename(results_save_dir))), mode="w") # save on project direc
+        patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(agrs.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
     
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
 
@@ -793,4 +821,4 @@ def test_for_robot(info_dict, model, results_save_dir, inference_step, fps=30) :
 if __name__ == "__main__":
     ###  base setting for model testing ### 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
-    test_video()
+    test_start()
