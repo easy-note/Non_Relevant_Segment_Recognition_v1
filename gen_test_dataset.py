@@ -22,6 +22,8 @@ parser.add_argument('--patient_list', type=str, help='Select patients to generat
 parser.add_argument('--video_dir_path', type=str, help='Video directory path')
 parser.add_argument('--save_dir_path', type=str, help='Save directory path')
 
+parser.add_argument('--mode', type=str, help='Select Robot or Lapa')
+
 args, _ = parser.parse_known_args()
 
 
@@ -61,6 +63,12 @@ def gen_test_dataset(video_dir_path, patient_list, save_dir_path):
     
     tmp_target_video = []
     target_video = []
+
+    # 생성한 test dataset 모드 기록 (e.g. R_303, L_301)
+    if args.mode == 'Robot':
+        mode = 'R'
+    elif args.mode == 'Lapa':
+        mode = 'L'
 
     # Choose target video.
     for patient in patient_list:
@@ -102,7 +110,7 @@ def gen_test_dataset(video_dir_path, patient_list, save_dir_path):
             if not os.path.isdir(path):
                 os.makedirs(path)
 
-            with open(path + target[:-4] + '_' + str(m), "wb") as f:
+            with open(path + mode + '_' + target[:-4] + '_' + str(m), "wb") as f:
                 pickle.dump(t, f)
 
             t = None
