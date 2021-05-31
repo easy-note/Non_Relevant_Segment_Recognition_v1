@@ -19,6 +19,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+
 from torchsummary import summary
 
 from train_model import CAMIO
@@ -45,6 +46,7 @@ def train():
 
     ## epoch
     parser.add_argument('--max_epoch', type=int, help='The maximum number of training epoch.')
+    parser.add_argument('--min_epoch', type=int, help='The minimum number of training epoch.')
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
@@ -157,7 +159,7 @@ def train():
 
     # model param save
     print('\n\n==== MODEL SUMMARY ====\n\n')
-    model_status = summary(model.cuda(), (3,224,224))#, verbose=0)
+    model_status = summary(model.cuda(), (3,224,224), verbose=0)
     print(model_status)
 
     log_txt = '\n\n==== MODEL SUMMARY ====\n\n'
@@ -347,6 +349,7 @@ def train():
     ## train    
     trainer = pl.Trainer(gpus=args.num_gpus, 
                         max_epochs=args.max_epoch, 
+                        min_epochs=args.min_epoch,
                         # checkpoint_callback=checkpoint_callback,
                         callbacks = [checkpoint_callback, early_stop_callback],
                         logger=tb_logger,
