@@ -23,6 +23,12 @@ import pytorch_lightning as pl
 
 matplotlib.use('Agg')
 
+def time_to_idx(time, fps):
+    t_segment = time.split(':')
+    # idx = int(t_segment[0]) * 3600 * fps + int(t_segment[1]) * 60 * fps + int(t_segment[2]) 
+    idx = (int(t_segment[0]) * 3600 * fps) + (int(t_segment[1]) * 60 * fps) + (int(t_segment[2]) * fps) + int(t_segment[3]) # [h, m, s, frame] 
+
+    return idx
 
 # check over frame and modify last annotation info
 def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False  
@@ -96,6 +102,7 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
             all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
         
         all_anno_path = glob.glob(anno_root_path + '/*.csv') # all annotation file list
+
     
     elif mode == 'LAPA' :
         fps = 60
@@ -124,6 +131,7 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
 
     print(all_video_path_df)
     print(all_anno_path_df)
+
 
     for video_no in video_set : # get target video
         # video_path_list = sorted([vfile for vfile in all_video_path if os.path.basename(vfile).startswith(video_no)])
@@ -219,7 +227,7 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
         info_dict['video'].append(target_video_list) # [[video1_1, video1_2], [video2_1, video_2_2], ...]
         info_dict['anno'].append(target_anno_list) # [[temp_idx_list_1_1, temp_idx_list_1_2], [temp_idx_list_2_1, temp_idx_list_2_2,], ...]
         info_dict['inference_assets'].append(target_inference_assets_list) # [[[video1_1_0, video1_1_1, video1_1_2,..], [video1_2_0, ...]], ... ]
-        
+
         print('\n\n')
         
     return info_dict

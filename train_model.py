@@ -25,7 +25,8 @@ class CAMIO(pl.LightningModule):
     def __init__(self, config:dict):
         super(CAMIO, self).__init__()
 
-        self.hparams = config # config
+        # self.hparams = config # config
+        self.hparams.update(config) # 21.05.30 JH 수정 - self.hparams=config has been removed from later versions and is no longer supported. 
         self.save_hyperparameters() # save with hparams
 
         # hyper param setting
@@ -104,9 +105,9 @@ class CAMIO(pl.LightningModule):
         # self.softmax = torch.nn.Softmax()
         
         self.accuracy = Accuracy()
-        self.prec = Precision(num_classes=1, is_multiclass=False)
-        self.rc = Recall(num_classes=1, is_multiclass=False)
-        self.f1 = F1(num_classes=1, multilabel=False)
+        self.prec = Precision(num_classes=1, multiclass=False) # 21.05.30 JH 변경 is_multiclass -> multiclass
+        self.rc = Recall(num_classes=1, multiclass=False) # 21.05.30 JH 변경 is_multiclass -> multiclass
+        self.f1 = F1(num_classes=1, multiclass=False) # 21.05.30 JH 변경 multilabel -> multiclass, Deprecated since version 0.3: Argument will not have any effect and will be removed in v0.4, please use multiclass intead.
         # self.confmat = ConfusionMatrix(num_classes=1)
 
         self.preds = []

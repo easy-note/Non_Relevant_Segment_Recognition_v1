@@ -48,7 +48,7 @@ def train():
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
-                        default='/data/LAPA/Img', help='Data path :)')
+                        default='/data/ROBOT/Img', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -115,13 +115,13 @@ def train():
         '__random_seed' : args.random_seed
     }
 
-    print('\n\n')
+    print('\n')
     print('dataset : ', args.dataset)
     print('fold : ', args.fold)
     print('batch size : ', args.batch_size)
     print('init lr : ', config_hparams['optimizer_lr'])
     print('backborn model : ', config_hparams['backborn_model'])
-    print('\n\n')
+    print('\n')
 
 
     ### ### create results folder for save args and log.txt ### ###
@@ -136,7 +136,7 @@ def train():
         print('ERROR : Creating Directory, ' + os.path.join(log_base_path, args.project_name))
 
     # save args log
-    log_txt='\n\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n\n'
+    log_txt='\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n'
     log_txt+=json.dumps(args.__dict__, indent=2)
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
     
@@ -149,7 +149,6 @@ def train():
     # make img info csv path
     # make_oob_csv(base_path, base_path)
 
-
     # bath size
     BATCH_SIZE = args.batch_size
 
@@ -158,7 +157,7 @@ def train():
 
     # model param save
     print('\n\n==== MODEL SUMMARY ====\n\n')
-    model_status = summary(model.cuda(), (3,224,224), verbose=0)
+    model_status = summary(model.cuda(), (3,224,224))#, verbose=0)
     print(model_status)
 
     log_txt = '\n\n==== MODEL SUMMARY ====\n\n'
@@ -232,6 +231,8 @@ def train():
 
     # dataset 설정
     # IB_ratio = [1,2,3,..] // IB개수 = OOB개수*IB_ratio
+
+    print('train_videos', train_videos)
     trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=train_videos, is_train=True, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
     valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=val_videos, is_train=False, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
     
@@ -242,9 +243,9 @@ def train():
     
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
-                                            shuffle=False, num_workers=8)
+                                               shuffle=False, num_workers=8)
     vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
-                                            shuffle=False, num_workers=8)
+                                               shuffle=False, num_workers=8)
 
     
     ###### this section is for check that dataset gets img and label correctly ####
@@ -310,20 +311,21 @@ def train():
     checkpoint_filename = checkpoint_filename + '{epoch}-{Confidence_ratio:.4f}'
     checkpoint_callback = ModelCheckpoint(
             dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
-            save_top_k=1, save_last=True, verbose=True, monitor="Confidence_ratio", mode="min"
+            save_top_k=1, save_last=True, verbose=True, monitor="Confidence_ratio", mode="max"
     )
+    
+    # change last checkpoint name
+    checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio) + '{epoch}-last'
 
     # early stopping
     early_stop_callback = EarlyStopping(
         monitor='Confidence_ratio',
-        patience = 5,
+        patience = 10,
         verbose = True,
         mode = 'max'
     )
 
-    # change last checkpoint name
-    checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio) + '{epoch}-last'
-
+    
     '''
         tensorboard logger
         save_dir : checkpoint log 저장 위치처럼 tensorboard log 저장위치
@@ -345,8 +347,8 @@ def train():
     ## train    
     trainer = pl.Trainer(gpus=args.num_gpus, 
                         max_epochs=args.max_epoch, 
-                        #checkpoint_callback=checkpoint_callback,
-                        callbacks = [checkpoint_callback, early_stop_callback]
+                        # checkpoint_callback=checkpoint_callback,
+                        callbacks = [checkpoint_callback, early_stop_callback],
                         logger=tb_logger,
                         plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
                         accelerator='ddp')

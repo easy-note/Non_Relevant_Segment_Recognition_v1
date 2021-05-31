@@ -26,8 +26,8 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
 from train_model import CAMIO
-from test_info_dic import gettering_information_for_oob
-from test_info_dic import sanity_check_info_dict
+from test_info_dict import gettering_information_for_oob
+from test_info_dict import sanity_check_info_dict
 
 matplotlib.use('Agg')
 
@@ -42,7 +42,7 @@ parser.add_argument('--anno_dir', type=str,
 parser.add_argument('--results_save_dir', type=str, help='inference results save path')
 
 parser.add_argument('--mode', type=str,
-                    default='robot', choices=['ROBOT', 'LAPA'], help='inference results save path')
+                    default='ROBOT', choices=['ROBOT', 'LAPA'], help='inference results save path')
 
 ## trained model (you should put same model as trained model)
 parser.add_argument('--model', type=str,
@@ -547,7 +547,8 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
                             TORCH_INDIES = [f_idx-start_idx for f_idx in FRAME_INDICES] # convert to torch idx
 
                             # make batch input tensor
-                            BATCH_INPUT_TENSOR = torch.index_select(infernce_asset, 0, torch.tensor(TORCH_INDIES, dtype=torch.int32))
+                            # index_select 함수를 사용해 지정한 차원 기준으로 (0) 원하는 값들을 뽑아낼 수 있음.
+                            BATCH_INPUT_TENSOR = torch.index_select(infernce_asset, 0, torch.tensor(TORCH_INDIES)) #, 21.05.30 JH 수정 - ERROR dtype=torch.int32 - dtype 을 바꿔도 되는지 확인 필요. (int64로 변경됨.)
                             
                             # upload on cuda
                             BATCH_INPUT_TENSOR = BATCH_INPUT_TENSOR.cuda()
@@ -812,7 +813,7 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
         # columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_Metric'])
         print('')
         print(patient_total_metric_df)
-        patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(agrs.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
+        patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
     
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
 

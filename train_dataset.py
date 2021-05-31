@@ -124,7 +124,6 @@ class CAMIO_Dataset(Dataset):
         print(read_assets_df)
         print('\n\n')
 
-
         # select patient video
         self.assets_df = read_assets_df[read_assets_df['img_path'].str.contains('|'.join(patient_name_for_parser))]
 
@@ -192,3 +191,6 @@ class CAMIO_Dataset(Dataset):
 
         return img, label
 
+
+if __name__ == '__main__':
+    make_oob_csv()
