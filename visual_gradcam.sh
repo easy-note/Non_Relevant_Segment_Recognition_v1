@@ -13,7 +13,7 @@ END
 
 model_name="wide_resnet50_2"
 
-python grad_cam_oob.py \
+python visual_gradcam.py \
 --title_name "${model_name}_FP" \
 --model_path "./logs/ROBOT/OOB/robot-oob-0423-fold_2/ckpoint_robot-oob-0423-fold_2-model=wide_resnet50_2-batch=32-lr=0.001-fold=2-ratio=3-epoch=49-last.ckpt" \
 --model_name ${model_name} \
