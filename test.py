@@ -200,7 +200,6 @@ def test_start() :
     model = CAMIO.load_from_checkpoint(args.model_path, config=test_hparams)
 
     model.cuda()
-    model.eval()
 
     print('\n\t=== model_loded for {} ===\n'.format(args.mode))
 
