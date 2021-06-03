@@ -44,9 +44,9 @@ parser.add_argument('--results_save_dir', type=str, help='inference results save
 parser.add_argument('--mode', type=str,
                     default='ROBOT', choices=['ROBOT', 'LAPA'], help='inference results save path')
 
-## trained model (you should put same model as trained model)
-parser.add_argument('--model', type=str,
-                    choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model')
+## trained model (you should put same model as trained model) # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가
+parser.add_argument('--model', type=str, 
+                    choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small'], help='backbone model')
 # inference frame step
 parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
 
