@@ -25,6 +25,7 @@ future==0.18.2
 glob2 @ file:///home/linux1/recipes/ci/glob2_1610991677669/work
 google-auth==1.30.0
 google-auth-oauthlib==0.4.4
+grad-cam==1.2.9
 grpcio==1.37.1
 idna @ file:///tmp/build/80754af9/idna_1593446292537/work
 ipython @ file:///tmp/build/80754af9/ipython_1610724799192/work
