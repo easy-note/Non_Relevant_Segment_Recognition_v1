@@ -35,12 +35,50 @@ class CAMIO(pl.LightningModule):
 
         print(config)
         print(self.init_lr)
-        print(self.backborn)
+        print(self.backborn) # 21.06.03 HG Comment - omg, mistake name of variable, it's backbone X-)
 
         # model setting
-        # model // choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet', 'mobilenet_v3_small']
+        # model // choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small']
+        if (self.backborn.find('vgg') != -1) : # # 21.06.03 HG 수정 - Add Support Model [VGG Family]
+            if self.backborn == 'vgg11' : 
+                print('MODEL = VGG11')
+                self.model = models.vgg11(pretrained=True)
+            
+            elif self.backborn == 'vgg13' : 
+                print('MODEL = VGG13')
+                self.model = models.vgg13(pretrained=True)
+            
+            elif self.backborn == 'vgg16' : 
+                print('MODEL = VGG16')
+                self.model = models.vgg16(pretrained=True)
+            
+            elif self.backborn == 'vgg19' : 
+                print('MODEL = VGG19')
+                self.model = models.vgg19(pretrained=True)
+            
+            elif self.backborn == 'vgg11_bn' : 
+                print('MODEL = VGG11_BN')
+                self.model = models.vgg11_bn(pretrained=True)
+            
+            elif self.backborn == 'vgg13_bn' : 
+                print('MODEL = VGG13_BN')
+                self.model = models.vgg13_bn(pretrained=True)
+            
+            elif self.backborn == 'vgg16_bn' : 
+                print('MODEL = VGG16_BN')
+                self.model = models.vgg16_bn(pretrained=True)
+            
+            elif self.backborn == 'vgg19_bn' : 
+                print('MODEL = VGG19_BN')
+                self.model = models.vgg19_bn(pretrained=True)
+                
+            else :
+                assert(False, '=== Not supported VGG model ===')
 
-        if (self.backborn.find('resnet') != -1) or (self.backborn.find('resnext') != -1) :
+            # change to binary classification
+            self.model.classifier[-1] = torch.nn.Linear(self.model.classifier[-1].in_features, 2)
+
+        elif (self.backborn.find('resnet') != -1) or (self.backborn.find('resnext') != -1) :
             if self.backborn == 'resnet18' :
                 print('MODEL = RESNET18')
                 self.model = models.resnet18(pretrained=True)
