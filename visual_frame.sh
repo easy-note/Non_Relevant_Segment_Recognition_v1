@@ -53,7 +53,10 @@ do
     --GT_path $model_inf_path_1 \
     --model_name "mobilenet_v3_small" \
     --model_infernce_path $model_inf_path_1 \
-    --results_save_dir "./visual_results/mobilenet-0514-inference-1"
+    --results_save_dir "./visual_results/mobilenet-0514-inference-1" \
+    --INFERENCE_STEP 1 \
+    --WINDOW_SIZE 10000 \
+    --OVERLAP_SECTION_NUM 3
 done
 
 # --filter "median" --kernel_size 19
@@ -75,6 +78,9 @@ do
     --model_name "mobilenet_v3_small" \
     --model_infernce_path $model_inf_path_1 \
     --results_save_dir "./visual_results/mobilenet-0514-inference-1"
+    --INFERENCE_STEP 1 \
+    --WINDOW_SIZE 10000 \
+    --OVERLAP_SECTION_NUM 3
 done
 
 patient_array=("R_7" \
@@ -93,5 +99,8 @@ do
     --GT_path $model_inf_path_1 \
     --model_name "mobilenet_v3_small" \
     --model_infernce_path $model_inf_path_1 \
-    --results_save_dir "./visual_results/mobilenet-0514-inference-1"
+    --results_save_dir "./visual_results/mobilenet-0514-inference-1" \
+    --INFERENCE_STEP 1 \
+    --WINDOW_SIZE 10000 \
+    --OVERLAP_SECTION_NUM 3
 done

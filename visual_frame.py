@@ -23,12 +23,18 @@ parser.add_argument('--sub_title_name', type=str, help='sub plot title, and save
 
 parser.add_argument('--GT_path', type=str, help='GT model_inference assets path')
 
+# 21.06.04 HG 수정 - Add supported model [VGG Family]
 parser.add_argument('--model_name', type=str, nargs='+',
-					choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model, it will be yticks name')
+					choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small'], help='trained backborn model, it will be yticks name')
 
 parser.add_argument('--model_infernce_path', type=str, nargs='+', help='model_inference_assets path. this order should be pair with --model_name. if not, results is not unpair.')
 
 parser.add_argument('--results_save_dir', type=str, help='inference results save path')
+
+# 21.06.04 HG 추가 - Add parser Variable for set Variable [Inference Step(==it should be synk with original Experimetal Setting), Window Size, Window num(==Overlap window number)]
+parser.add_argument('--INFERENCE_STEP', type=int, help='Original Experimental Setting in Infernce Step (You should be set as same as test.py --inference_step)')
+parser.add_argument('--WINDOW_SIZE', type=int, help='How many frame count in One section')
+parser.add_argument('--OVERLAP_SECTION_NUM', type=int, help='Overap Count for Section number inference results save path, 1 is non-overlap')
 
 parser.add_argument('--filter', type=str, nargs='?', choices=['mean', 'median'], help='only predict results will be apply')
 
@@ -363,18 +369,18 @@ def main():
 	total_info_df = df(predict_data)
 	total_len = len(total_info_df)
 	
-	# init_variable
-	## INFERENCE STEP = 1 | WINDOW_SIZE = 5000 | WINDOW_NUM = 3
-	## INFERENCE STEP = 5 | WINDOW_SIZE = 1000 | WINDOW_NUM = 3
-	INFERENCE_STEP = 1 ## Frame Inference Step
+	# init_variable # 21.06.04 HG 수정 - change to parser variable
+	## INFERENCE STEP = 1 | WINDOW_SIZE = 5000 | OVERLAP_OVERLAP_SECTION_NUM = 3
+	## INFERENCE STEP = 5 | WINDOW_SIZE = 1000 | OVERLAP_OVERLAP_SECTION_NUM = 3
+	INFERENCE_STEP = args.INFERENCE_STEP ## Frame Inference Step, it will be calc for xlabel and section of start,end idx so you should correctly set as same as test.py --inference_step
 	
-	WINDOW_SIZE = 10000
-	WINDOW_NUM = 3 # overlap window number, if you set WINDOW_NUM = 1, it means non overlap
+	WINDOW_SIZE = args.WINDOW_SIZE # count of frame in one section
+	OVERLAP_OVERLAP_SECTION_NUM = args.OVERLAP_SECTION_NUM # overlap section count, if you set OVERLAP_OVERLAP_SECTION_NUM = 1, it means non overlap
 
-	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+WINDOW_NUM) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
+	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+OVERLAP_OVERLAP_SECTION_NUM) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
 
 	# affine end_idx (last)
-	for z in range(1, WINDOW_NUM+1) : 
+	for z in range(1, OVERLAP_OVERLAP_SECTION_NUM+1) : 
 		slide_window_start_end_idx[z*-1][1] = total_len
 	
 	print(slide_window_start_end_idx)
@@ -479,8 +485,8 @@ def main():
 	Over_metric_per_section_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Section_Over_metric.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
 		
 	# OOB Section Metric Plot
-	section_confidence_metric_plt(Confidence_metric_per_section_df, yticks, ax[1], title='Confidence Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
-	section_over_metric_plt(Over_metric_per_section_df, yticks, ax[2], title='Over Estimation Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
+	section_confidence_metric_plt(Confidence_metric_per_section_df, yticks, ax[1], title='Confidence Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, OVERLAP_OVERLAP_SECTION_NUM, INFERENCE_STEP))
+	section_over_metric_plt(Over_metric_per_section_df, yticks, ax[2], title='Over Estimation Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, OVERLAP_OVERLAP_SECTION_NUM, INFERENCE_STEP))
 
 	#### 4. title 설정
 	fig.suptitle(args.title_name, fontsize=16)
