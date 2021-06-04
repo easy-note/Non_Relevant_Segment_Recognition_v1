@@ -43,22 +43,55 @@ patient_array=("R_17" \
             "R_208" \
             "R_303")
 
-patient_array=("R_17")
-
 for (( i = 0 ; i < ${#patient_array[@]} ; i++ ))
 do
-    model_inf_path_1="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
-    model_inf_path_2="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
-    model_inf_path_3="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
-    model_inf_path_4="./temp2_results-robot_oob-wide_resnet50_2-fold_2-last/${patient_array[$i]}/Inference-${patient_array[$i]}.csv"
+    model_inf_path_1="./results-robot-oob-mobilenet_v3_small-fold_1-last-Inference_1/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
 
     python visual_frame.py \
-    --title_name "tmp_New_Dataset_Inference-FOLD_1" \
+    --title_name "Mobilenet_v3_small-Inference Step_1-FOLD_1" \
     --sub_title_name ${patient_array[$i]} \
     --GT_path $model_inf_path_1 \
-    --model_name "wide_resnet50_2" "resnext50_32x4d" "mobilenet_v3_small" "squeezenet1_0" \
-    --model_infernce_path $model_inf_path_1 $model_inf_path_2 $model_inf_path_3 $model_inf_path_4 \
-    --results_save_dir "./visual_results/temp"
+    --model_name "mobilenet_v3_small" \
+    --model_infernce_path $model_inf_path_1 \
+    --results_save_dir "./visual_results/mobilenet-0514-inference-1"
 done
 
 # --filter "median" --kernel_size 19
+
+patient_array=("R_3" \
+            "R_4" \
+            "R_6" \
+            "R_13" \
+            "R_18")
+
+for (( i = 0 ; i < ${#patient_array[@]} ; i++ ))
+do
+    model_inf_path_1="./results-robot-oob-mobilenet_v3_small-fold_2-last-Inference_1/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
+
+    python visual_frame.py \
+    --title_name "Mobilenet_v3_small-Inference Step_1-FOLD_2" \
+    --sub_title_name ${patient_array[$i]} \
+    --GT_path $model_inf_path_1 \
+    --model_name "mobilenet_v3_small" \
+    --model_infernce_path $model_inf_path_1 \
+    --results_save_dir "./visual_results/mobilenet-0514-inference-1"
+done
+
+patient_array=("R_7" \
+            "R_10" \
+            "R_19" \
+            "R_56" \
+            "R_74")
+
+for (( i = 0 ; i < ${#patient_array[@]} ; i++ ))
+do
+    model_inf_path_1="./results-robot-oob-mobilenet_v3_small-fold_3-last-Inference_1/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
+
+    python visual_frame.py \
+    --title_name "Mobilenet_v3_small-Inference Step_1-FOLD_3" \
+    --sub_title_name ${patient_array[$i]} \
+    --GT_path $model_inf_path_1 \
+    --model_name "mobilenet_v3_small" \
+    --model_infernce_path $model_inf_path_1 \
+    --results_save_dir "./visual_results/mobilenet-0514-inference-1"
+done
