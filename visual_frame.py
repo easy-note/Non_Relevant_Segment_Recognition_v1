@@ -298,7 +298,7 @@ def main():
 	print(runlength_model)
 
 	#### 2. matplotlib의 figure 및 axis 설정
-	fig, ax = plt.subplots(3,1,figsize=(20,18)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
+	fig, ax = plt.subplots(3,1,figsize=(26,20)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
 
 
 	plt.subplots_adjust(left=0.125,
@@ -501,7 +501,7 @@ def main():
 	print(xtick_labels)
 
 	ax[0].set_xticklabels(xtick_labels) # xtick change
-	ax[0].xaxis.set_tick_params(labelsize=7)
+	ax[0].xaxis.set_tick_params(labelsize=6)
 	ax[0].set_xlabel('Frame / Time (h:m:s:fps)', fontsize=12)
 	
 	#### 7. y축 세부설정
@@ -555,7 +555,7 @@ def section_confidence_metric_plt(Confidence_metric_per_section_df, model_list, 
 	xtick_labels = ['{}\n{}'.format(time, frame) if i_th % 2 == 0 else '\n\n{}\n{}'.format(time, frame) for i_th, (time, frame) in enumerate(zip(x_value, Confidence_metric_per_section_df['Time_start_idx']))]
 	ax.set_xticklabels(xtick_labels) # xtick change
 	# ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Confidence_metric_per_section_df['Time_start_idx'])]) # xtick change
-	ax.xaxis.set_tick_params(labelsize=7)
+	ax.xaxis.set_tick_params(labelsize=6)
 	ax.set_xlabel('Start Frame / Time (h:m:s:fps)', fontsize=12)
 
 	# y 축 세부설정
@@ -600,7 +600,7 @@ def section_over_metric_plt(Over_metric_per_section_df, model_list, ax, title) :
 	ax.set_xticklabels(xtick_labels) # xtick change
 	
 	# ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Over_metric_per_section_df['Time_start_idx'])]) # xtick change
-	ax.xaxis.set_tick_params(labelsize=7)
+	ax.xaxis.set_tick_params(labelsize=6)
 	ax.set_xlabel('Start Frame / Time (h:m:s:fps)', fontsize=12)
 
 	# y 축 세부설정
