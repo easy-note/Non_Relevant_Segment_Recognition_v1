@@ -34,9 +34,9 @@ def train():
     ## train file and log file are saving in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
-    ## training model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가
+    ## training model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가
     parser.add_argument('--model', type=str,
-                        choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small'], help='backbone model')
+                        choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1'], help='backbone model')
 
     ## init lr
     parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
@@ -110,6 +110,7 @@ def train():
         'optimizer_lr' : args.init_lr,
 
         '__max_epoch' : args.max_epoch,
+        '__min_epoch' : args.min_epoch, # 21.06.05 HG 추가 - parser변수 추가에 따른 logging 추가
         '__train_videos :' : args.train_videos,
         '__val_videos :' : args.val_videos,
 

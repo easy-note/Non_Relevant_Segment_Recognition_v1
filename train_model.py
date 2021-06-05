@@ -38,7 +38,7 @@ class CAMIO(pl.LightningModule):
         print(self.backborn) # 21.06.03 HG Comment - omg, mistake name of variable, it's backbone X-)
 
         # model setting
-        # model // choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small']
+        # model // choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1']
         if (self.backborn.find('vgg') != -1) : # # 21.06.03 HG 수정 - Add Support Model [VGG Family]
             if self.backborn == 'vgg11' : 
                 print('MODEL = VGG11')
@@ -122,18 +122,21 @@ class CAMIO(pl.LightningModule):
             else :
                 assert(False, '=== Not supported MobileNet model ===')
         
-        elif self.backborn.find('squeezenet') != -1 :
+        elif self.backborn.find('squeezenet') != -1 :# 21.06.05 HG 수정 - Squeezenet 모델에 맞게 수정 
             if self.backborn == 'squeezenet1_0' :
                 print('MODEL = squeezenet1_0')
                 self.model = models.squeezenet1_0(pretrained=True)
 
-                final_conv = torch.nn.Conv2d(512, 2, 1)
-                self.model.classifier = torch.nn.Sequential(
-                    final_conv,
-                    torch.nn.AdaptiveAvgPool2d((1,1))
-                )
+            elif self.backborn == 'squeezenet1_1' : # 21.06.05 HG 추가 - Squeezenet1_1
+                print('MODEL = squeezenet1_1')
+                self.model = models.squeezenet1_0(pretrained=True)
+
             else :
                 assert(False, '=== Not supported Squeezenet model ===')
+
+            # change to binary classification
+            final_conv = torch.nn.Conv2d(512, 2, 1)
+            self.model.classifier[1] = final_conv # change only final conv layer
 
         else :
             assert(False, '=== Not supported Model === ')
