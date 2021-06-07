@@ -129,7 +129,7 @@ class CAMIO(pl.LightningModule):
 
             elif self.backborn == 'squeezenet1_1' : # 21.06.05 HG 추가 - Squeezenet1_1
                 print('MODEL = squeezenet1_1')
-                self.model = models.squeezenet1_0(pretrained=True)
+                self.model = models.squeezenet1_1(pretrained=True)
 
             else :
                 assert(False, '=== Not supported Squeezenet model ===')
