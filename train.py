@@ -34,9 +34,11 @@ def train():
     ## train file and log file are saving in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
-    ## training model
+    ## training model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가 # 21.06.09 HG 추가 [EfficientNet Family]
     parser.add_argument('--model', type=str,
-                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='backborn model')
+                        choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
+                        'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1',
+                        'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='backbone model')
 
     ## init lr
     parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
@@ -110,6 +112,7 @@ def train():
         'optimizer_lr' : args.init_lr,
 
         '__max_epoch' : args.max_epoch,
+        '__min_epoch' : args.min_epoch, # 21.06.05 HG 추가 - parser변수 추가에 따른 logging 추가
         '__train_videos :' : args.train_videos,
         '__val_videos :' : args.val_videos,
 
@@ -321,17 +324,17 @@ def train():
 
     # early stopping
     early_stop_callback = EarlyStopping(
-        monitor='Confidence_ratio',
+        monitor='val_loss',
         patience = 10,
         verbose = True,
-        mode = 'max'
+        mode = 'min'
     )
 
     
     '''
         tensorboard logger
         save_dir : checkpoint log 저장 위치처럼 tensorboard log 저장위치
-        name : tensorboard log 저장할 폴더 이름 (이 안에 하위폴더로 version_0, version_1, ... 이런식으로 생김)
+        name : tensorboard log 저장할 폴더 이름 (이 안에 하위폴더로 version_0, version_1, ...› 이런식으로 생김)
         default_hp_metric : 뭔지 모르는데 거슬려서 False
     '''
     tb_logger = pl_loggers.TensorBoardLogger(save_dir=os.path.join(log_base_path, args.project_name),
