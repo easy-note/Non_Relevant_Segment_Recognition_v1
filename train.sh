@@ -20,19 +20,13 @@ do
 done
 END
 
+model_array=("resnet50")
 
-model_array=("wide_resnet50_2" \
-            "resnext50_32x4d" \
-            "mobilenet_v3_small" \
-            "squeezenet1_0")
-
-model_array=("squeezenet1_0")
-
-for (( i = 0 ; i < ${#model_array[@]} ; i++ ))
+for ((i=0; i<${#model_array[@]}; i++))
 do
-    python train_camIO.py \
-    --project_name "lapa-oob-temp" \
-    --dataset "LAPA" \
+    python train.py \
+    --project_name "resnet50" \
+    --dataset "ROBOT" \
     --max_epoch 50 \
     --log_path "/OOB_RECOG/logs" \
     --batch_size 32 \
@@ -40,6 +34,6 @@ do
     --model ${model_array[$i]} \
     --IB_ratio 3 \
     --random_seed 10 \
-    --fold '1' \
+    --fold '3' \
     --num_gpus 2
 done

@@ -1,33 +1,44 @@
+"""
+Training model for Out of Body Recognition.
+
+Usage:
+    train.sh
+"""
+
 import os
 import argparse
+import pandas as pd
+import time
+import json
+import shutil
+from tqdm import tqdm
+
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.plugins import DDPPlugin
-
-from Model import CAMIO
-from gen_dataset import CAMIO_Dataset
-from gen_dataset import make_oob_csv
-
-import pandas as pd
-import shutil
-from tqdm import tqdm
-
-import time
-
-import json
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 from torchsummary import summary
 
+from train_model import CAMIO
+from train_dataset import CAMIO_Dataset
+from train_dataset import make_oob_csv
+
+
 def train():
+    """ Train model for OOB Recognition. """
+
     parser = argparse.ArgumentParser()
     ## train file and log file are saving in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
-    ## training model
+    ## training model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가 # 21.06.09 HG 추가 [EfficientNet Family]
     parser.add_argument('--model', type=str,
-                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='backborn model')
+                        choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
+                        'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1',
+                        'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='backbone model')
 
     ## init lr
     parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
@@ -37,10 +48,11 @@ def train():
 
     ## epoch
     parser.add_argument('--max_epoch', type=int, help='The maximum number of training epoch.')
+    parser.add_argument('--min_epoch', type=int, help='The minimum number of training epoch.')
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
-                        default='/data/LAPA/Img', help='Data path :)')
+                        default='/data/ROBOT/Img', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -100,6 +112,7 @@ def train():
         'optimizer_lr' : args.init_lr,
 
         '__max_epoch' : args.max_epoch,
+        '__min_epoch' : args.min_epoch, # 21.06.05 HG 추가 - parser변수 추가에 따른 logging 추가
         '__train_videos :' : args.train_videos,
         '__val_videos :' : args.val_videos,
 
@@ -107,13 +120,13 @@ def train():
         '__random_seed' : args.random_seed
     }
 
-    print('\n\n')
+    print('\n')
     print('dataset : ', args.dataset)
     print('fold : ', args.fold)
     print('batch size : ', args.batch_size)
     print('init lr : ', config_hparams['optimizer_lr'])
     print('backborn model : ', config_hparams['backborn_model'])
-    print('\n\n')
+    print('\n')
 
 
     ### ### create results folder for save args and log.txt ### ###
@@ -128,7 +141,7 @@ def train():
         print('ERROR : Creating Directory, ' + os.path.join(log_base_path, args.project_name))
 
     # save args log
-    log_txt='\n\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n\n'
+    log_txt='\n=============== \t\t COMMAND ARGUMENT \t\t ============= \n'
     log_txt+=json.dumps(args.__dict__, indent=2)
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
     
@@ -140,7 +153,6 @@ def train():
     
     # make img info csv path
     # make_oob_csv(base_path, base_path)
-
 
     # bath size
     BATCH_SIZE = args.batch_size
@@ -155,8 +167,6 @@ def train():
 
     log_txt = '\n\n==== MODEL SUMMARY ====\n\n'
     log_txt+= 'MODEL PARAMS : \t {}'.format(str(model_status))
-
-    # log_txt+= 'MODEL PARAMS : \t {}'.format(sum([param.nelement() for param in model.parameters()])) # when not suppoerted torch summary
 
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
 
@@ -226,6 +236,8 @@ def train():
 
     # dataset 설정
     # IB_ratio = [1,2,3,..] // IB개수 = OOB개수*IB_ratio
+
+    print('train_videos', train_videos)
     trainset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=train_videos, is_train=True, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
     valiset =  CAMIO_Dataset(csv_path=os.path.join(base_path, 'oob_assets_path.csv'), patient_name=val_videos, is_train=False, random_seed=args.random_seed, IB_ratio=args.IB_ratio)
     
@@ -236,13 +248,10 @@ def train():
     
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, 
-                                            shuffle=False, num_workers=8)
+                                               shuffle=False, num_workers=8)
     vali_loader = torch.utils.data.DataLoader(valiset, batch_size=BATCH_SIZE, 
-                                            shuffle=False, num_workers=8)
+                                               shuffle=False, num_workers=8)
 
-    
-
-    
     
     ###### this section is for check that dataset gets img and label correctly ####
     ### 해당 section은 단지 모델이 학습하는 데이터셋이 무엇인지 확인하기 위해 구성된 Dataset의 image와 label정보를 모두 /get_dataset_results에 저장하는 부분
@@ -298,43 +307,54 @@ def train():
 
     ##### ### ###
 
-    """
+    '''
         dirpath : log 저장되는 위치
         filename : 저장되는 checkpoint file 이름
         monitor : 저장할 metric 기준
-    """
+    '''
     checkpoint_filename = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio)
-    checkpoint_filename = checkpoint_filename + '{epoch}-{val_loss:.4f}'
+    checkpoint_filename = checkpoint_filename + '{epoch}-{Confidence_ratio:.4f}'
     checkpoint_callback = ModelCheckpoint(
             dirpath=os.path.join(log_base_path, args.project_name), filename=checkpoint_filename, # {epoch}-{val_loss:.4f}
-            save_top_k=1, save_last=True, verbose=True, monitor="OOB_metric", mode="min"
+            save_top_k=1, save_last=True, verbose=True, monitor="Confidence_ratio", mode="max"
     )
-
+    
     # change last checkpoint name
     checkpoint_callback.CHECKPOINT_NAME_LAST = 'ckpoint_{}-model={}-batch={}-lr={}-fold={}-ratio={}-'.format(args.project_name, args.model, BATCH_SIZE, args.init_lr, args.fold, args.IB_ratio) + '{epoch}-last'
 
-    """
+    # early stopping
+    early_stop_callback = EarlyStopping(
+        monitor='val_loss',
+        patience = 10,
+        verbose = True,
+        mode = 'min'
+    )
+
+    
+    '''
         tensorboard logger
         save_dir : checkpoint log 저장 위치처럼 tensorboard log 저장위치
-        name : tensorboard log 저장할 폴더 이름 (이 안에 하위폴더로 version_0, version_1, ... 이런식으로 생김)
+        name : tensorboard log 저장할 폴더 이름 (이 안에 하위폴더로 version_0, version_1, ...› 이런식으로 생김)
         default_hp_metric : 뭔지 모르는데 거슬려서 False
-    """
+    '''
     tb_logger = pl_loggers.TensorBoardLogger(save_dir=os.path.join(log_base_path, args.project_name),
                                             name='TB_log',
                                             default_hp_metric=False)
-    """
+    '''
         gpus : GPU 몇 개 사용할건지, 1개면 ddp 안함
         max_epochs : 최대 몇 epoch 할지
         checkpoint_callback : 위에 정의한 callback 함수
         logger : tensorboard logger, 다른 custom logger도 사용가능
         accelerator : 멀티 GPU 모드 설정
-    """
+    '''
 
     # pytorch lightning Trainer Class
     ## train    
     trainer = pl.Trainer(gpus=args.num_gpus, 
                         max_epochs=args.max_epoch, 
-                        checkpoint_callback=checkpoint_callback,
+                        min_epochs=args.min_epoch,
+                        # checkpoint_callback=checkpoint_callback,
+                        callbacks = [checkpoint_callback, early_stop_callback],
                         logger=tb_logger,
                         plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
                         accelerator='ddp')
@@ -355,14 +375,11 @@ def train():
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
 
 
-
 # save log 
 def save_log(log_txt, save_dir) :
     print('=========> SAVING LOG ... | {}'.format(save_dir))
     with open(save_dir, 'a') as f :
         f.write(log_txt)
-
-
 
 
 if __name__ == "__main__":

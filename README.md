@@ -92,7 +92,11 @@ ssh -L 6006:localhost:6006 hyeongyuc@192.168.1.15
 
 - Tensorboard 사용
 ```shell
+# Solution 1) Connect http://localhost:6006
 tensorboard --logdir=/CAM_IO/logs/OOB_robot_test/DPP_Test/version_0 --bind_all
+
+# Solution 2) Connect http://serverIP:6006
+tensorboard --logdir=/CAM_IO/logs/OOB_robot_test/DPP_Test/version_0 --port 6006 --host=0.0.0.0
 ```
 
 - GPU 확인
