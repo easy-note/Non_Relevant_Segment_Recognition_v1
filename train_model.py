@@ -8,6 +8,8 @@ import pytorch_lightning as pl
 from pytorch_lightning.metrics.utils import to_categorical
 from pytorch_lightning.metrics import Accuracy, Precision, Recall, ConfusionMatrix, F1
 from pycm import *
+from efficientnet_pytorch import EfficientNet # 21.06.09 HG 수정 - Add Support Model [EfficientNet Family] - https://github.com/lukemelas/EfficientNet-PyTorch
+
 
 from torchsummary import summary
 
@@ -38,7 +40,7 @@ class CAMIO(pl.LightningModule):
         print(self.backborn) # 21.06.03 HG Comment - omg, mistake name of variable, it's backbone X-)
 
         # model setting
-        # model // choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1']
+        # model // choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1', efficientnet_b0, efficientnet_b1, efficientnet_b2, efficientnet_b3, efficientnet_b4, efficientnet_b5, efficientnet_b6, efficientnet_b7]
         if (self.backborn.find('vgg') != -1) : # # 21.06.03 HG 수정 - Add Support Model [VGG Family]
             if self.backborn == 'vgg11' : 
                 print('MODEL = VGG11')
@@ -105,19 +107,24 @@ class CAMIO(pl.LightningModule):
             # change to binary classification
             self.model.fc = torch.nn.Linear(self.model.fc.in_features, 2)
 
-        elif self.backborn.find('mobilenet') != -1 :
+        elif self.backborn.find('mobilenet') != -1 : # 21.06.08 HG - 수정 - From JH code
             if self.backborn == 'mobilenet_v2' :
                 print('MODEL = MOBILENET_V2')
                 self.model = models.mobilenet_v2(pretrained=True)
                 self.num_ftrs = self.model.classifier[-1].in_features
-                self.model.classifier = torch.nn.Linear(self.num_ftrs, 2)
-            
+                self.classifier = nn.Sequential(
+                    torch.nn.Dropout(0.2),
+                    torch.nn.Linear(self.num_ftrs, 2),
+                )
             elif self.backborn == 'mobilenet_v3_small' :
                 print('MODEL = MOBILENET_V3_SMALL')
                 self.model = models.mobilenet_v3_small(pretrained=True)
-
+                self.num_ftrs = self.model.classifier[-1].in_features
                 self.model.classifier = torch.nn.Sequential(
-                    torch.nn.Linear(576, 2)
+                    torch.nn.Linear(576, self.num_ftrs), #lastconv_output_channels, last_channel
+                    torch.nn.Hardswish(inplace=True),
+                    torch.nn.Dropout(p=0.2, inplace=True),
+                    torch.nn.Linear(self.num_ftrs, 2) #last_channel, num_classes
                 )
             else :
                 assert(False, '=== Not supported MobileNet model ===')
@@ -137,6 +144,42 @@ class CAMIO(pl.LightningModule):
             # change to binary classification
             final_conv = torch.nn.Conv2d(512, 2, 1)
             self.model.classifier[1] = final_conv # change only final conv layer
+
+        elif self.backborn.find('efficientnet') != -1 :# 21.06.09 HG 추가 - Add supported model [Efficient Family]
+            if self.backborn == 'efficientnet_b0' :
+                print('MODEL = EFFICIENTNET-B0')
+                self.model = EfficientNet.from_pretrained('efficientnet-b0', advprop=False, num_classes=2) # Normailize from ImageNet, # change to binary classification
+
+            elif self.backborn == 'efficientnet_b1' : 
+                print('MODEL = EFFICIENTNET-B1')
+                self.model = EfficientNet.from_pretrained('efficientnet-b1', advprop=False, num_classes=2) # Normailize from ImageNet
+
+            elif self.backborn == 'efficientnet_b2' :
+                print('MODEL = EFFICIENTNET-B2')
+                self.model = EfficientNet.from_pretrained('efficientnet-b2', advprop=False, num_classes=2) # Normailize from ImageNet
+
+            elif self.backborn == 'efficientnet_b3' : 
+                print('MODEL = EFFICIENTNET-B3')
+                self.model = EfficientNet.from_pretrained('efficientnet-b3', advprop=False, num_classes=2) # Normailize from ImageNet
+            
+            elif self.backborn == 'efficientnet_b4' :
+                print('MODEL = EFFICIENTNET-B4')
+                self.model = EfficientNet.from_pretrained('efficientnet-b4', advprop=False, num_classes=2) # Normailize from ImageNet
+
+            elif self.backborn == 'efficientnet_b5' : 
+                print('MODEL = EFFICIENTNET-B5')
+                self.model = EfficientNet.from_pretrained('efficientnet-b5', advprop=False, num_classes=2) # Normailize from ImageNet
+
+            elif self.backborn == 'efficientnet_b6' : 
+                print('MODEL = EFFICIENTNET-B6')
+                self.model = EfficientNet.from_pretrained('efficientnet-b6', advprop=False, num_classes=2) # Normailize from ImageNet
+
+            elif self.backborn == 'efficientnet_b7' : 
+                print('MODEL = EFFICIENTNET-B7')
+                self.model = EfficientNet.from_pretrained('efficientnet-b7', advprop=False, num_classes=2) # Normailize from ImageNet
+
+            else :
+                assert(False, '=== Not supported EfficientNet model ===')            
 
         else :
             assert(False, '=== Not supported Model === ')

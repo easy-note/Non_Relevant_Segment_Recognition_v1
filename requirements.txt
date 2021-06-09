@@ -19,6 +19,7 @@ dataclasses==0.6
 decorator==4.4.2
 decord==0.5.2
 dnspython==2.1.0
+efficientnet-pytorch==0.7.1
 filelock @ file:///home/linux1/recipes/ci/filelock_1610993975404/work
 fsspec==2021.4.0
 future==0.18.2

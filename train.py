@@ -34,9 +34,11 @@ def train():
     ## train file and log file are saving in project_name
     parser.add_argument('--project_name', type=str, help='log saved in project_name')
 
-    ## training model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가
+    ## training model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가 # 21.06.09 HG 추가 [EfficientNet Family]
     parser.add_argument('--model', type=str,
-                        choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1'], help='backbone model')
+                        choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
+                        'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1',
+                        'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='backbone model')
 
     ## init lr
     parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
