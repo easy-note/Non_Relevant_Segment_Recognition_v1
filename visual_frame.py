@@ -23,12 +23,18 @@ parser.add_argument('--sub_title_name', type=str, help='sub plot title, and save
 
 parser.add_argument('--GT_path', type=str, help='GT model_inference assets path')
 
+# 21.06.04 HG 수정 - Add supported model [VGG Family]
 parser.add_argument('--model_name', type=str, nargs='+',
-					choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='trained backborn model, it will be yticks name')
+					choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small'], help='trained backborn model, it will be yticks name')
 
 parser.add_argument('--model_infernce_path', type=str, nargs='+', help='model_inference_assets path. this order should be pair with --model_name. if not, results is not unpair.')
 
 parser.add_argument('--results_save_dir', type=str, help='inference results save path')
+
+# 21.06.04 HG 추가 - Add parser Variable for set Variable [Inference Step(==it should be synk with original Experimetal Setting), Window Size, Window num(==Overlap window number)]
+parser.add_argument('--INFERENCE_STEP', type=int, help='Original Experimental Setting in Infernce Step (You should be set as same as test.py --inference_step)')
+parser.add_argument('--WINDOW_SIZE', type=int, help='How many frame count in One section')
+parser.add_argument('--OVERLAP_SECTION_NUM', type=int, help='Overap Count for Section number inference results save path, 1 is non-overlap')
 
 parser.add_argument('--filter', type=str, nargs='?', choices=['mean', 'median'], help='only predict results will be apply')
 
@@ -113,18 +119,18 @@ def apply_filter(assets, filter_type:str, kernel_size) : # input = numpy, kernel
 def present_text(ax, bar, text, color='black'):
 	for rect in bar:
 		posx = rect.get_x()
-		posy = rect.get_y() - rect.get_height()*0.3
+		posy = rect.get_y() - rect.get_height()*0.1
 		print(posx, posy)
 		ax.text(posx, posy, text, color=color, rotation=0, ha='left', va='bottom')
 
 def present_text_for_section(ax, bar, pos_x, text, color='black'):
 	for rect in bar:
 		posx = pos_x
-		posy = rect.get_y() + rect.get_height()*1.3
+		posy = rect.get_y() + rect.get_height()*1.2
 		print(posx, posy)
 		ax.text(posx, posy, text, rotation=0, color=color, ha='left', va='top', fontsize=8)
 
-def present_text_for_sub_section(ax, bar, pos_x, text):
+def present_text_for_sub_section(ax, bar, pos_x, text): # not used
 	for rect in bar:
 		posx = pos_x
 		posy = rect.get_y() + rect.get_height()*1.0
@@ -292,8 +298,17 @@ def main():
 	print(runlength_model)
 
 	#### 2. matplotlib의 figure 및 axis 설정
-	fig, ax = plt.subplots(3,1,figsize=(18,22)) # 1x1 figure matrix 생성, 가로(7인치)x세로(5인치) 크기지정
-	print(fig)
+	fig, ax = plt.subplots(3,1,figsize=(26,20)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
+
+
+	plt.subplots_adjust(left=0.125,
+                    bottom=0.1, 
+                    right=0.9, 
+                    top=0.9, 
+                    wspace=0, 
+                    hspace=0.35)
+
+	# print(fig)
 	
 	##### initalize label for legned, this code should be write before writing barchart #####
 	init_bar = ax[0].barh(range(len(yticks)), np.zeros(len(yticks)), label=label_names[IB], height=height, color=colors[IB]) # dummy data
@@ -354,14 +369,18 @@ def main():
 	total_info_df = df(predict_data)
 	total_len = len(total_info_df)
 	
-	# init_variable
-	WINDOW_SIZE = 3000
-	INFERENCE_STEP = 5
-	WINDOW_NUM = 3 # overlap window number, if you set WINDOW_NUM = 1, it means non overlap
-	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+WINDOW_NUM) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
+	# init_variable # 21.06.04 HG 수정 - change to parser variable
+	## INFERENCE STEP = 1 | WINDOW_SIZE = 5000 | OVERLAP_OVERLAP_SECTION_NUM = 3
+	## INFERENCE STEP = 5 | WINDOW_SIZE = 1000 | OVERLAP_OVERLAP_SECTION_NUM = 3
+	INFERENCE_STEP = args.INFERENCE_STEP ## Frame Inference Step, it will be calc for xlabel and section of start,end idx so you should correctly set as same as test.py --inference_step
+	
+	WINDOW_SIZE = args.WINDOW_SIZE # count of frame in one section
+	OVERLAP_OVERLAP_SECTION_NUM = args.OVERLAP_SECTION_NUM # overlap section count, if you set OVERLAP_OVERLAP_SECTION_NUM = 1, it means non overlap
+
+	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+OVERLAP_OVERLAP_SECTION_NUM) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
 
 	# affine end_idx (last)
-	for z in range(1, WINDOW_NUM+1) : 
+	for z in range(1, OVERLAP_OVERLAP_SECTION_NUM+1) : 
 		slide_window_start_end_idx[z*-1][1] = total_len
 	
 	print(slide_window_start_end_idx)
@@ -419,12 +438,12 @@ def main():
 
 				# 해당 부분 표시 (Exception)
 				pos_x = frame_start_idx[k]
-				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n☆')
+				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n\n☆')
 
 			elif model_section_confidence_metric_list[k] == -1.0 : # 실제 -1.0
 				# 해당 부분 표시 (Exception)
 				pos_x = frame_start_idx[k]
-				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n★', color='red')
+				present_text_for_section(ax[0], text_bar, frame_label.index(frame_start_idx[k]), '\n\n★', color='red')
 		
 				
 		
@@ -438,7 +457,18 @@ def main():
 
 		for rank, idx in enumerate(sort_index[:MIN_COUNT], 1) :
 			pos_x = frame_label.index(section_confidence_dict['Frame_start_idx'][idx]) # x position
-			present_text_for_section(ax[0], text_bar, pos_x, ' R-{} | C-{:.3f} | O-{:.3f}'.format(rank, model_section_confidence_metric_list[idx], model_section_over_metric_list[idx]))
+			
+			# ranking 별 겹치지 않게 texting
+			if rank == 1 : 
+				section_text = ' R-{} | C-{:.3f} | O-{:.3f}'.format(rank, model_section_confidence_metric_list[idx], model_section_over_metric_list[idx])
+			elif rank == 2 : 
+				section_text = '\n R-{} | C-{:.3f} | O-{:.3f}'.format(rank, model_section_confidence_metric_list[idx], model_section_over_metric_list[idx])
+			elif rank == 3 : 
+				section_text = '\n\n R-{} | C-{:.3f} | O-{:.3f}'.format(rank, model_section_confidence_metric_list[idx], model_section_over_metric_list[idx])
+			else : 
+				section_text = ' R-{} | C-{:.3f} | O-{:.3f}'.format(rank, model_section_confidence_metric_list[idx], model_section_over_metric_list[idx])
+
+			present_text_for_section(ax[0], text_bar, pos_x, section_text)
 		
 
 
@@ -455,8 +485,8 @@ def main():
 	Over_metric_per_section_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Section_Over_metric.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a'
 		
 	# OOB Section Metric Plot
-	section_confidence_metric_plt(Confidence_metric_per_section_df, yticks, ax[1], title='Confidence Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
-	section_over_metric_plt(Over_metric_per_section_df, yticks, ax[2], title='Over Estimation Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, WINDOW_NUM, INFERENCE_STEP))
+	section_confidence_metric_plt(Confidence_metric_per_section_df, yticks, ax[1], title='Confidence Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, OVERLAP_OVERLAP_SECTION_NUM, INFERENCE_STEP))
+	section_over_metric_plt(Over_metric_per_section_df, yticks, ax[2], title='Over Estimation Metric Per Section \n WINDOW SIZE : {} | WINDOW NUM : {} | INFERENCE STEP : {}'.format(WINDOW_SIZE, OVERLAP_OVERLAP_SECTION_NUM, INFERENCE_STEP))
 
 	#### 4. title 설정
 	fig.suptitle(args.title_name, fontsize=16)
@@ -465,8 +495,13 @@ def main():
 	#### 6. x축 세부설정
 	step_size = WINDOW_SIZE # xtick step_size
 	ax[0].set_xticks(range(0, len(frame_label), step_size)) # step_size
-	ax[0].set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(frame_label[::step_size], time_label[::step_size])]) # xtick change
-	ax[0].xaxis.set_tick_params(labelsize=7)
+	
+	print('\n\n===== XTICKS =====\n\n')
+	xtick_labels = ['{}\n{}'.format(time, frame) if i_th % 2 == 0 else '\n\n{}\n{}'.format(time, frame) for i_th, (time, frame) in enumerate(zip(frame_label[::step_size], time_label[::step_size]))]
+	print(xtick_labels)
+
+	ax[0].set_xticklabels(xtick_labels) # xtick change
+	ax[0].xaxis.set_tick_params(labelsize=6)
 	ax[0].set_xlabel('Frame / Time (h:m:s:fps)', fontsize=12)
 	
 	#### 7. y축 세부설정
@@ -484,14 +519,16 @@ def main():
 	ax[0].xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
 	
 	#### 10. 그래프 저장하고 출력하기
-	plt.savefig(os.path.join(args.results_save_dir, '{}-{}.png'.format(args.title_name, args.sub_title_name)), format='png', dpi=500)
+	# fig.tight_layout() # subbplot 간격 줄이기
 	plt.show()
+	plt.savefig(os.path.join(args.results_save_dir, '{}-{}.png'.format(args.title_name, args.sub_title_name)), format='png', dpi=500)
+	
 
 def section_confidence_metric_plt(Confidence_metric_per_section_df, model_list, ax, title) :
 	x_value = Confidence_metric_per_section_df['Frame_start_idx']
 
 	for model in model_list :
-		# -1.0 일경우 1로 처리
+		# EXCPETION NUM (-100) 일경우 1로 처리
 		ax.plot(x_value, [1.0 if val==EXCEPTION_NUM else val for val in Confidence_metric_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
 
 		# exception mark (-1.0일 경우 1로 처리하여 ^ 표시)
@@ -511,9 +548,14 @@ def section_confidence_metric_plt(Confidence_metric_per_section_df, model_list, 
 	ax.set_title(title)
 
 	# x 축 세부설정
+
+	#### 6. x축 세부설정
 	ax.set_xticks(x_value)
-	ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Confidence_metric_per_section_df['Time_start_idx'])]) # xtick change
-	ax.xaxis.set_tick_params(labelsize=7)
+
+	xtick_labels = ['{}\n{}'.format(time, frame) if i_th % 2 == 0 else '\n\n{}\n{}'.format(time, frame) for i_th, (time, frame) in enumerate(zip(x_value, Confidence_metric_per_section_df['Time_start_idx']))]
+	ax.set_xticklabels(xtick_labels) # xtick change
+	# ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Confidence_metric_per_section_df['Time_start_idx'])]) # xtick change
+	ax.xaxis.set_tick_params(labelsize=6)
 	ax.set_xlabel('Start Frame / Time (h:m:s:fps)', fontsize=12)
 
 	# y 축 세부설정
@@ -522,7 +564,6 @@ def section_confidence_metric_plt(Confidence_metric_per_section_df, model_list, 
 	# 보조선(눈금선) 나타내기
 	ax.set_axisbelow(True)
 	ax.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
-
 
 	# 범례
 	box = ax.get_position() # 범례를 그래프상자 밖에 그리기위해 상자크기를 조절
@@ -533,8 +574,8 @@ def section_over_metric_plt(Over_metric_per_section_df, model_list, ax, title) :
 	x_value = Over_metric_per_section_df['Frame_start_idx']
 
 	for model in model_list :
-		# -1.0 일경우 1로 처리
-		ax.plot(x_value, [1.0 if val==EXCEPTION_NUM else val for val in Over_metric_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
+		# EXCPETION NUM (-100) 일경우 0로 처리
+		ax.plot(x_value, [0.0 if val==EXCEPTION_NUM else val for val in Over_metric_per_section_df[model]], marker='o', markersize=4, alpha=1.0)
 
 		# exception mark (-1.0일 경우 1로 처리하여 ^ 표시)
 		'''
@@ -554,8 +595,12 @@ def section_over_metric_plt(Over_metric_per_section_df, model_list, ax, title) :
 
 	# x 축 세부설정
 	ax.set_xticks(x_value)
-	ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Over_metric_per_section_df['Time_start_idx'])]) # xtick change
-	ax.xaxis.set_tick_params(labelsize=7)
+	
+	xtick_labels = ['{}\n{}'.format(time, frame) if i_th % 2 == 0 else '\n\n{}\n{}'.format(time, frame) for i_th, (time, frame) in enumerate(zip(x_value, Over_metric_per_section_df['Time_start_idx']))]
+	ax.set_xticklabels(xtick_labels) # xtick change
+	
+	# ax.set_xticklabels(['{}\n{}'.format(time, frame) for time, frame in zip(x_value, Over_metric_per_section_df['Time_start_idx'])]) # xtick change
+	ax.xaxis.set_tick_params(labelsize=6)
 	ax.set_xlabel('Start Frame / Time (h:m:s:fps)', fontsize=12)
 
 	# y 축 세부설정
