@@ -83,7 +83,7 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
             }
     """
 
-    print('\n\n\n\t\t\t ### STARTING DEF [gettering_information_for_robot] ### \n\n')
+    print('\n\n\n\t\t\t ### STARTING DEF [gettering_information_for_oob] ### \n\n')
 
     info_dict = {
         'video': [],
@@ -91,19 +91,18 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
         'inference_assets' : []
     }
 
+    # init
     all_video_path = []
     all_anno_path = []
 
     if mode == 'ROBOT' : 
         fps = 30
-        
         video_ext_list = ['mp4']
         for ext in video_ext_list :
             all_video_path.extend(glob.glob(video_root_path +'/*.{}'.format(ext)))
         
         all_anno_path = glob.glob(anno_root_path + '/*.csv') # all annotation file list
 
-    
     elif mode == 'LAPA' :
         fps = 60
         video_ext_list = ['mp4', 'MP4', 'mpg']
@@ -114,8 +113,8 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
         all_anno_path = glob.glob(anno_root_path + '/*.json') # all annotation file list
 
         ##### except video file ######
-        all_video_path.remove(os.path.join(video_root_path, '01_G_01_L_423_xx0_01.MP4'))
-        all_anno_path.remove(os.path.join(anno_root_path, '01_G_01_L_423_xx0_01_OOB_16.json'))
+        # all_video_path.remove(os.path.join(video_root_path, '01_G_01_L_423_xx0_01.MP4'))
+        # all_anno_path.remove(os.path.join(anno_root_path, '01_G_01_L_423_xx0_01_OOB_16.json'))
 
     else :
         assert False, 'ONLY SUPPORT MODE [ROBOT, LAPA] | Input mode : {}'.format(mode)
@@ -139,6 +138,9 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
 
         # find video_no in video_file
         video_path_df = all_video_path_df[all_video_path_df['video_path'].str.contains(video_no + '_')]
+
+        # extract video only xx0, ch1 # 21.06.10 HG 추가 - xx0, ch1 만 추출
+        video_path_df = video_path_df[video_path_df['video_path'].str.contains('|'.join(['xx0_', 'ch1_']))]
 
         # sort video_path_df for sync for video slice
         video_path_df = video_path_df.sort_values(by=['video_path'], axis=0, ascending=True)
@@ -194,23 +196,45 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
             # consist infernce assets
             temp_inference_assets_list = glob.glob(os.path.join(inference_assets_base_dir, os.path.splitext(os.path.basename(target_video_path))[0], '*')) # [video1_1_0, video1_1_1, ...]
 
+            # 21.06.10 HG 수정 - LAPA = json, ROBOT = csv parser
             # only target_video_path 
-            if target_anno_path != '' :
-                anno_df = pd.read_csv(target_anno_path)
-                anno_df = anno_df.dropna(axis=0) # 결측행 제거
+            if target_anno_path != '' : # csv
 
-                # time -> frame idx
-                for i in range(len(anno_df)) :
-                    t_start = anno_df.iloc[i]['start']
-                    t_end = anno_df.iloc[i]['end']
+                if mode=='ROBOT' : 
+                    anno_df = pd.read_csv(target_anno_path)
+                    anno_df = anno_df.dropna(axis=0) # 결측행 제거
+
+                    # time -> frame idx
+                    for i in range(len(anno_df)) :
+                        t_start = anno_df.iloc[i]['start'] # time
+                        t_end = anno_df.iloc[i]['end'] # time
+                        
+                        target_idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)]) # temp_idx_list = [[start, end], [start, end]..]
                     
-                    target_idx_list.append([time_to_idx(t_start, fps), time_to_idx(t_end, fps)]) # temp_idx_list = [[start, end], [start, end]..]
                 
-                print('-----'*3)
-                print('target_video_path \t | ', target_video_path)
-                print('inf_assets \t\t |', temp_inference_assets_list)
-                print('anno_path \t\t | ', target_anno_path)
-                print(anno_df)
+                    print('-----'*3)
+                    print('target_video_path \t | ', target_video_path)
+                    print('inf_assets \t\t |', temp_inference_assets_list)
+                    print('anno_path \t\t | ', target_anno_path)
+                    print(anno_df)
+
+                elif mode=='LAPA' : # json
+                    with open(target_anno_path) as json_file :
+                            json_data = json.load(json_file)
+
+                    # annotation frame
+                    for anno_data in json_data['annotations'] :
+                        t_start = anno_data['start'] # frame
+                        t_end = anno_data['end'] # frame
+
+                        target_idx_list.append([t_start, t_end]) # temp_idx_list = [[start, end], [start, end]..]
+
+                    print('-----'*3)
+                    print('target_video_path \t | ', target_video_path)
+                    print('inf_assets \t\t |', temp_inference_assets_list)
+                    print('anno_path \t\t | ', target_anno_path)
+                    print(json_data['annotations'])
+
 
             else : # no event
                 print('-----'*3)
