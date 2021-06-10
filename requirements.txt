@@ -19,12 +19,14 @@ dataclasses==0.6
 decorator==4.4.2
 decord==0.5.2
 dnspython==2.1.0
+efficientnet-pytorch==0.7.1
 filelock @ file:///home/linux1/recipes/ci/filelock_1610993975404/work
 fsspec==2021.4.0
 future==0.18.2
 glob2 @ file:///home/linux1/recipes/ci/glob2_1610991677669/work
 google-auth==1.30.0
 google-auth-oauthlib==0.4.4
+grad-cam==1.2.9
 grpcio==1.37.1
 idna @ file:///tmp/build/80754af9/idna_1593446292537/work
 ipython @ file:///tmp/build/80754af9/ipython_1610724799192/work
