@@ -52,7 +52,7 @@ def train():
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
-                        default='/data/ROBOT/Img', help='Data path :)')
+                        default='/data/LAPA/Img', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -146,7 +146,7 @@ def train():
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
     
     # 사용할 GPU 디바이스 번호들
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1' #, 0'
 
     # images path (.csv dir)
     base_path = args.data_path

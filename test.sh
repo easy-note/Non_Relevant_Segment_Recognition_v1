@@ -41,20 +41,23 @@ END
 #                 "./temp_results-robot_oob-squeezenet1_0-fold_2-last")
 
 
-model_array=("resnet18")
-model_path_array=("/OOB_RECOG/logs/ROBOT/OOB/resnet18/ckpoint_resnet18-model=resnet18-batch=32-lr=0.001-fold=3-ratio=3-epoch=8-Confidence_ratio=0.9227.ckpt")
-results_save_dir_array=("./results-robot_oob-resnet18-fold_3-Confidence_Ratio_Max")
+model_array=("mobilenet_v3_small")
+
+model_path_array=("/OOB_RECOG/logs/ROBOT/OOB/model-scratch-mobilenet_v3_small-fold1/ckpoint_model-scratch-mobilenet_v3_small-fold1-model=mobilenet_v3_small-batch=32-lr=0.001-fold=1-ratio=3-epoch=26-last.ckpt")
+
+results_save_dir_array=("./results-last-robot_oob-mobilenet_v3_small-fold_3-model-scratch")
 
 
 for (( i = 0 ; i < ${#model_path_array[@]} ; i++ ))
 do
     python test.py \
     --model_path ${model_path_array[$i]} \
-    --data_dir "/data/ROBOT/Video" \
+    --data_dir "/data/LAPA/Video" \
     --anno_dir "/data/OOB" \
-    --inference_assets_dir "/data/ROBOT/Inference" \
+    --inference_assets_dir "/data/LAPA/Inference" \
     --results_save_dir ${results_save_dir_array[$i]} \
     --model ${model_array[$i]} \
     --inference_step 5 \
-    --test_videos 'R_7' 'R_10' 'R_19' 'R_56' 'R_74'
+    --test_videos 'L_522' 'L_605' 'L_553' 'L_550' 'L_412'
+
 done

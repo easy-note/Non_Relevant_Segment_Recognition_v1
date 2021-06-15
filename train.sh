@@ -20,14 +20,16 @@ do
 done
 END
 
-model_array=("resnet50")
+model_array=("mobilenet_v3_small")
+project_name_array=("model-scratch-mobilenet_v3_small-fold3")
 
 for ((i=0; i<${#model_array[@]}; i++))
 do
     python train.py \
-    --project_name "resnet50" \
-    --dataset "ROBOT" \
+    --project_name ${project_name_array[$i]} \
+    --dataset "LAPA" \
     --max_epoch 50 \
+    --min_epoch 25 \
     --log_path "/OOB_RECOG/logs" \
     --batch_size 32 \
     --init_lr 1e-3 \

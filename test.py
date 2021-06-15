@@ -49,7 +49,6 @@ parser.add_argument('--model', type=str,
                     choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
                     'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1',
                     'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='backbone model')
-
 # inference frame step
 parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
 

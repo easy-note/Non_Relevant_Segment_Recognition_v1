@@ -113,9 +113,9 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
         
         all_anno_path = glob.glob(anno_root_path + '/*.json') # all annotation file list
 
-        ##### except video file ######
-        all_video_path.remove(os.path.join(video_root_path, '01_G_01_L_423_xx0_01.MP4'))
-        all_anno_path.remove(os.path.join(anno_root_path, '01_G_01_L_423_xx0_01_OOB_16.json'))
+        # ##### except video file ######
+        # all_video_path.remove(os.path.join(video_root_path, '01_G_01_L_423_xx0_01.MP4'))
+        # all_anno_path.remove(os.path.join(anno_root_path, '01_G_01_L_423_xx0_01_OOB_16.json'))
 
     else :
         assert False, 'ONLY SUPPORT MODE [ROBOT, LAPA] | Input mode : {}'.format(mode)
