@@ -156,8 +156,7 @@ class CAMIO(pl.LightningModule):
 
             else :
                 assert(False, '=== Not supported Squeezenet model ===')
-<<<<<<< HEAD
-
+                
             # change to binary classification
             final_conv = torch.nn.Conv2d(512, 2, 1)
             self.model.classifier[1] = final_conv # change only final conv layer
@@ -198,9 +197,6 @@ class CAMIO(pl.LightningModule):
             else :
                 assert(False, '=== Not supported EfficientNet model ===')            
 
-=======
-            
->>>>>>> feature/train_model_mobilenet
         else :
             assert(False, '=== Not supported Model === ')
 
