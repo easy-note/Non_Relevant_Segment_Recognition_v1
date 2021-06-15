@@ -36,7 +36,7 @@ def train():
 
     ## training model
     parser.add_argument('--model', type=str,
-                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0'], help='backborn model')
+                        choices=['resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0'], help='backborn model')
 
     ## init lr
     parser.add_argument('--init_lr', type=float, help='optimizer for init lr')
@@ -50,7 +50,7 @@ def train():
 
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
-                        default='/data/ROBOT/Img', help='Data path :)')
+                        default='/data/LAPA/Img', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -143,7 +143,7 @@ def train():
     save_log(log_txt, os.path.join(log_base_path, args.project_name, 'log.txt')) # save log
     
     # 사용할 GPU 디바이스 번호들
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1' #, 0'
 
     # images path (.csv dir)
     base_path = args.data_path
@@ -321,10 +321,10 @@ def train():
 
     # early stopping
     early_stop_callback = EarlyStopping(
-        monitor='Confidence_ratio',
+        monitor='val_loss',
         patience = 10,
         verbose = True,
-        mode = 'max'
+        mode = 'min'
     )
 
     
