@@ -200,9 +200,9 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
 
             # 21.06.10 HG 수정 - LAPA = json, ROBOT = csv parser
             # only target_video_path 
-            if target_anno_path != '' : # csv
+            if target_anno_path != '' : # event
 
-                if mode=='ROBOT' : 
+                if mode=='ROBOT' :  # csv
                     anno_df = pd.read_csv(target_anno_path)
                     anno_df = anno_df.dropna(axis=0) # 결측행 제거
 
