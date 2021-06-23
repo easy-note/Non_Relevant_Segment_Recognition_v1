@@ -4,6 +4,7 @@ For model test using pre-created test datset in tensor form.
 
 import os
 import cv2
+from PIL import Image
 import torch
 import numpy as np
 import pandas as pd
@@ -18,7 +19,6 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import pickle
 
-import torch
 from torchvision import transforms
 import pytorch_lightning as pl
 from sklearn.metrics import classification_report
@@ -29,7 +29,14 @@ from train_model import CAMIO
 from test_info_dict import gettering_information_for_oob
 from test_info_dict import sanity_check_info_dict
 
+# 21.06.10 HG 추가 - to load video for capture FP FN frame
+from decord import VideoReader
+from decord import cpu, gpu
+
+from PIL import ImageFilter
+
 matplotlib.use('Agg')
+
 
 
 parser = argparse.ArgumentParser()
@@ -38,11 +45,10 @@ parser.add_argument('--model_path', type=str, help='trained model_path')
 parser.add_argument('--data_dir', type=str,
                     default='/data/ROBOT/Video', help='video_path :) ')
 parser.add_argument('--anno_dir', type=str,
-                    default='/data/OOB', help='annotation_path :) ')
+                    default='/data/OOB/V1_40', help='annotation_path :) ')
 parser.add_argument('--results_save_dir', type=str, help='inference results save path')
 
-parser.add_argument('--mode', type=str,
-                    default='ROBOT', choices=['ROBOT', 'LAPA'], help='inference results save path')
+parser.add_argument('--mode', type=str, choices=['ROBOT', 'LAPA'], help='inference results save path')
 
 ## test model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가 # 21.06.09 HG 추가 [EfficientNet Family]
 parser.add_argument('--model', type=str,
@@ -57,13 +63,48 @@ parser.add_argument('--inference_step', type=int, default=5, help='inference fra
 parser.add_argument('--test_videos', type=str, nargs='+',
                     choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
                             'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
-                            'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'],
+                            'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'] + 
+                            ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
+                            'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550',
+                            'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676'],
                     help='inference video')
 
 # infernece assets root path
 parser.add_argument('--inference_assets_dir', type=str, help='inference assets root path')
 
 args, _ = parser.parse_known_args()
+
+
+# data transforms (output: tensor)
+data_transforms = {
+    'test': transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ]),
+}
+aug = data_transforms['test']
+
+def npy_to_tensor(npy_img):
+    pil_img = Image.fromarray(npy_img)
+    img = aug(pil_img)
+    
+    return img
+
+def batch_npy_to_tensor(batch_npy_img) : 
+    b, h, w, c = batch_npy_img.shape
+    return_tensor = torch.Tensor(b, 3, 224, 224) # batch, channel, height, width
+    
+    # loop for Batch size
+    for b_idx in range(b) : 
+        # convert pil
+        pil_img = Image.fromarray(batch_npy_img[b_idx])
+        
+        # pil to tensor ('using test' aug)
+        return_tensor[b_idx] = aug(pil_img)
+    
+    return return_tensor
 
 
 # check results for binary metric
@@ -83,7 +124,7 @@ def calc_confusion_matrix(gts, preds):
 
 def idx_to_time(idx, fps) :
     time_s = idx // fps
-    frame = idx % fps
+    frame = int(idx % fps) # 21.06.10 HG 수정 - frame 소수점 truncate
 
     converted_time = str(datetime.timedelta(seconds=time_s))
     converted_time = converted_time + ':' + str(frame)
@@ -118,13 +159,44 @@ def return_metric_frame(result_df) :
     }
 
 # save video frame from frame_list | it will be saved in {save_path}/{video_name}-{frame_idx}.jpg
-def save_video_frame(video_path, frame_list, save_path, video_name) :
-    video = cv2.VideoCapture(video_path)
+# save FP FN frame from Video Record, 하나의 비디오에 대해 여러개 folder를 캡쳐하기 위해 사용
+# LAPA, ROBOT 공용사용 가능
+def save_video_frame_for_VR(video_path, frame_list_arr, save_path_arr, video_name) : # using VideoRecord
+    '''
+    video_path = 'path'
+    frame_list_arr = [[1st frame_list], [2nd frame_list]]
+    frame_list_arr = ['1st save_path', '2nd save_path']
+    video_name = 'video_name'
+    '''
+
+    print('TARGET VIDEO_PATH : ', video_path)
+    video = VideoReader(video_path, ctx=cpu())
     
+    for frame_list, save_path in zip(frame_list_arr, save_path_arr) : # multiple capture from one video
+        print('TARGET FRAME : ', frame_list)
+
+        for frame_idx in tqdm(frame_list, desc='Saving Frame From {} ... '.format(video_path)) : 
+            video_frame = video[frame_idx].asnumpy()
+            pil_image=Image.fromarray(video_frame)
+            results_save_dir
+
+            pil_image.save(fp=os.path.join(save_path, '{}-{:010d}.jpg'.format(video_name, frame_idx)))
+            
+    del video, video_frame
+    print('======> DONE.')
+
+
+# save video frame from frame_list | it will be saved in {save_path}/{video_name}-{frame_idx}.jpg
+# ROBOT 사용가능, LAPA 불가
+def save_video_frame_for_CV(video_path, frame_list, save_path, video_name) : # using CV
     print('TARGET VIDEO_PATH : ', video_path)
     print('TARGET FRAME : ', frame_list)
 
+    video = cv2.VideoCapture(video_path)
+
     for frame_idx in tqdm(frame_list, desc='Saving Frame From {} ... '.format(video_path)) :
+        video_frame = video[i].asnumpy()
+        
         video.set(1, frame_idx) # frame setting
         _, img = video.read() # read frame
 
@@ -239,7 +311,7 @@ def test_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, m
     ### base setting ###
     # val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
     valset = patient_list
-    fps = 30
+    # fps = 30 # 21.06.10 HG 수정 - Not used
 
     # gettering information step
     info_dict = gettering_information_for_oob(data_dir, anno_dir, infernece_assets_dir, valset, mode='ROBOT')
@@ -272,7 +344,7 @@ def test_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, m
     print('\t=== === === ===\n\n')
 
     # inference step
-    test(info_dict, model, results_save_dir, inference_step, fps=fps)
+    test(info_dict, model, results_save_dir, inference_step) # 21.06.10 HG 수정 - automatic FPS setting for each video FPS
 
 def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step):
     """
@@ -292,7 +364,7 @@ def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, mo
     ### base setting ###
     # val_videos = ['R_17', 'R_22', 'R_116', 'R_208', 'R_303']
     valset = patient_list
-    fps = 60
+    # fps = 30 # 21.06.10 HG 수정 - Not used
 
     # gettering information step
     info_dict = gettering_information_for_oob(data_dir, anno_dir, infernece_assets_dir, valset, mode='LAPA')
@@ -325,9 +397,10 @@ def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, mo
     print('\t=== === === ===\n\n')
 
     # inference step
-    test(info_dict, model, results_save_dir, inference_step, fps=fps)
+    test(info_dict, model, results_save_dir, inference_step) # 21.06.10 HG 수정 - automatic FPS setting for each video FPS
 
-def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project_name is only for use for title in total_metric_df.csv
+# project_name is only for use for title in total_metric_df.csv
+def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수정 - automatic FPS setting for each video FPS
     """
     - Model test (inference).
 
@@ -340,7 +413,6 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
             }
         results_save_dir: Path for save directory.
         inference_step: Frame unit for test.
-        fps: Video fps.
     """
 
     print('\n\n\n\t\t\t ### STARTING DEF [test] ### \n\n')
@@ -387,6 +459,10 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
         print('NUMBER OF INFERNECE ASSETS {} \n==> ASSETS LIST : {}'.format(len(infernece_assets_path_list), infernece_assets_path_list))
         print('RESULTS SAVED AT \t\t\t ======>  {}'.format(each_videoset_result_dir))
         print('\n')
+            
+
+
+        #### 
         
         # extract info for each video_path
         for video_path, anno_info, each_video_infernece_assets_path_list in zip(video_path_list, anno_info_list, infernece_assets_path_list) :
@@ -418,10 +494,26 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
                 print('ERROR : Creating Directory, ' + fn_frame_saved_dir)
 
             # open video cap, only check for frame count
+            '''            
             video = cv2.VideoCapture(video_path)
-            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-            video_fps = video.get(cv2.CAP_PROP_FPS)
+            video_len = int(video.get(cv2.CAP_PROP_FRAME_COUNT)) # it's okay to use CV
+            video_fps = video.get(cv2.CAP_PROP_FPS) # it's okay to use CV
+            
             video.release()
+            del video
+            '''
+
+            # using VR(len) & CV (fps) # 21.06.10 HG Change to VideoRecoder
+            video_cap = cv2.VideoCapture(video_path)
+            video_fps = video_cap.get(cv2.CAP_PROP_FPS)
+            print(int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+
+            video_cap.release()
+            del video_cap
+
+            video = VideoReader(video_path, ctx=cpu())
+            video_len = len(video)
+            # del video, video_cap
 
             print('\tTarget video : {} | Total Frame : {} | Video FPS : {} '.format(video_name, video_len, video_fps))
             print('\tAnnotation Info : {}'.format(anno_info))
@@ -429,7 +521,7 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
             ### check idx -> time
             if anno_info : # event 
                 for start, end in anno_info :
-                    print([idx_to_time(start, fps), idx_to_time(end, fps)])
+                    print([idx_to_time(start, video_fps), idx_to_time(end, video_fps)])
             else : # no evnet
                 print(anno_info)
                 print('=====> NO EVENT')
@@ -477,6 +569,7 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
 
             # split gt_list per inference assets
             # init_variable
+            '''
             SLIDE_FRAME = 30000
             inference_assets_start_end_frame_idx= [[start_idx*SLIDE_FRAME, (start_idx+1)*SLIDE_FRAME-1] for start_idx in range(inference_assets_cnt)]
             inference_assets_start_end_frame_idx[-1][1] = video_len - 1 # last frame of last pickle
@@ -488,9 +581,92 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
                 inference_frame_idx_list.append([idx for idx in range(start, end+1) if idx % inference_step == 0])
                 
             BATCH_SIZE = 512
+            '''
 
-            temp_cnt = 0 ### dummy for test
+            # temp_cnt = 0 ### dummy for test
+            # for video inference
+            # batch slice from infernece_frame_idx
+            BATCH_SIZE = 64
+            
+            TOTAL_INFERENCE_FRAME_INDICES = list(range(0, video_len, inference_step))
+            
+            start_pos = 0
+            end_pos = len(TOTAL_INFERENCE_FRAME_INDICES)
 
+            print('TOTAL_INFERENCE_FRAME_INDICES')
+            print(TOTAL_INFERENCE_FRAME_INDICES)
+            
+            with torch.no_grad() :
+                model.eval()
+                
+                for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE),  desc='Inferencing... \t ==> {}'.format(video_name)):
+                    FRAME_INDICES = TOTAL_INFERENCE_FRAME_INDICES[start_pos:start_pos + BATCH_SIZE] # batch video frame idx
+                    if FRAME_INDICES != []:
+                        BATCH_INPUT = video.get_batch(FRAME_INDICES).asnumpy() # get batch (batch, height, width, channel)
+
+                        # convert batch tensor
+                        BATCH_TENSOR = batch_npy_to_tensor(BATCH_INPUT).cuda()
+
+                        # inferencing model
+                        BATCH_OUTPUT = model(BATCH_TENSOR)
+
+                        # predict
+                        BATCH_PREDICT = torch.argmax(BATCH_OUTPUT.cpu(), 1)
+                        BATCH_PREDICT = BATCH_PREDICT.tolist()
+
+                        # save results
+                        frame_idx_list+=FRAME_INDICES
+                        predict_list+= list(BATCH_PREDICT)
+
+                        gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
+                        time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
+
+                        print('FRAME_INDICES :', FRAME_INDICES)
+                        print('BATCH INPUT TENSOR SIZE : {}'.format(BATCH_TENSOR.size))
+                        print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
+                        print('\n\n')
+
+                    start_pos = start_pos + BATCH_SIZE
+
+                
+                '''
+                for v_idx in tqdm(range(0, video_len, inference_step), desc='Inferencing... \t ==> {}'.format(video_name)) :
+                        # inferencing model
+                        input_=video[v_idx].asnumpy()
+
+                        # PIL save
+                        pil_image=Image.fromarray(input_)
+                        # print('before pil_img : ', np.unique(input_))
+                        # temp_save_path = os.path.join('./results/temp_img' ,'{}-{:010d}.jpg'.format(video_name, v_idx))
+                        # pil_image.save(temp_save_path)
+
+                        # load
+                        # gaussianBlur = ImageFilter.GaussianBlur(5)
+                        # input_ = aug(Image.open(temp_save_path).filter(gaussianBlur))
+                        input_ = aug(pil_image)
+                        
+                        input_=torch.unsqueeze(input_, 0).cuda()
+
+                        output_ = model(input_)
+
+                        predict = torch.argmax(output_.cpu()) # predict 
+
+                        print('v_idx : {} \t output_ : {} \t predict : {}'.format(v_idx, output_, predict))
+
+                        frame_idx_list.append(v_idx)
+                        predict_list.append(int(predict))
+                        gt_list.append(truth_list[v_idx])
+
+                        print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
+                '''
+
+
+            # time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in frame_idx_list] # FRAME INDICES -> time
+
+            del video
+
+                    
+            '''
             # getting infernce aseets 
             for infernece_assests_path, inference_frame_idx, (start_idx, end_idx) in zip(each_video_infernece_assets_path_list, inference_frame_idx_list, inference_assets_start_end_frame_idx) :
                 print('\n\n=============== \tTARGET INFRENCE \t ============= \n\n')
@@ -567,13 +743,14 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
                             predict_list+= list(predict)
                             
                             gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
-                            time_list+=[idx_to_time(frame_idx, fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
+                            time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
 
 
                         start_pos = start_pos + BATCH_SIZE
                 
 
                 del infernce_asset # free memory
+            '''
 
             print('\n\n=============== \t\t ============= \n\n')
             print('\t ===> INFERNECE DONE')
@@ -643,14 +820,10 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
             
             
             ### saving FP TN frame
-            # FP frame
-            print('\n\n=============== \tSAVE FP frame \t ============= \n\n')
-            save_video_frame(video_path, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_name)
-
-            # FN frame
-            print('\n\n=============== \tSAVE FN frame \t ============= \n\n')
-            save_video_frame(video_path, list(metric_frame['FN_df']['frame']), fn_frame_saved_dir, video_name)
-
+            # FP & FN frame
+            print('\n\n=============== \tSAVE FP & FN frame \t ============= \n\n')
+            #save_video_frame_for_VR(video_path, [list(metric_frame['FP_df']['frame']), list(metric_frame['FN_df']['frame'])], [fp_frame_saved_dir, fn_frame_saved_dir], video_name)
+            
             # OOB_Metric
             OOB_metric = calc_OOB_metric(FN_frame_cnt, FP_frame_cnt, TN_frame_cnt, TP_frame_cnt, TOTAL_frame_cnt)
 
@@ -743,7 +916,7 @@ def test(info_dict, model, results_save_dir, inference_step, fps=30) : # project
         # re-index consensus_frame
         patient_inference_results_df['consensus_frame'] = [frame * inference_step for frame in range(len(patient_inference_results_df))]
         # calc consensus time
-        patient_inference_results_df['consensus_time'] = patient_inference_results_df.apply(lambda x : idx_to_time(x['consensus_frame'], fps), axis=1)
+        patient_inference_results_df['consensus_time'] = patient_inference_results_df.apply(lambda x : idx_to_time(x['consensus_frame'], video_fps), axis=1)
 
         # save
         print('Patient Result Saved at \t ====> ', each_videoset_result_dir)
