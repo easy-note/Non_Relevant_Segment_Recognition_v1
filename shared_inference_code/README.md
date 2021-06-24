@@ -70,9 +70,19 @@ docker run -it --name cam_io_hyeongyu -v /home/hyeongyuc/code/CAM_IO:/CAM_IO -v 
 watch -d -n 0.5 nvidia-smi
 ```
 ---
+## Notice
+Binary Classification
+- In Body (0), Out of Body (1)
+
+Video type
+- 'ch1' 비디오에 비디오에 대해서 정상 작동.
+- 'xx0' 비디오는 codec issue로 아직 inference 결과가 정확하지 않음. 
+
+---
 ## 사용법
-- input : frame single image or video file
-- output : inference result (format : list)
+- input : frame single image or video file -> str:
+- output : inference result (format : list) -> List[int]:
+
 ```shell
 python infer.py --model_path <model_path> --input_path <input_path>
 
@@ -80,4 +90,4 @@ ex) python infer.py --model_path /home/jihyun/OOB/mobilenet_v3_large-fold1/ckpoi
 ```
 
 - model_path : only support .ckpt file
-- input_path : only support .jpg, .png, .mp4, .mpeg, .avi extension file
+- input_path : only support .jpg, .png, .mp4, .mpeg, .avi extension file (recommand 'ch1' video)
