@@ -20,8 +20,6 @@ VI Hub를 통해 녹화되는 영상에 대해 환자의 몸속 영상인지, �
 - Lapa 40개 [35 / 5] [train / validation]
 - Robot + Lapa [70 / 10] [train / validation]
 - V2 실험부터 100개 dataset으로 작업 예정
-    
-    [Validation Set Info](https://www.nature.com/articles/s41598-020-79173-6.epdf?sharing_token=57pWgB367cI5coHzkZUDR9RgN0jAjWel9jnR3ZoTv0MCV8TIltOg1hyPQGUx3RpjykRBW7tAmqhJCZlzxL0s2NSSWKMZpEM3UFO4sTQKqx7neUFX9oBn_x6p5BDC04YK7SP82L6tnjqWQ_lomdL75_4pkUeZjpjF_9ZzkYi6Fhg%3D)
 
 --- 
 ## Development Log
