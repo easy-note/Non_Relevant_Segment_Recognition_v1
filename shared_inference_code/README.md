@@ -48,11 +48,11 @@ docker build & run
 # Dockerfile이 있는 곳에서
 # docker image building
 sudo docker build -t <원하는 도커 이미지 이름>:<버전 정보 원하면> .
-# ex) sudo docker build -t pyl:1.0 .
+# ex) sudo docker build -t oob:1.0 .
 
 # docker container running
 sudo docker -it -d -v <공유할 폴더 위치>:<컨테이너 내부 공유폴더 위치> --gpus all --name <원하는 컨테이너 이름> <실행하길 원하는 도커 이미지>
-# ex) sudo docker -it -d /nas/bgpark/CAM_IO:/data/CAM_IO --gpus all --name pyl-test pyl:1.0
+# ex) sudo docker -it -d /nas/bgpark/OOB_RECOG:/data/OOB_RECOG --gpus all --name pyl-test oob:1.0
 
 # docker 내부로 진입
 # bash shell 실행
@@ -62,7 +62,7 @@ sudo docker exec -it pyl-test /bin/bash
 ## Easy Command
 - docker container 생성 (gpu all, volumn 연동, 포트포워딩, ipc 설정)
 ```shell
-docker run -it --name cam_io_hyeongyu -v /home/hyeongyuc/code/CAM_IO:/CAM_IO -v /nas/bgpark:/dat —-gpus all --ipc=host cam_io:1.0
+docker run -it --name oob_inference -v /home/hyeongyuc/code/OOB_RECOG:/OOB_RECOG —-gpus all --ipc=host oob:1.0
 ```
 
 - GPU 확인
