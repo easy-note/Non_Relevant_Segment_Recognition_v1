@@ -130,7 +130,7 @@ def inference_by_video(video, model) :
             BATCH_SIZE = 64
             
             # TOTAL_INFERENCE_FRAME_INDICES = list(range(0, video_len, inference_step))
-            TOTAL_INFERENCE_FRAME_INDICES = list(range(0, video_len, 1000))
+            TOTAL_INFERENCE_FRAME_INDICES = list(range(0, video_len, 5))
             
             start_pos = 0
             end_pos = len(TOTAL_INFERENCE_FRAME_INDICES)
@@ -138,7 +138,7 @@ def inference_by_video(video, model) :
             with torch.no_grad() :
                 model.eval()
                 
-                for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE)):
+                for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE),  desc='Inferencing... \t ==> {}'.format(args.input_path)):
                     FRAME_INDICES = TOTAL_INFERENCE_FRAME_INDICES[start_pos:start_pos + BATCH_SIZE] # batch video frame idx
 
                     if FRAME_INDICES != []:
@@ -159,6 +159,7 @@ def inference_by_video(video, model) :
                 
                     start_pos = start_pos + BATCH_SIZE
                 
+                print(predict_list)
                 return predict_list
 
 def inference_by_frame(model):
@@ -187,6 +188,7 @@ def inference_by_frame(model):
         BATCH_PREDICT = torch.argmax(BATCH_OUTPUT.cpu(), 1)
         BATCH_PREDICT = BATCH_PREDICT.tolist()
 
+        print(BATCH_PREDICT)
         return BATCH_PREDICT
 
 
