@@ -19,7 +19,7 @@ from infer_train_model import CAMIO
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_path', type=str, help='inference model path (.ckpt)')
-parser.add_argument('--input_path', type=str, help='input path (only support jpg, png, mp4, mpeg, avi)')  
+parser.add_argument('--input_path', type=str, help='input path (only support jpg, png, mp4, mpeg, avi). Recommand to use ch1 video.')  
 
 args, _ = parser.parse_known_args()
 
@@ -36,6 +36,13 @@ data_transforms = {
 aug = data_transforms['test']
     
 def batch_npy_to_tensor(batch_npy_img) : 
+    """
+    Convert batch numpy to 4D-tensor.
+    Args:
+        batch_npy_img: get_batch as numpy from video.
+    Return:
+        4D-tensor (batch, channel, height, width)
+    """
     b, h, w, c = batch_npy_img.shape
     return_tensor = torch.Tensor(b, 3, 224, 224) # batch, channel, height, width
     
@@ -50,15 +57,24 @@ def batch_npy_to_tensor(batch_npy_img) :
     return return_tensor
 
 def npy_to_tensor(npy_img):
+    """
+    Convert numpy to 4D-tensor.
+    Args:
+        npy_img: image as numpy.
+    Return:
+        4D-tensor (batch, channel, height, width)
+    """
     pil_img = Image.fromarray(npy_img)
     img = aug(pil_img)
-    img = img.unsqueeze(0) # batch, channel, height, width
+    return_tensor = img.unsqueeze(0) # batch, channel, height, width
     
-    return img
+    return return_tensor
 
 def trainer_load():
+    """
+    train model load and start inference.
+    """
     # inference setting for each mode
-
     if 'mobilenet_v3_large' in args.model_path:
         backbone_model = 'mobilenet_v3_large'
     elif 'efficientnet_b3' in args.model_path:
@@ -88,6 +104,14 @@ def trainer_load():
 
 
 def inference_by_video(video, model) :
+    """
+    inference using video. 
+    Args:
+        video: target video for infernece (args.input_path). we only support .mp4, .mpeg, .avi extention. -> str:
+        model: trainer model. we only support .ckpt extention. -> str:
+    Return:
+        BATCH_PREDICT (predict list) -> List[int]:
+    """
     # loop from total_videoset_cnt
     for i, input_path_list in enumerate(video, 1):
             
@@ -135,10 +159,16 @@ def inference_by_video(video, model) :
                 
                     start_pos = start_pos + BATCH_SIZE
                 
-                print(predict_list)
                 return predict_list
 
 def inference_by_frame(model):
+    """
+    inference using single frame. 
+    Args:
+        model: trainer model. we only support .ckpt extention. -> str:
+    Return:
+        BATCH_PREDICT (predict list) -> List[int]:
+    """
     with torch.no_grad() :
         model.eval()
 
@@ -157,7 +187,6 @@ def inference_by_frame(model):
         BATCH_PREDICT = torch.argmax(BATCH_OUTPUT.cpu(), 1)
         BATCH_PREDICT = BATCH_PREDICT.tolist()
 
-        print(BATCH_PREDICT)
         return BATCH_PREDICT
 
 
