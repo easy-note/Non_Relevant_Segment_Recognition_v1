@@ -78,6 +78,9 @@ Video type
 - 'ch1' 비디오에 비디오에 대해서 정상 작동.
 - 'xx0' 비디오는 codec issue로 아직 inference 결과가 정확하지 않음. 
 
+Inference Step
+- 5 (defualt)
+
 ---
 ## 사용법
 - input : frame single image or video file -> str:
