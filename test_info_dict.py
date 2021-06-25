@@ -277,7 +277,7 @@ def sanity_check_info_dict(info_dict) :
 
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(os.path.basename(video_path_list[0]))[0].split('_') # parsing videoset name # 21.06.25 HG 수정, Bug Fix
         videoset_name = '{}_{}'.format(op_method, patient_idx)
 
         for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
