@@ -45,18 +45,18 @@ patient_array=("R_17" \
 
 for (( i = 0 ; i < ${#patient_array[@]} ; i++ ))
 do
-    model_inf_path_1="./results-robot-oob-mobilenet_v3_small-fold_1-last-Inference_1/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
+    model_inf_path_1="./results/results-robot-oob-0610-efficientnet_b3-fold_1-last/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
 
     python visual_frame.py \
-    --title_name "Mobilenet_v3_small-Inference Step_1-FOLD_1" \
+    --title_name "Efficientnet_B3-Inference Step_5-FOLD_1" \
     --sub_title_name ${patient_array[$i]} \
     --GT_path $model_inf_path_1 \
-    --model_name "mobilenet_v3_small" \
+    --model_name "efficientnet_b3" \
     --model_infernce_path $model_inf_path_1 \
-    --results_save_dir "./visual_results/mobilenet-0514-inference-1" \
-    --INFERENCE_STEP 1 \
-    --WINDOW_SIZE 10000 \
-    --OVERLAP_SECTION_NUM 3
+    --results_save_dir "./visual_results/robot-oob-efficientnet_b3" \
+    --INFERENCE_STEP 5 \
+    --WINDOW_SIZE 1000 \
+    --OVERLAP_SECTION_NUM 2
 done
 
 # --filter "median" --kernel_size 19
@@ -69,18 +69,18 @@ patient_array=("R_3" \
 
 for (( i = 0 ; i < ${#patient_array[@]} ; i++ ))
 do
-    model_inf_path_1="./results-robot-oob-mobilenet_v3_small-fold_2-last-Inference_1/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
+    model_inf_path_1="./results/results-robot-oob-0610-efficientnet_b3-fold_2-last/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
 
     python visual_frame.py \
-    --title_name "Mobilenet_v3_small-Inference Step_1-FOLD_2" \
+    --title_name "Efficientnet_B3-Inference Step_5-FOLD_2" \
     --sub_title_name ${patient_array[$i]} \
     --GT_path $model_inf_path_1 \
-    --model_name "mobilenet_v3_small" \
+    --model_name "efficientnet_b3" \
     --model_infernce_path $model_inf_path_1 \
-    --results_save_dir "./visual_results/mobilenet-0514-inference-1"
-    --INFERENCE_STEP 1 \
-    --WINDOW_SIZE 10000 \
-    --OVERLAP_SECTION_NUM 3
+    --results_save_dir "./visual_results/robot-oob-efficientnet_b3" \
+    --INFERENCE_STEP 5 \
+    --WINDOW_SIZE 1000 \
+    --OVERLAP_SECTION_NUM 2
 done
 
 patient_array=("R_7" \
@@ -91,16 +91,16 @@ patient_array=("R_7" \
 
 for (( i = 0 ; i < ${#patient_array[@]} ; i++ ))
 do
-    model_inf_path_1="./results-robot-oob-mobilenet_v3_small-fold_3-last-Inference_1/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
+    model_inf_path_1="./results/results-robot-oob-0610-efficientnet_b3-fold_3-last/${patient_array[$i]}/Inference-ROBOT-${patient_array[$i]}.csv"
 
     python visual_frame.py \
-    --title_name "Mobilenet_v3_small-Inference Step_1-FOLD_3" \
+    --title_name "Efficientnet_B3-Inference Step_5-FOLD_3" \
     --sub_title_name ${patient_array[$i]} \
     --GT_path $model_inf_path_1 \
-    --model_name "mobilenet_v3_small" \
+    --model_name "efficientnet_b3" \
     --model_infernce_path $model_inf_path_1 \
-    --results_save_dir "./visual_results/mobilenet-0514-inference-1" \
-    --INFERENCE_STEP 1 \
-    --WINDOW_SIZE 10000 \
-    --OVERLAP_SECTION_NUM 3
+    --results_save_dir "./visual_results/robot-oob-efficientnet_b3" \
+    --INFERENCE_STEP 5 \
+    --WINDOW_SIZE 1000 \
+    --OVERLAP_SECTION_NUM 2
 done
