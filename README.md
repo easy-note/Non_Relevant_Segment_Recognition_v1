@@ -60,17 +60,18 @@ WORKDIR /OOB_RECOG
 
 - v1.1
 ```docker
-FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
+FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-runtime
 
-RUN apt-get update
-RUN apt-get upgrade
-RUN apt-get install vim
-RUN apt-get install git
+RUN apt-get update && apt-get install -y \ 
+    vim \
+    git
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get install -y --no-install-recommends python-opencv
 
 ADD . /OOB_RECOG
 WORKDIR /OOB_RECOG
 
-RUN apt-get install python3-opencv
 RUN pip install -r requirements.txt
 ```
 ---
@@ -110,7 +111,7 @@ sudo docker exec -it pyl-test /bin/bash
 ## Easy Command
 - docker container 생성 (gpu all, volumn 연동, 포트포워딩, ipc 설정) + PAGEING CHACHE Control을 위한 writable_proc 생성
 ```shell
-docker run -it --rm -v /proc:/writable_proc --name oob_hyeongyu -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.1
+docker run -it --name oob_hyeongyu -v /proc:/writable_proc -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.1
 ```
 
 - Tensorboard 사용을 위한 ssh 포트포워딩
