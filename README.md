@@ -47,7 +47,35 @@ Video using Semi-Supervised Learning](http://proceedings.mlr.press/v121/zohar20a
         - add code for dataset log check
 ---
 
-## 사용법
+## DOCKER VERSION UPDATE LOG
+- v1.0
+```docker
+FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
+
+RUN pip install pytorch-lightning
+
+ADD . /OOB_RECOG
+WORKDIR /OOB_RECOG
+```
+
+- v1.1
+```docker
+FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
+
+RUN apt-get update
+RUN apt-get upgrade
+RUN apt-get install vim
+RUN apt-get install git
+
+ADD . /OOB_RECOG
+WORKDIR /OOB_RECOG
+
+RUN apt-get install python3-opencv
+RUN pip install -r requirements.txt
+```
+---
+
+## DOCKER SETTING
 ```bash
 # nvidia-docker repository 등록
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
@@ -80,9 +108,9 @@ sudo docker exec -it pyl-test /bin/bash
 ```
 --- 
 ## Easy Command
-- docker container 생성 (gpu all, volumn 연동, 포트포워딩, ipc 설정)
+- docker container 생성 (gpu all, volumn 연동, 포트포워딩, ipc 설정) + PAGEING CHACHE Control을 위한 writable_proc 생성
 ```shell
-docker run -it --name cam_io_hyeongyu -v /home/hyeongyuc/code/CAM_IO:/CAM_IO -v /nas/bgpark:/data -p 6006:6006  —-gpus all --ipc=host cam_io:1.0
+docker run -it --rm -v /proc:/writable_proc --name oob_hyeongyu -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.1
 ```
 
 - Tensorboard 사용을 위한 ssh 포트포워딩
@@ -100,5 +128,12 @@ tensorboard --logdir=/CAM_IO/logs/OOB_robot_test/DPP_Test/version_0 --port 6006 
 ```
 
 - GPU 확인
-```shell
-watch -d -n 0.5 nvidia-smi
+```bash
+$ watch -d -n 0.5 nvidia-smi
+```
+
+- Resource 확인
+```bash
+$ top
+shift + m # memory usage descending sort
+```
