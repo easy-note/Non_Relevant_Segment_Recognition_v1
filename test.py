@@ -12,6 +12,7 @@ import argparse
 import time
 import json
 import datetime
+import glob
 
 import subprocess # for CLEAR PAGING CACHE
 
@@ -35,6 +36,9 @@ from decord import VideoReader
 from decord import cpu, gpu
 
 from PIL import ImageFilter
+
+# 21.06.25 HG 추가 - for FP frame Gradcam 
+from visual_gradcam import get_oob_grad_cam_from_video, img_seq_to_gif, return_group
 
 matplotlib.use('Agg')
 
@@ -227,7 +231,57 @@ def save_video_frame_for_loaded_VR(video, frame_list, save_path, video_name, vid
         pil_image=Image.fromarray(video_frame)
 
         pil_image.save(fp=os.path.join(save_path, '{}-{:010d}-{}.jpg'.format(video_name, frame_idx, idx_to_time(frame_idx, video_fps))))
+
+# 21.06.25 HG 추가 - GRADCAM for FP Frame => call function in visual_gradcam.py [get_oob_grad_cam_from_video, img_seq_to_gif]
+def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, save_dir, title_name) :
     
+    # video_dir의 모든 video parsing
+    all_video_path = []
+    video_ext_list = ['mp4', 'MP4', 'mpg']
+
+    for ext in video_ext_list :
+        all_video_path.extend(glob.glob(video_dir +'/*.{}'.format(ext)))
+
+    # consensus_results csv loading
+    consensus_results_df = pd.read_csv(consensus_results_path)
+    
+    # calc FP frame
+    metric_frame_dict = return_metric_frame(consensus_results_df)
+    FP_consensus_df = metric_frame_dict['FP_df']
+
+    # group by 'video_name'
+    FP_df_per_group = return_group(FP_consensus_df)
+    
+    # video_name별로 FP Frame Gradcam
+    for video_name, FP_df in FP_df_per_group.items() :
+        print('video_name : ', video_name)
+
+        # video_dir 찾기
+        video_path_list = [v_path for v_path in all_video_path if video_name in v_path]
+
+        # video_dir 찾은 Video가 1개일 경우에만 처리
+        if len(video_path_list) == 1 :
+            video_path = video_path_list[0]
+
+            # set save dir and make dir
+            each_save_dir = os.path.join(save_dir, os.path.splitext(os.path.basename(video_path))[0])
+            try :
+                if not os.path.exists(each_save_dir) :
+                    os.makedirs(each_save_dir)
+            except OSError :
+                print('ERROR : Creating Directory, ' + each_save_dir)
+
+            # gradcam visual save in each save_dir
+            get_oob_grad_cam_from_video(model_path, model_name, video_path, FP_df, each_save_dir, title_name)
+
+            # save_dir img to gif
+            print('\n\n===> CONVERTING GIF\n\n')
+            all_results_img_path = sorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
+            img_seq_to_gif(all_results_img_path, os.path.join(each_save_dir, '{}-GRADCAM.gif'.format(video_name))) # seqence 이므로 sort 하여 append
+            print('\n\n===> DONE\n\n')
+    
+        else : # 비디오 여러개일 경우 오류
+            assert False, "ERROR : Duplicatied Video Exist"
 
 # calc OOB_false Metric
 def calc_OOB_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt, TOTAL_cnt) :
@@ -821,10 +875,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             #save_video_frame_for_VR(video_path, [list(metric_frame['FP_df']['frame']), list(metric_frame['FN_df']['frame'])], [fp_frame_saved_dir, fn_frame_saved_dir], video_name)
             save_video_frame_for_loaded_VR(video, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_name, video_fps) # Saving FP
             save_video_frame_for_loaded_VR(video, list(metric_frame['FN_df']['frame']), fn_frame_saved_dir, video_name, video_fps) # Saving FN
-
-            
+        
             del video # delete Video
-            
+    
             # OOB_Metric
             OOB_metric = calc_OOB_metric(FN_frame_cnt, FP_frame_cnt, TN_frame_cnt, TP_frame_cnt, TOTAL_frame_cnt)
 
@@ -921,7 +974,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
 
         # save
         print('Patient Result Saved at \t ====> ', each_videoset_result_dir)
-        patient_inference_results_df.to_csv(os.path.join(each_videoset_result_dir, 'Inference-{}-{}.csv'.format(args.mode, videoset_name)), mode="w")
+        patient_inference_results_df_save_path = os.path.join(each_videoset_result_dir, 'Inference-{}-{}.csv'.format(args.mode, videoset_name))
+        patient_inference_results_df.to_csv(patient_inference_results_df_save_path, mode="w")
 
         # each metric per patient
         result_metric_df_per_patient = return_metric_frame(patient_inference_results_df)
@@ -991,6 +1045,24 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print(patient_total_metric_df)
         patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
 
+        #######################
+        ######  GRADCAM  ######
+        # FP Frame GRADCAM saved folder for each video
+        print('\n\n=============== \t\t GRADCAM PROCESSING \t\t ============= \n\n')
+        fp_frame_gradcam_saved_dir = os.path.join(each_videoset_result_dir, 'GRADCAM', 'FP') # '~~~/results/R022/GRADCAM/FP'
+    
+        try :
+            if not os.path.exists(os.path.join(fp_frame_gradcam_saved_dir)) :
+                os.makedirs(fp_frame_gradcam_saved_dir)
+        except OSError :
+            print('ERROR : Creating Directory, ' + fp_frame_gradcam_saved_dir)
+        
+        print('GRADCAM FP Result Saved at \t ====> ', fp_frame_gradcam_saved_dir)
+        # def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, save_dir, title_name)
+        save_fp_frame_gradcam(args.model_path, args.model, args.data_dir, patient_inference_results_df_save_path, fp_frame_gradcam_saved_dir, videoset_name) # GRADCAM to sequcence gif
+        ######  GRADCAM  ######
+        #######################
+
         # clear Paging Cache because of VideoRecoder I/O CACHE [docker run -it --name cam_io_hyeongyu -v /proc:/writable_proc -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.0]
         print('\n\n\t ====> CLEAN PAGINGCACHE, DENTRIES, INODES "echo 3 > /writable_proc/sys/vm/drop_caches"\n\n')
         subprocess.run('sync', shell=True)
@@ -1004,3 +1076,4 @@ if __name__ == "__main__":
     ###  base setting for model testing ### 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
     test_start()
+    

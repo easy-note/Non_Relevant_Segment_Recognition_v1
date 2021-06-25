@@ -48,27 +48,6 @@ data_transforms = {
 
 IB_CLASS, OOB_CLASS = [0,1]
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument('--title_name', type=str, help='plot title, and save file name')
-
-parser.add_argument('--model_path', type=str, help='model ckpt path')
-
-parser.add_argument('--model_name', type=str,
-                    choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
-                    'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1',
-                    'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='backbone model')
-
-
-parser.add_argument('--video_dir', type=str, help='Video Assets root dir')
-parser.add_argument('--consensus_results_path', type=str, help='Inference-[ROBOT, LAPA]-[R_15, L_300] Assets dir')
-
-# parser.add_argument('--inference_img_dir', type=str, help='root dir for inference img')
-
-parser.add_argument('--save_dir', type=str, help='gradcam results save path')
-
-args, _ = parser.parse_known_args()
-
 
 # preprocessing pil image to modify resize or crop .. etc
 def preprocessing_pil_img(im) :
@@ -112,7 +91,7 @@ def img_seq_to_gif(img_path_list, results_path) :
     if len(images) <= 1 : # one img
         images[0].save(results_path)
     else :                # seq img
-        images[0].save(results_path, save_all=True, append_images=images[1:], optimize=False, duration=500, loop=0) # 200 ms == 1/2 s, inf loop, no ommit img
+        images[0].save(results_path, save_all=True, append_images=images[1:], optimize=False, duration=1000, loop=0) # 200 ms == 1/2 s, inf loop, no ommit img
 
 
 # input|DataFrame = 'frame' 'time' truth' 'predict'
@@ -166,7 +145,7 @@ def present_text(ax, bar, text, color='black'):
 
 
 # save_dir = 'gradcam_results/mobilenet/robot_oob/R-17'
-def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_results_df, save_dir) : 
+def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_results_df, save_dir, title_name) : 
 
     ### 0. inference img to input tensor and log img to numpy
     print('TARGET VIDEO_PATH : ', video_path)
@@ -367,7 +346,7 @@ def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_re
         colors = ('cadetblue', 'orange')
         
         #### 1. fig title
-        fig.suptitle('{}'.format(args.title_name), fontsize=20)
+        fig.suptitle('{}'.format(title_name), fontsize=20)
 
         #### 2. shape, location, rowspan, colspane
         ax1 = plt.subplot2grid((3,6), (0,0), rowspan=2, colspan=2) # Input 
@@ -427,7 +406,7 @@ def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_re
         # pil_image.save(os.path.join(save_dir, 'grad_temp-{}.jpg'.format(idx)), format='JPEG')
 
 
-def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir) : 
+def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, title_name) : 
 
     ### 0. inference img to input tensor and log img to numpy
     all_inference_img_path = sorted(glob.glob(inference_img_dir +'/*{}'.format('jpg'))) # all inference file list
@@ -587,7 +566,7 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir) :
         colors = ('cadetblue', 'orange')
         
         #### 1. fig title
-        fig.suptitle('{}'.format(args.title_name), fontsize=25)
+        fig.suptitle('{}'.format(title_name), fontsize=25)
 
         #### 2. shape, location, rowspan, colspane
         ax1 = plt.subplot2grid((3,6), (0,0), rowspan=2, colspan=2) # Input 
@@ -685,7 +664,7 @@ def main(model_path, model_name, video_dir, consensus_results_path, save_dir) :
                 print('ERROR : Creating Directory, ' + each_save_dir)
 
             # gradcam visual save in each save_dir
-            get_oob_grad_cam_from_video(model_path, model_name, video_path, FP_df, each_save_dir)
+            get_oob_grad_cam_from_video(model_path, model_name, video_path, FP_df, each_save_dir, args.title_name)
 
             # save_dir img to gif
             print('\n\n===> CONVERTING GIF\n\n')
@@ -701,6 +680,27 @@ def main(model_path, model_name, video_dir, consensus_results_path, save_dir) :
 if __name__ == '__main__' :
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--title_name', type=str, help='plot title, and save file name')
+
+    parser.add_argument('--model_path', type=str, help='model ckpt path')
+
+    parser.add_argument('--model_name', type=str,
+                        choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
+                        'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1',
+                        'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='backbone model')
+
+
+    parser.add_argument('--video_dir', type=str, help='Video Assets root dir')
+    parser.add_argument('--consensus_results_path', type=str, help='Inference-[ROBOT, LAPA]-[R_15, L_300] Assets dir')
+
+    # parser.add_argument('--inference_img_dir', type=str, help='root dir for inference img')
+
+    parser.add_argument('--save_dir', type=str, help='gradcam results save path')
+
+    args, _ = parser.parse_known_args()
 
     '''
     model_path = './logs/ROBOT/OOB/robot-oob-0423-fold_2/ckpoint_robot-oob-0423-fold_2-model=wide_resnet50_2-batch=32-lr=0.001-fold=2-ratio=3-epoch=49-last.ckpt'
