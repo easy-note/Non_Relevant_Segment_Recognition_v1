@@ -51,6 +51,9 @@ parser.add_argument('--results_save_dir', type=str, help='inference results save
 
 parser.add_argument('--mode', type=str, choices=['ROBOT', 'LAPA'], help='inference results save path')
 
+## assets mode # 21.06.25 HG 추가 - VIDEO로 바로 Inferece (Inference 시간소요 up), test augmentation (30000, 3, 244, 244)로 미리 잘라논 INFERENCE TENSOR PICKLE DATA로 Inference (Inferece 시간소요 down)
+parser.add_argument('--assets_mode', type=str, default='VIDEO', choices=['VIDEO', 'TENSOR'], help='choose inferece assets VIDEO or INFERENCE TENSOR(PICKLE DATA)')
+
 ## test model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가 # 21.06.09 HG 추가 [EfficientNet Family]
 parser.add_argument('--model', type=str,
                     choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
@@ -527,7 +530,6 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             # using VR(len) & CV (fps) # 21.06.10 HG Change to VideoRecoder
             video_cap = cv2.VideoCapture(video_path)
             video_fps = video_cap.get(cv2.CAP_PROP_FPS)
-            print(int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
 
             video_cap.release()
             del video_cap
@@ -583,211 +585,168 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             # frame_check_cnt = 0 # loop cnt
             OOB_metric = -1 # false metric
 
-            print('----')
-            print('EACH INFERENCE ASEETS PATH LENGTH')
-            inference_assets_cnt = len(each_video_infernece_assets_path_list)
-            print(inference_assets_cnt)
-
-            # split gt_list per inference assets
-            # init_variable
-            '''
-            SLIDE_FRAME = 30000
-            inference_assets_start_end_frame_idx= [[start_idx*SLIDE_FRAME, (start_idx+1)*SLIDE_FRAME-1] for start_idx in range(inference_assets_cnt)]
-            inference_assets_start_end_frame_idx[-1][1] = video_len - 1 # last frame of last pickle
-            print(inference_assets_start_end_frame_idx)
-
-            inference_frame_idx_list = [] # inference target frame [[pickle_0], [pickle_1], [pickle_2],...]
-
-            for start, end in inference_assets_start_end_frame_idx :
-                inference_frame_idx_list.append([idx for idx in range(start, end+1) if idx % inference_step == 0])
-                
-            BATCH_SIZE = 512
-            '''
-
             # temp_cnt = 0 ### dummy for test
             # for video inference
             # batch slice from infernece_frame_idx
             BATCH_SIZE = 64
             
-            TOTAL_INFERENCE_FRAME_INDICES = list(range(0, video_len, inference_step))
             
-            start_pos = 0
-            end_pos = len(TOTAL_INFERENCE_FRAME_INDICES)
-
-            print('TOTAL_INFERENCE_FRAME_INDICES')
-            print(TOTAL_INFERENCE_FRAME_INDICES)
-            
-            with torch.no_grad() :
-                model.eval()
+            with torch.no_grad() : # autograd 끔 - 메모리 사용량 줄이고, 연산 속도 높힘. 사실상 안 쓸 gradient 라서 inference 시에 굳이 계산할 필요 없음. 
+                model.eval() # layer 의 동작을 inference(eval) mode로 변경, 모델링 시 training과 inference 시에 다르게 동작하는 layer 들이 존재함. (e.g. Dropout layer, BatchNorm)
 
                 ######### ######### ######### #########
                 ########## FOR USING VIDEO #########
+                if args.assets_mode == 'VIDEO' :
+                    print('\n\t########## FOR USING VIDEO #########\n')
+                    TOTAL_INFERENCE_FRAME_INDICES = list(range(0, video_len, inference_step))
                 
-                for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE),  desc='Inferencing... \t ==> {}'.format(video_name)):
-                    FRAME_INDICES = TOTAL_INFERENCE_FRAME_INDICES[start_pos:start_pos + BATCH_SIZE] # batch video frame idx
-                    if FRAME_INDICES != []:
-                        BATCH_INPUT = video.get_batch(FRAME_INDICES).asnumpy() # get batch (batch, height, width, channel)
-
-                        # convert batch tensor
-                        BATCH_TENSOR = batch_npy_to_tensor(BATCH_INPUT).cuda()
-
-                        # inferencing model
-                        BATCH_OUTPUT = model(BATCH_TENSOR)
-
-                        # predict
-                        BATCH_PREDICT = torch.argmax(BATCH_OUTPUT.cpu(), 1)
-                        BATCH_PREDICT = BATCH_PREDICT.tolist()
-
-                        # save results
-                        frame_idx_list+=FRAME_INDICES
-                        predict_list+= list(BATCH_PREDICT)
-
-                        gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
-                        time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
-
-                        print('FRAME_INDICES :', FRAME_INDICES)
-                        print('BATCH INPUT TENSOR SIZE : {}'.format(BATCH_TENSOR.size))
-                        print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
-                        print('\n\n')
-
-                    start_pos = start_pos + BATCH_SIZE
-
-                ########## FOR USING VIDEO #########
-                ######### ######### ######### #########
-
-                ######### ######### ######### #########
-                ########## FOR USING TENSOR #########
-
-                
-
-
-                ########## FOR USING TENSOR #########
-                ######### ######### ######### #########
-
-                
-
-                
-                '''
-                for v_idx in tqdm(range(0, video_len, inference_step), desc='Inferencing... \t ==> {}'.format(video_name)) :
-                        # inferencing model
-                        input_=video[v_idx].asnumpy()
-
-                        # PIL save
-                        pil_image=Image.fromarray(input_)
-                        # print('before pil_img : ', np.unique(input_))
-                        # temp_save_path = os.path.join('./results/temp_img' ,'{}-{:010d}.jpg'.format(video_name, v_idx))
-                        # pil_image.save(temp_save_path)
-
-                        # load
-                        # gaussianBlur = ImageFilter.GaussianBlur(5)
-                        # input_ = aug(Image.open(temp_save_path).filter(gaussianBlur))
-                        input_ = aug(pil_image)
-                        
-                        input_=torch.unsqueeze(input_, 0).cuda()
-
-                        output_ = model(input_)
-
-                        predict = torch.argmax(output_.cpu()) # predict 
-
-                        print('v_idx : {} \t output_ : {} \t predict : {}'.format(v_idx, output_, predict))
-
-                        frame_idx_list.append(v_idx)
-                        predict_list.append(int(predict))
-                        gt_list.append(truth_list[v_idx])
-
-                        print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
-                '''
-
-
-            # time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in frame_idx_list] # FRAME INDICES -> time
-
-
-                    
-            '''
-            # getting infernce aseets 
-            for infernece_assests_path, inference_frame_idx, (start_idx, end_idx) in zip(each_video_infernece_assets_path_list, inference_frame_idx_list, inference_assets_start_end_frame_idx) :
-                print('\n\n=============== \tTARGET INFRENCE \t ============= \n\n')
-                print('======> VIDEO PATH')
-                print(video_path)
-
-                print('======> ANNO INFO')
-                print(anno_info)
-
-                print('======> TRUTH_LIST LENGTH')
-                print(len(truth_list))
-
-                print('======> NUMBER OF INFERENCE ASSETS')
-                print(len(each_video_infernece_assets_path_list))
-
-                print('======> INFERENCE ASSETS PATH')
-                print(infernece_assests_path)
-
-                print('======> INFERENCE FRAME IDX [START, END]')
-                print([start_idx, end_idx])
-
-                print('======> INFERENCE FRAME IDX ')
-                print(inference_frame_idx)
-
-                print('')
-                
-                print('\n\n=============== \t\t ============= \n\n')
-
-                # load inference assets from pickle
-                print('===> LOADING... | \t {} '.format(infernece_assests_path))
-                if True :
-                    with open(infernece_assests_path, 'rb') as file :    
-                        infernce_asset = pickle.load(file)
-                        print('\t ===> DONE')
-                else : # for test
-                    infernce_asset = torch.Tensor(inference_assets_start_end_frame_idx[temp_cnt][-1], 3, 224, 224) # zero, float32
-                    temp_cnt += 1
-                print('\n\n=============== \t\t ============= \n\n')
-                
-                
-                # infernceing 
-                with torch.no_grad() : #autograd 끔 - 메모리 사용량 줄이고, 연산 속도 높힘. 사실상 안 쓸 gradient 라서 inference 시에 굳이 계산할 필요 없음. 
-
-                    model.eval() # 21.05.30 JH 추가 - layer 의 동작을 inference(eval) mode로 변경, 모델링 시 training과 inference 시에 다르게 동작하는 layer 들이 존재함. (e.g. Dropout layer, BatchNorm)
-
-                    # batch slice from infernece_frame_idx
                     start_pos = 0
-                    end_pos = len(inference_frame_idx)
+                    end_pos = len(TOTAL_INFERENCE_FRAME_INDICES)
+
+                    print('TOTAL_INFERENCE_FRAME_INDICES')
+                    print(TOTAL_INFERENCE_FRAME_INDICES)
                     
-                    FRAME_INDICES = []
-
-                    # inferencing per batch
-                    for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE),  desc='Inferencing... \t ==> {} | {}'.format(video_name, infernece_assests_path)):
-                        FRAME_INDICES = inference_frame_idx[start_pos:start_pos + BATCH_SIZE] # video frame idx
+                    for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE),  desc='Inferencing... \t ==> {}'.format(video_name)):
+                        FRAME_INDICES = TOTAL_INFERENCE_FRAME_INDICES[start_pos:start_pos + BATCH_SIZE] # batch video frame idx
                         if FRAME_INDICES != []:
-                            TORCH_INDIES = [f_idx-start_idx for f_idx in FRAME_INDICES] # convert to torch idx
+                            BATCH_INPUT = video.get_batch(FRAME_INDICES).asnumpy() # get batch (batch, height, width, channel)
 
-                            # make batch input tensor
-                            # index_select 함수를 사용해 지정한 차원 기준으로 (0) 원하는 값들을 뽑아낼 수 있음.
-                            BATCH_INPUT_TENSOR = torch.index_select(infernce_asset, 0, torch.tensor(TORCH_INDIES)) #, 21.05.30 JH 수정 - ERROR dtype=torch.int32 - dtype 을 바꿔도 되는지 확인 필요. (int64로 변경됨.)
-                            
-                            # upload on cuda
-                            BATCH_INPUT_TENSOR = BATCH_INPUT_TENSOR.cuda()
+                            # convert batch tensor
+                            BATCH_TENSOR = batch_npy_to_tensor(BATCH_INPUT).cuda()
 
                             # inferencing model
-                            outputs = model(BATCH_INPUT_TENSOR)
+                            BATCH_OUTPUT = model(BATCH_TENSOR)
 
-                            predict = torch.argmax(outputs.cpu(), 1) # predict 
-                            predict = predict.tolist() # tensot -> list
-                            # print(predict)
+                            # predict
+                            BATCH_PREDICT = torch.argmax(BATCH_OUTPUT.cpu(), 1)
+                            BATCH_PREDICT = BATCH_PREDICT.tolist()
 
                             # save results
                             frame_idx_list+=FRAME_INDICES
-                            predict_list+= list(predict)
-                            
+                            predict_list+= list(BATCH_PREDICT)
+
                             gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
                             time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
 
+                            print('FRAME_INDICES :', FRAME_INDICES)
+                            print('BATCH INPUT TENSOR SIZE : {}'.format(BATCH_TENSOR.size))
+                            print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
+                            print('\n\n')
 
                         start_pos = start_pos + BATCH_SIZE
+
+                ########## FOR USING VIDEO #########
+                ######### ######### ######### #########
+                
+                # ---------------------------------- #
+
+                ######### ######### ######### #########
+                ########## FOR USING TENSOR #########  
+                elif args.assets_mode == 'TENSOR' :
+                    print('\n\t########## FOR USING TENSOR #########\n')
+                    print('----')
+                    print('EACH INFERENCE ASEETS PATH LENGTH')
+                    inference_assets_cnt = len(each_video_infernece_assets_path_list)
+                    print(inference_assets_cnt)
+
+                    # split gt_list per inference assets
+                    # init_variable
+                    
+                    SLIDE_FRAME = 30000
+                    inference_assets_start_end_frame_idx= [[start_idx*SLIDE_FRAME, (start_idx+1)*SLIDE_FRAME-1] for start_idx in range(inference_assets_cnt)]
+                    inference_assets_start_end_frame_idx[-1][1] = video_len - 1 # last frame of last pickle
+                    print(inference_assets_start_end_frame_idx)
+
+                    inference_frame_idx_list = [] # inference target frame [[pickle_0], [pickle_1], [pickle_2],...]
+
+                    for start, end in inference_assets_start_end_frame_idx :
+                        inference_frame_idx_list.append([idx for idx in range(start, end+1) if idx % inference_step == 0])
+
+
+                    # getting infernce aseets 
+                    for infernece_assests_path, inference_frame_idx, (start_idx, end_idx) in zip(each_video_infernece_assets_path_list, inference_frame_idx_list, inference_assets_start_end_frame_idx) :
+                        print('\n\n=============== \tTARGET INFRENCE \t ============= \n\n')
+                        print('======> VIDEO PATH')
+                        print(video_path)
+
+                        print('======> ANNO INFO')
+                        print(anno_info)
+
+                        print('======> TRUTH_LIST LENGTH')
+                        print(len(truth_list))
+
+                        print('======> NUMBER OF INFERENCE ASSETS')
+                        print(len(each_video_infernece_assets_path_list))
+
+                        print('======> INFERENCE ASSETS PATH')
+                        print(infernece_assests_path)
+
+                        print('======> INFERENCE FRAME IDX [START, END]')
+                        print([start_idx, end_idx])
+
+                        print('======> INFERENCE FRAME IDX ')
+                        print(inference_frame_idx)
+
+                        print('')
+                        
+                        print('\n\n=============== \t\t ============= \n\n')
+
+                        # load inference assets from pickle
+                        print('===> LOADING... | \t {} '.format(infernece_assests_path))
+                        if True :
+                            with open(infernece_assests_path, 'rb') as file :    
+                                infernce_asset = pickle.load(file)
+                                print('\t ===> DONE')
+                        else : # for test
+                            infernce_asset = torch.Tensor(inference_assets_start_end_frame_idx[temp_cnt][-1], 3, 224, 224) # zero, float32
+                            temp_cnt += 1
+                        print('\n\n=============== \t\t ============= \n\n')
+                        
+                        
+                        # infernceing 
+
+                        # batch slice from infernece_frame_idx
+                        start_pos = 0
+                        end_pos = len(inference_frame_idx)
+                        
+                        FRAME_INDICES = []
+
+                        # inferencing per batch
+                        for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE),  desc='Inferencing... \t ==> {} | {}'.format(video_name, infernece_assests_path)):
+                            FRAME_INDICES = inference_frame_idx[start_pos:start_pos + BATCH_SIZE] # video frame idx
+                            if FRAME_INDICES != []:
+                                TORCH_INDIES = [f_idx-start_idx for f_idx in FRAME_INDICES] # convert to torch idx
+
+                                # make batch input tensor
+                                # index_select 함수를 사용해 지정한 차원 기준으로 (0) 원하는 값들을 뽑아낼 수 있음.
+                                BATCH_INPUT_TENSOR = torch.index_select(infernce_asset, 0, torch.tensor(TORCH_INDIES)) #, 21.05.30 JH 수정 - ERROR dtype=torch.int32 - dtype 을 바꿔도 되는지 확인 필요. (int64로 변경됨.)
+                                
+                                # upload on cuda
+                                BATCH_INPUT_TENSOR = BATCH_INPUT_TENSOR.cuda()
+
+                                # inferencing model
+                                outputs = model(BATCH_INPUT_TENSOR)
+
+                                predict = torch.argmax(outputs.cpu(), 1) # predict 
+                                predict = predict.tolist() # tensot -> list
+                                # print(predict)
+
+                                # save results
+                                frame_idx_list+=FRAME_INDICES
+                                predict_list+= list(predict)
+                                
+                                gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
+                                time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
+
+
+                            start_pos = start_pos + BATCH_SIZE
+                        
+
+                        del infernce_asset # free memory
                 
 
-                del infernce_asset # free memory
-            '''
+                ########## FOR USING TENSOR #########
+                ######### ######### ######### #########
 
             print('\n\n=============== \t\t ============= \n\n')
             print('\t ===> INFERNECE DONE')
@@ -1032,7 +991,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print(patient_total_metric_df)
         patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
 
-        # clear Paging Cache [docker run -it --rm -v /proc:/writable_proc --name cam_io_hyeongyu -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.0]
+        # clear Paging Cache because of VideoRecoder I/O CACHE [docker run -it --name cam_io_hyeongyu -v /proc:/writable_proc -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.0]
         print('\n\n\t ====> CLEAN PAGINGCACHE, DENTRIES, INODES "echo 3 > /writable_proc/sys/vm/drop_caches"\n\n')
         subprocess.run('sync', shell=True)
         subprocess.run('echo 3 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
