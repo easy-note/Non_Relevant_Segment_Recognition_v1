@@ -126,6 +126,18 @@ class CAMIO(pl.LightningModule):
                     torch.nn.Dropout(p=0.2, inplace=True),
                     torch.nn.Linear(self.num_ftrs, 2) #last_channel, num_classes
                 )
+            elif self.backborn == 'mobilenet_v3_large' :
+                print('MODEL = MOBILENET_V3_LARGE')
+                self.model = models.mobilenet_v3_large(pretrained=True)
+                self.num_ftrs = self.model.classifier[-1].in_features
+
+                self.model.classifier = torch.nn.Sequential(
+                    torch.nn.Linear(960, self.num_ftrs), #lastconv_output_channels, last_channel
+                    torch.nn.Hardswish(inplace=True),
+                    torch.nn.Dropout(p=0.2, inplace=True),
+                    torch.nn.Linear(self.num_ftrs, 2) #last_channel, num_classes
+                )
+
             else :
                 assert(False, '=== Not supported MobileNet model ===')
         
