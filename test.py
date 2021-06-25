@@ -1,7 +1,6 @@
 """
 For model test using pre-created test datset in tensor form.
 """
-
 import os
 import cv2
 from PIL import Image
@@ -13,6 +12,8 @@ import argparse
 import time
 import json
 import datetime
+
+import subprocess # for CLEAR PAGING CACHE
 
 from pandas import DataFrame as df
 from tqdm import tqdm
@@ -161,12 +162,13 @@ def return_metric_frame(result_df) :
 # save video frame from frame_list | it will be saved in {save_path}/{video_name}-{frame_idx}.jpg
 # save FP FN frame from Video Record, 하나의 비디오에 대해 여러개 folder를 캡쳐하기 위해 사용
 # LAPA, ROBOT 공용사용 가능
-def save_video_frame_for_VR(video_path, frame_list_arr, save_path_arr, video_name) : # using VideoRecord
+def save_video_frame_for_VR(video_path, frame_list_arr, save_path_arr, video_name, video_fps) : # using VideoRecord
     '''
     video_path = 'path'
     frame_list_arr = [[1st frame_list], [2nd frame_list]]
     frame_list_arr = ['1st save_path', '2nd save_path']
     video_name = 'video_name'
+    video_fps = it's only used for idx to time
     '''
 
     print('TARGET VIDEO_PATH : ', video_path)
@@ -178,9 +180,8 @@ def save_video_frame_for_VR(video_path, frame_list_arr, save_path_arr, video_nam
         for frame_idx in tqdm(frame_list, desc='Saving Frame From {} ... '.format(video_path)) : 
             video_frame = video[frame_idx].asnumpy()
             pil_image=Image.fromarray(video_frame)
-            results_save_dir
 
-            pil_image.save(fp=os.path.join(save_path, '{}-{:010d}.jpg'.format(video_name, frame_idx)))
+            pil_image.save(fp=os.path.join(save_path, '{}-{:010d}.jpg'.format(video_name, frame_idx, idx_to_time(frame_idx, video_fps))))
             
     del video, video_frame
     print('======> DONE.')
@@ -188,7 +189,7 @@ def save_video_frame_for_VR(video_path, frame_list_arr, save_path_arr, video_nam
 
 # save video frame from frame_list | it will be saved in {save_path}/{video_name}-{frame_idx}.jpg
 # ROBOT 사용가능, LAPA 불가
-def save_video_frame_for_CV(video_path, frame_list, save_path, video_name) : # using CV
+def save_video_frame_for_CV(video_path, frame_list, save_path, video_name, video_fps) : # using CV
     print('TARGET VIDEO_PATH : ', video_path)
     print('TARGET FRAME : ', frame_list)
 
@@ -200,10 +201,30 @@ def save_video_frame_for_CV(video_path, frame_list, save_path, video_name) : # u
         video.set(1, frame_idx) # frame setting
         _, img = video.read() # read frame
 
-        cv2.imwrite(os.path.join(save_path, '{}-{:010d}.jpg'.format(video_name, frame_idx)), img)
+        cv2.imwrite(os.path.join(save_path, '{}-{:010d}-{}.jpg'.format(video_name, frame_idx, idx_to_time(frame_idx, video_fps))), img)
     
     video.release()
     print('======> DONE.')
+
+# 21.06.25 HG 추가 - VR Load시 객체 Memeory 누수현상을 줄이고자 사용
+# save video frame from already loaded VideoRecoder 
+# 이미 로드된 VideoRecoder를 parameter로 넘겨 해당 frame_list를 저장
+def save_video_frame_for_loaded_VR(video, frame_list, save_path, video_name, video_fps) : # using loaded VR 
+    '''
+    video = VideoRecoder 객체
+    frame_list = [idx_1, idx_2 ...]
+    save_path = 'save_path'
+    video_name = 'video_name'
+    video_fps = it's only used for idx to time
+    '''
+    print('TARGET FRAME : ', frame_list)
+
+    for frame_idx in tqdm(frame_list, desc='Saving Frame From {} to {}... '.format(video_name, save_path)) : 
+        video_frame = video[frame_idx].asnumpy()
+        pil_image=Image.fromarray(video_frame)
+
+        pil_image.save(fp=os.path.join(save_path, '{}-{:010d}-{}.jpg'.format(video_name, frame_idx, idx_to_time(frame_idx, video_fps))))
+    
 
 # calc OOB_false Metric
 def calc_OOB_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt, TOTAL_cnt) :
@@ -598,6 +619,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             
             with torch.no_grad() :
                 model.eval()
+
+                ######### ######### ######### #########
+                ########## FOR USING VIDEO #########
                 
                 for idx in tqdm(range(start_pos, end_pos + BATCH_SIZE, BATCH_SIZE),  desc='Inferencing... \t ==> {}'.format(video_name)):
                     FRAME_INDICES = TOTAL_INFERENCE_FRAME_INDICES[start_pos:start_pos + BATCH_SIZE] # batch video frame idx
@@ -627,6 +651,20 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                         print('\n\n')
 
                     start_pos = start_pos + BATCH_SIZE
+
+                ########## FOR USING VIDEO #########
+                ######### ######### ######### #########
+
+                ######### ######### ######### #########
+                ########## FOR USING TENSOR #########
+
+                
+
+
+                ########## FOR USING TENSOR #########
+                ######### ######### ######### #########
+
+                
 
                 
                 '''
@@ -663,7 +701,6 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
 
             # time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in frame_idx_list] # FRAME INDICES -> time
 
-            del video
 
                     
             '''
@@ -823,6 +860,11 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             # FP & FN frame
             print('\n\n=============== \tSAVE FP & FN frame \t ============= \n\n')
             #save_video_frame_for_VR(video_path, [list(metric_frame['FP_df']['frame']), list(metric_frame['FN_df']['frame'])], [fp_frame_saved_dir, fn_frame_saved_dir], video_name)
+            save_video_frame_for_loaded_VR(video, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_name, video_fps) # Saving FP
+            save_video_frame_for_loaded_VR(video, list(metric_frame['FN_df']['frame']), fn_frame_saved_dir, video_name, video_fps) # Saving FN
+
+            
+            del video # delete Video
             
             # OOB_Metric
             OOB_metric = calc_OOB_metric(FN_frame_cnt, FP_frame_cnt, TN_frame_cnt, TP_frame_cnt, TOTAL_frame_cnt)
@@ -954,7 +996,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print(patient_TOTAL_frame_cnt)
         print('\n\n=============== \t\t ============= \n\n')
 
-        print('Pateint Result Saved at \t ====> ', each_videoset_result_dir)
+        print('Patient Result Saved at \t ====> ', each_videoset_result_dir)
 
         # OOB_Metric
         patient_OOB_metric = calc_OOB_metric(patient_FN_frame_cnt, patient_FP_frame_cnt, patient_TN_frame_cnt, patient_TP_frame_cnt, patient_TOTAL_frame_cnt)
@@ -989,6 +1031,11 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print('')
         print(patient_total_metric_df)
         patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
+
+        # clear Paging Cache [docker run -it --rm -v /proc:/writable_proc --name cam_io_hyeongyu -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.0]
+        print('\n\n\t ====> CLEAN PAGINGCACHE, DENTRIES, INODES "echo 3 > /writable_proc/sys/vm/drop_caches"\n\n')
+        subprocess.run('sync', shell=True)
+        subprocess.run('echo 3 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
     
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
 
