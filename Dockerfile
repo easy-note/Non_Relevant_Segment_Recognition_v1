@@ -4,10 +4,12 @@ RUN apt-get update && apt-get install -y \
     vim \
     git
 
-ENV DEBIAN_FRONTEND=noninteractive # set non iteratctive when installed python-opencv, tzdate
+# set non iteratctive when installed python-opencv, tzdate
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y --no-install-recommends python-opencv
 
-RUN apt-get install -y tzdata # for setup time zone
+ # for setup time zone
+RUN apt-get install -y tzdata
 ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN dpkg-reconfigure --frontend noninteractive tzdata
