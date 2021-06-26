@@ -48,7 +48,7 @@ Video using Semi-Supervised Learning](http://proceedings.mlr.press/v121/zohar20a
 ---
 
 ## DOCKER VERSION UPDATE LOG
-- v1.0
+- v1.0 : BASE
 ```docker
 FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
 
@@ -58,7 +58,7 @@ ADD . /OOB_RECOG
 WORKDIR /OOB_RECOG
 ```
 
-- v1.1
+- v1.1 : ADD ESSENTIAL PACKAGE & pip requirements
 ```docker
 FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-runtime
 
@@ -68,6 +68,28 @@ RUN apt-get update && apt-get install -y \
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y --no-install-recommends python-opencv
+
+ADD . /OOB_RECOG
+WORKDIR /OOB_RECOG
+
+RUN pip install -r requirements.txt
+```
+
+- v1.2 : ADD TZDATE PACKAGE TO MODIFY LOCAL TIME ZONE
+```docker
+FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-runtime
+
+RUN apt-get update && apt-get install -y \ 
+    vim \
+    git
+
+ENV DEBIAN_FRONTEND=noninteractive # set non iteratctive when installed python-opencv, tzdate
+RUN apt-get install -y --no-install-recommends python-opencv
+
+RUN apt-get install -y tzdata # for setup time zone
+ENV TZ=Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN dpkg-reconfigure --frontend noninteractive tzdata
 
 ADD . /OOB_RECOG
 WORKDIR /OOB_RECOG
