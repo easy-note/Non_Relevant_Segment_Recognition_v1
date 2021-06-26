@@ -41,6 +41,7 @@ from PIL import ImageFilter
 from visual_gradcam import get_oob_grad_cam_from_video, img_seq_to_gif, return_group
 
 matplotlib.use('Agg')
+EXCEPTION_NUM = -100 # full TN
 
 
 
@@ -282,6 +283,34 @@ def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_p
     
         else : # 비디오 여러개일 경우 오류
             assert False, "ERROR : Duplicatied Video Exist"
+
+# HG 추가 - 기존 calc_OOB_metric function 대체
+# calc OOB Evaluation Metric
+def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
+	base_denominator = FP_cnt + TP_cnt + FN_cnt	
+	# init
+	EVAL_metric = {
+		'CONFIDENCE_metric' : EXCEPTION_NUM,
+		'correspondence' : EXCEPTION_NUM,
+		'UN_correspondence' : EXCEPTION_NUM,
+		'OVER_estimation' : EXCEPTION_NUM,
+		'UNDER_estimtation' : EXCEPTION_NUM,
+		'FN' : FN_cnt,
+		'FP' : FP_cnt,
+		'TN' : TN_cnt,
+		'TP' : TP_cnt,
+		'TOTAL' : FN_cnt + FP_cnt + TN_cnt + TP_cnt
+	}
+
+
+	if base_denominator > 0 : # zero devision except check, FN == full
+		EVAL_metric['CONFIDENCE_metric'] = (TP_cnt - FP_cnt) / base_denominator
+		EVAL_metric['correspondence'] = TP_cnt /  base_denominator
+		EVAL_metric['UN_correspondence'] = (FP_cnt + FN_cnt) /  base_denominator
+		EVAL_metric['OVER_estimation'] = FP_cnt / base_denominator
+		EVAL_metric['UNDER_estimtation'] = FN_cnt / base_denominator
+	
+	return EVAL_metric
 
 # calc OOB_false Metric
 def calc_OOB_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt, TOTAL_cnt) :
@@ -682,10 +711,10 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                             gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
                             time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
 
-                            print('FRAME_INDICES :', FRAME_INDICES)
-                            print('BATCH INPUT TENSOR SIZE : {}'.format(BATCH_TENSOR.size))
-                            print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
-                            print('\n\n')
+                            # print('FRAME_INDICES :', FRAME_INDICES)
+                            # print('BATCH INPUT TENSOR SIZE : {}'.format(BATCH_TENSOR.size))
+                            # print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
+                            # print('\n\n')
 
                         start_pos = start_pos + BATCH_SIZE
 
@@ -878,8 +907,17 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         
             del video # delete Video
     
-            # OOB_Metric
-            OOB_metric = calc_OOB_metric(FN_frame_cnt, FP_frame_cnt, TN_frame_cnt, TP_frame_cnt, TOTAL_frame_cnt)
+            # Evalutation Metric per VIDEO
+            # CONFIDENCE_metric | correspondence | UN_correspondence | OVER_estimation | UNDER_estimtation | FN | FP | TN | TP | TOTAL
+            # inital value
+            video_evaluation_dict, video_confidence_metric, video_over_metric, video_under_metric, video_correspondence, video_uncorrespondence = None, None, None, None, None, None
+
+            video_evaluation_dict = calc_OOB_Evaluation_metric(FN_frame_cnt, FP_frame_cnt, TN_frame_cnt, TP_frame_cnt)
+            video_confidence_metric = video_evaluation_dict['CONFIDENCE_metric']
+            video_over_metric = video_evaluation_dict['OVER_estimation']
+            video_under_metric = video_evaluation_dict['UNDER_estimtation']
+            video_correspondence = video_evaluation_dict['correspondence']
+            video_uncorrespondence = video_evaluation_dict['UN_correspondence']
 
             # saving FN FP TP TN Metric
             results_metric = {
@@ -896,7 +934,11 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                 'PREDICT_IB' : [predict_list.count(IB_CLASS)],
                 'GT_OOB_1FPS' : [truth_oob_count],
                 'GT_IB_1FPS' : [video_len-truth_oob_count],
-                'Confidence_Ratio' : [OOB_metric]
+                'Confidence_Ratio' : [video_confidence_metric],
+                'Over_Ratio' : [video_over_metric],
+                'Under_Ratio' : [video_under_metric],
+                'Correspondence' : [video_correspondence],
+                'Un_Correspondence' : [video_uncorrespondence]
             }
 
             # each metric per video
@@ -907,7 +949,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             result_metric_df.to_csv(os.path.join(each_video_result_dir, 'Confidence_Ratio-{}-{}.csv'.format(args.mode, video_name)), mode="w")
 
             # append metric
-            # columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio'])           
+            # columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio', 'Over_Ratio', 'Under_Ratio', Correspondence, Un_Correspondence])           
             # total_metric_df = total_metric_df.append(result_metric_df)
             total_metric_df = pd.concat([total_metric_df, result_metric_df], ignore_index=True) # shoul shink columns
 
@@ -1012,7 +1054,16 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print('Patient Result Saved at \t ====> ', each_videoset_result_dir)
 
         # OOB_Metric
-        patient_OOB_metric = calc_OOB_metric(patient_FN_frame_cnt, patient_FP_frame_cnt, patient_TN_frame_cnt, patient_TP_frame_cnt, patient_TOTAL_frame_cnt)
+        # Evalutation Metric per PATIENT
+        # CONFIDENCE_metric | correspondence | UN_correspondence | OVER_estimation | UNDER_estimtation | FN | FP | TN | TP | TOTAL
+        # inital value
+        patient_evaluation_dict, patient_confidence_metric, patient_over_metric, patient_under_metric, patient_correspondence, patient_uncorrespondence = None, None, None, None, None, None
+        patient_evaluation_dict = calc_OOB_Evaluation_metric(patient_FN_frame_cnt, patient_FP_frame_cnt, patient_TN_frame_cnt, patient_TP_frame_cnt)
+        patient_confidence_metric = patient_evaluation_dict['CONFIDENCE_metric']
+        patient_over_metric = patient_evaluation_dict['OVER_estimation']
+        patient_under_metric = patient_evaluation_dict['UNDER_estimtation']
+        patient_correspondence = patient_evaluation_dict['correspondence']
+        patient_uncorrespondence = patient_evaluation_dict['UN_correspondence']
 
         # saving FN FP TP TN Metric
         patient_results_metric = {
@@ -1028,7 +1079,11 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         'PREDICT_IB' : [patient_FN_frame_cnt + patient_TN_frame_cnt],
         'GT_OOB_1FPS' : [patient_truth_oob_count],
         'GT_IB_1FPS' : [patient_truth_ib_count],
-        'Confidence_Ratio' : [patient_OOB_metric]
+        'Confidence_Ratio' : [patient_confidence_metric],
+        'Over_Ratio' : [patient_over_metric],
+        'Under_Ratio' : [patient_under_metric],
+        'Correspondence' : [patient_correspondence],
+        'Un_Correspondence' : [patient_uncorrespondence]
         }
 
         # each metric per patient
@@ -1040,7 +1095,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         # append to total metric per patient
         patient_total_metric_df = pd.concat([patient_total_metric_df, patient_result_metric_df], ignore_index=True)
 
-        # columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'OOB_Metric'])
+        # columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio', Over_Ratio, Under_Ratio, Correspondence, Un_Correspondence])
         print('')
         print(patient_total_metric_df)
         patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
