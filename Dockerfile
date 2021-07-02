@@ -2,7 +2,8 @@ FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-runtime
 
 RUN apt-get update && apt-get install -y \ 
     vim \
-    git
+    git \
+    ffmpeg
 
 # set non iteratctive when installed python-opencv, tzdate
 ENV DEBIAN_FRONTEND=noninteractive
