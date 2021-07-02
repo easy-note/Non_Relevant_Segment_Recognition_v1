@@ -534,8 +534,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
     total_videoset_cnt = len(info_dict['video']) # total number of video set
 
     # init total metric df
-    total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio']) # row cnt is same as checking vidoes length
-    patient_total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio']) # row cnt is same as total_videoset_cnt
+    total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Video_set', 'Video_name', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio', 'Over_Ratio', 'Under_Ratio', 'Correspondence', 'Un_Correspondence']) # row cnt is same as checking vidoes length
+    patient_total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio', 'Over_Ratio', 'Under_Ratio', 'Correspondence', 'Un_Correspondence']) # row cnt is same as total_videoset_cnt
 
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list, infernece_assets_path_list) in enumerate(zip(info_dict['video'], info_dict['anno'], info_dict['inference_assets']), 1):
@@ -666,7 +666,6 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             TN_frame_cnt = 0
             TOTAL_frame_cnt = 0
             # frame_check_cnt = 0 # loop cnt
-            OOB_metric = -1 # false metric
 
             # temp_cnt = 0 ### dummy for test
             # for video inference
@@ -965,7 +964,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             plt.scatter(np.array(frame_idx_list), np.array(predict_list), color='red', marker='o', s=5, label='Predict') # predict
 
             plt.title('Inference Results By per {} Frame | Video : {} | Results : {} '.format(inference_step, video_name, os.path.basename(results_save_dir)));
-            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | TP : {} | FN : {} | TN : {} | TOTAL : {} | Confidence_Ratio : {} '.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, TOTAL_frame_cnt, OOB_metric));
+            plt.suptitle('OOB_CLASS [{}] | IB_CLASS [{}] | FP : {} | TP : {} | FN : {} | TN : {} | TOTAL : {} | Confidence_Ratio : {} '.format(OOB_CLASS, IB_CLASS, FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, TOTAL_frame_cnt, video_confidence_metric)); # HG 수정 - 21.06.27 변수이름 변경에 따른 변경
             plt.ylabel('class'); plt.xlabel('frame');
             plt.legend(loc='center right');
 
@@ -976,7 +975,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             saved_text = calc_confusion_matrix(gt_list, predict_list)
             saved_text += '\n\nFP\t\tTP\t\tFN\t\tTN\t\tTOTAL\n'
             saved_text += '{}\t\t{}\t\t{}\t\t{}\t\t{}\n\n'.format(FP_frame_cnt, TP_frame_cnt, FN_frame_cnt, TN_frame_cnt, TOTAL_frame_cnt)
-            saved_text += 'Confidence_Ratio : {:.4f}'.format(OOB_metric)
+            saved_text += 'Confidence_Ratio : {:.4f}'.format(video_confidence_metric) # HG 수정 - 21.06.27 변수이름 변경에 따른 변경
 
             with open(os.path.join(each_video_result_dir, 'Metric-{}-{}.txt'.format(args.mode, video_name)), 'w') as f :
                 f.write(saved_text)
@@ -1119,9 +1118,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         #######################
 
         # clear Paging Cache because of VideoRecoder I/O CACHE [docker run -it --name cam_io_hyeongyu -v /proc:/writable_proc -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.0]
-        print('\n\n\t ====> CLEAN PAGINGCACHE, DENTRIES, INODES "echo 3 > /writable_proc/sys/vm/drop_caches"\n\n')
+        print('\n\n\t ====> CLEAN PAGINGCACHE, DENTRIES, INODES "echo 1 > /writable_proc/sys/vm/drop_caches"\n\n')
         subprocess.run('sync', shell=True)
-        subprocess.run('echo 3 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
+        subprocess.run('echo 1 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
     
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
 

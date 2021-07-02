@@ -91,7 +91,7 @@ def img_seq_to_gif(img_path_list, results_path) :
     if len(images) <= 1 : # one img
         images[0].save(results_path)
     else :                # seq img
-        images[0].save(results_path, save_all=True, append_images=images[1:], optimize=False, duration=1000, loop=0) # 200 ms == 1/2 s, inf loop, no ommit img
+        images[0].save(results_path, save_all=True, append_images=images[1:], optimize=False, duration=1500, loop=1) # 200 ms == 1/2 s, inf loop, no ommit img
 
 
 # input|DataFrame = 'frame' 'time' truth' 'predict'
@@ -194,15 +194,19 @@ def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_re
     print(models)
     print('\n\n==== MODEL SUMMARY ====\n\n')
     summary(models.model, (3,224,224))
+    
+    outputs = torch.empty((len(input_tensor), 2), dtype=torch.float64, device = 'cuda')
 
-    # Model predict
+    # Model predict, 21.06.26 HG 수정 - 개별 처리로 변경 (input tensor 클 경우 한번에 처리시 GPU 부족)
     with torch.no_grad() :
-        outputs = models(input_tensor.cuda())
-
-
+    	for idx in range(len(input_tensor)) :
+    		print('INFERENCE FOR GRACAM ===> DATA NUM : {} | {}'.format(idx, len(input_tensor)))
+    		outputs[idx] = models(input_tensor[idx, ...].unsqueeze(dim=0).cuda())
+ 
+    # outputs = models(input_tensor.cuda())
+    
     predict = torch.nn.Softmax(dim=1)(outputs.cpu()) # softmax
     print(torch.argmax(predict.cpu(), 1)) # predict class
-    
 
     ### 3. select gradcam layer
     if (model_name.find('resnet') != -1) or (model_name.find('resnext') != -1) :
