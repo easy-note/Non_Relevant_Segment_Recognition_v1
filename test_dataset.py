@@ -20,24 +20,17 @@ IB_CLASS, OOB_CLASS = (0,1)
 class OOB_DB_Dataset(Dataset): 
 
     def __init__(self, DB_path): 
-        # self.img_list = glob.glob(DB_path) # ALL img into DB path
-        # self.aug = data_transforms['test']
-
-        self.img_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+        self.img_list = glob.glob(DB_path) # ALL img into DB path
+        self.aug = data_transforms['test']
     
     def __len__(self):
         return len(self.img_list)
 
     def __getitem__(self, index):
-        '''
         img_path = self.img_list[index]
 
         img = Image.open(img_path)
         img = self.aug(img)
-        '''
-        
-        img = self.img_list[index]
-        img = torch.tensor(img)
 
         return {'img': img}
 
@@ -67,30 +60,3 @@ class IDX_Sampler():
             start_pos = start_pos + self.batch_size
         
         return iter(batches)
-            
-
-def main(): 
-    step_size = 1
-
-    # custom idx
-    idx_list = [i for i in range(10) if i % step_size == 0]
-    # idx_list = [1,200,800,1000]
-
-    s = IDX_Sampler(idx_list, batch_size=3)
-    print(IDX_Sampler)
-    print(list(s))
-    
-    dl = DataLoader(OOB_DB_Dataset('..'), batch_sampler=list(s))
-    print(len(dl))
-    
-    
-    for sample in dl :
-        print(sample)
-        img = sample['img']
-        print(img)
-    
-    
-    
-
-if __name__ == "__main__":
-	main()
