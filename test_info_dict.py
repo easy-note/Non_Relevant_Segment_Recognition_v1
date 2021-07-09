@@ -277,6 +277,7 @@ def sanity_check_info_dict(info_dict) :
             info_dict = {
             'video': [video1_path, video2_path, ... ],
             'anno': [ 1-[[start, end],[start, end]], 2-[[start,end],[start,end]], 3-... ],
+            'DB': [video1_DB_path, video2_DB_path, ... ],
             'inference_assets' : [test_dataset1_path, test_dataset2_path, ...]
             }
     """
@@ -763,14 +764,14 @@ def print_patients_info_yaml(patients_info_yaml_path):
     for idx in range(patient_count) : 
         patient = patients[idx]
 
-        print('PATIENT_NO : {}'.format(patient['patient_no']))
-        print('PATIENT_VIDEO : {}'.format(patient['patient_video']))
+        print('PATIENT_NO : \t\t{}'.format(patient['patient_no']))
+        print('PATIENT_VIDEO : \t{}\n'.format(patient['patient_video']))
         
         for video_path_info in patient['path_info'] :
-            print('VIDEO_NAME : \t{}'.format(video_path_info['video_name']))
-            print('VIDEO_PATH : \t{}'.format(video_path_info['video_path']))
+            print('VIDEO_NAME : \t\t{}'.format(video_path_info['video_name']))
+            print('VIDEO_PATH : \t\t{}'.format(video_path_info['video_path']))
             print('ANNOTATION_PATH : \t{}'.format(video_path_info['annotation_path']))
-            print('DB_PATH : \t{}'.format(video_path_info['DB_path']))
+            print('DB_PATH : \t\t{}'.format(video_path_info['DB_path']))
             print('\n', '-----'*10, '\n')
 
         print('\n', '=== === === === ==='*5, '\n')
@@ -816,8 +817,22 @@ def print_patients_info_yaml(patients_info_yaml_path):
                 annotation_path : '/ANNOTATION_PATH'
                 DB_path : '/DB_PATH'
     '''
-def make_patients_aggregate_info(patient_video_dict, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, save_path): 
+def make_patients_aggregate_info(patient_list, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, save_path): 
+
+
+    # 1. SET patient video
+    patient_video_dict = parsing_patient_video(patient_list, OOB_robot_list + OOB_lapa_list) # parsing pateint video
+
+    # 2. patient video sorting
+    for patient, video_name_list in patient_video_dict.items() : 
+        patient_video_dict[patient] = pateint_video_sort(video_name_list)
     
+    # print patinet video
+    print('\n----- SORTED ------\n')
+    for patient, video_name_list in patient_video_dict.items() : 
+        print(patient, video_name_list)
+    
+    # 3. aggregtation to yaml
     patients = {'patients': []}
 
     # add 'patinet' obj
@@ -841,10 +856,10 @@ def make_patients_aggregate_info(patient_video_dict, VIDEO_PATH_SHEET, ANNOTATIO
         })
         
 
-    # serialization from python object to YAML stream
-    
+    # 4. serialization from python object to YAML stream and save
     with open(save_path, 'w') as f :
         yaml.dump(patients, f)
+    
 
 
 # sort [R_999_ch1_03, R_999_ch2_01, R_999_ch2_02] => [R_999_ch2_01, R_999_ch2_02, R_999_ch1_03]
@@ -896,17 +911,14 @@ def patients_yaml_to_test_info_dict(patients_yaml_path) : # paring video from an
     Generate 'info_dict' (Incomplete form of 'info_dict') 
 
     Args:
-        video_root_path: Video root path.
-        anno_root_path: Annotation file root path.
-        inference_assets_root_path: Tensor form test dataset root path.
-        video_set: Video set for test.
-        mode: For Robot or Lapa? Default - Robot.
+        patients_yaml_path : patinets_yaml file (use def make_patients_aggregate_info())
 
     Returns:
         info_dict: 
             info_dict = {
                 'video': [],
                 'anno': [],
+                'DB': [],
                 'inference_assets' : []
             }
     """
@@ -925,8 +937,6 @@ def patients_yaml_to_test_info_dict(patients_yaml_path) : # paring video from an
         'DB': [],
         'inference_assets' : []
     }
-
-    
 
     for idx in range(patients_count): 
         patient = patients[idx]
@@ -974,11 +984,29 @@ def patients_yaml_to_test_info_dict(patients_yaml_path) : # paring video from an
     return info_dict
 
 
+def save_dict_to_yaml(save_dict, save_path): # dictonary, ~.yaml
+    save_dir, _ = os.path.split(save_path)
+    try :
+        if not os.path.exists(save_dir) :
+            os.makedirs(save_dir)
+    except OSError :
+        print('ERROR : Creating Directory, ' + save_dir)
+    
+    with open(save_path, 'w') as f :
+        yaml.dump(save_dict, f)
+    
+def load_yaml_to_dict(yaml_file_path): # ~.yaml
+    load_dict = {}
 
+    with open(yaml_file_path, 'r') as f :
+        load_dict = yaml.load(f, Loader=yaml.FullLoader)
+    
+    return load_dict
+
+    
 
 # OOB_robot_40과 같은 GLOBAL 변수는 Main에서만 사용 (각 함수에서 내에서 사용지양, local 변수로 사용지향)
-
-def main():
+def make_data_sheet(save_dir):
 
     # DATA PATH SHEET
     ROBOT_VIDEO_PATH_SHEET = {}
@@ -1013,34 +1041,59 @@ def main():
     
     ROBOT_DB_PATH_SHEET = get_DB_path(ROBOT_DB_ROOT_PATH, OOB_robot_list) # ROBOT
     LAPA_DB_PATH_SHEET = get_DB_path(LAPA_DB_ROOT_PATH, OOB_lapa_list) # LAPA
-    
 
-    # 4. SET patient
-    patient_list = ['R_210', 'R_424', 'R_391', 'L_676', 'E_999']
-    patient_video_dict = parsing_patient_video(patient_list, OOB_robot_list + OOB_lapa_list)
-
-    # 5. AGGREGATE
-    patient_aggregtation = None
-    
-
+    # 4. AGGREGATE
     VIDEO_PATH_SHEET = {**ROBOT_VIDEO_PATH_SHEET, **LAPA_VIDEO_PATH_SHEET}
-    ANNOTATION_PATH_SHEET = {**ROBOT_ANNOTATION_PATH_SHEET, **LAPA_ANNOTATION_PATH_SHEET}
+    ANNOTATION_PATH_SHEET = {**ROBOT_ANNOTATION_PATH_SHEET, **LAPA_ANNOTATION_PATH_SHEET} # V1
     DB_PATH_SHEET = {**ROBOT_DB_PATH_SHEET, **LAPA_DB_PATH_SHEET}
 
-    # patient video sorting
-    for patient, video_name_list in patient_video_dict.items() : 
-        patient_video_dict[patient] = pateint_video_sort(video_name_list)
+    # 5. SAVE SHEET
+    VIDEO_PATH_SHEET_SAVE_PATH = os.path.join(save_dir, 'VIDEO_PATH_SHEET.yaml')
+    ANNOTATION_SHHET_SAVE_PATH = os.path.join(save_dir, 'ANNOTATION_PATH_SHEET.yaml')
+    DB_SHEET_SAVE_PATH = os.path.join(save_dir, 'DB_PATH_SHEET.yaml')
 
-    SAVED_PATIENTS_INFO_PATH = './patients_info.yaml'
-    make_patients_aggregate_info(patient_video_dict, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, save_path=SAVED_PATIENTS_INFO_PATH)
-    print_patients_info_yaml(SAVED_PATIENTS_INFO_PATH)
-    
-    # yaml => test_info_dict
-    print(yaml.dump(patients_yaml_to_test_info_dict(SAVED_PATIENTS_INFO_PATH)))
-    
+    save_dict_to_yaml(VIDEO_PATH_SHEET, VIDEO_PATH_SHEET_SAVE_PATH)
+    save_dict_to_yaml(ANNOTATION_PATH_SHEET, ANNOTATION_SHHET_SAVE_PATH)
+    save_dict_to_yaml(DB_PATH_SHEET, DB_SHEET_SAVE_PATH)
 
-    for patient, video_name_list in patient_video_dict.items() : 
-        print(patient, video_name_list)
+def load_data_sheet(data_sheet_dir):
+    # 1. set load path from data_sheet_dir
+    VIDEO_PATH_SHEET_yaml_path = os.path.join(data_sheet_dir, 'VIDEO_PATH_SHEET.yaml')
+    ANNOTATION_PATH_SHEET_yaml_path = os.path.join(data_sheet_dir, 'ANNOTATION_PATH_SHEET.yaml')
+    DB_PATH_SHEET_yaml_path = os.path.join(data_sheet_dir, 'DB_PATH_SHEET.yaml')
+    
+    # 2. load from yaml to dict
+    VIDEO_PATH_SHEET = load_yaml_to_dict(VIDEO_PATH_SHEET_yaml_path)
+    ANNOTATION_PATH_SHEET = load_yaml_to_dict(ANNOTATION_PATH_SHEET_yaml_path)
+    DB_PATH_SHEET = load_yaml_to_dict(DB_PATH_SHEET_yaml_path)
+
+    return VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET
+
+
+
+
+
+def main():
+    # make DATA SHEET
+    make_data_sheet('./DATA_SHEET')
+
+    # load DATA SHEET
+    VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet('./DATA_SHEET')
+
+    patient_list = ['R_210', 'R_424', 'R_391', 'L_676', 'E_999']
+
+    # make patinets aggregation file
+    make_patients_aggregate_info(patient_list, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, './patients_info.yaml')
+
+    # print patinets aggregation file
+    print_patients_info_yaml('./patients_info.yaml')
+    
+    # convert patients aggregation file to info_dict
+    info_dict = patients_yaml_to_test_info_dict('./patients_info.yaml')
+
+    print(info_dict)
+
+
 
 
 if __name__ == "__main__":
