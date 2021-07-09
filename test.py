@@ -28,8 +28,15 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
 from train_model import CAMIO
-from test_info_dict import gettering_information_for_oob
-from test_info_dict import sanity_check_info_dict
+
+from test_info_dict import make_data_sheet, load_data_sheet
+from test_info_dict import make_patients_aggregate_info, print_patients_info_yaml, patients_yaml_to_test_info_dict, sanity_check_info_dict
+from test_info_dict import convert_video_name_from_old_nas_policy
+
+
+
+
+from test_dataset import OOB_DB_Dataset, IDX_Sampler
 
 # 21.06.10 HG 추가 - to load video for capture FP FN frame
 from decord import VideoReader
@@ -57,7 +64,7 @@ parser.add_argument('--results_save_dir', type=str, help='inference results save
 parser.add_argument('--mode', type=str, choices=['ROBOT', 'LAPA'], help='inference results save path')
 
 ## assets mode # 21.06.25 HG 추가 - VIDEO로 바로 Inferece (Inference 시간소요 up), test augmentation (30000, 3, 244, 244)로 미리 잘라논 INFERENCE TENSOR PICKLE DATA로 Inference (Inferece 시간소요 down)
-parser.add_argument('--assets_mode', type=str, default='VIDEO', choices=['VIDEO', 'TENSOR'], help='choose inferece assets VIDEO or INFERENCE TENSOR(PICKLE DATA)')
+parser.add_argument('--assets_mode', type=str, default='VIDEO', choices=['VIDEO', 'DB', 'TENSOR'], help='choose inferece assets VIDEO or DB or INFERENCE TENSOR(PICKLE DATA)')
 
 ## test model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가 # 21.06.09 HG 추가 [EfficientNet Family]
 parser.add_argument('--model', type=str,
@@ -94,6 +101,12 @@ data_transforms = {
     ]),
 }
 aug = data_transforms['test']
+
+
+
+
+
+
 
 def npy_to_tensor(npy_img):
     pil_img = Image.fromarray(npy_img)
@@ -384,7 +397,7 @@ def test_start() :
     model.cuda()
 
     print('\n\t=== model_loded for {} ===\n'.format(args.mode))
-
+    '''
     if args.mode == 'LAPA' : 
         # starting inference
         test_for_lapa(args.data_dir, args.anno_dir, args.inference_assets_dir, args.results_save_dir, model, args.test_videos, args.inference_step)
@@ -392,6 +405,16 @@ def test_start() :
     else: # robot
         # starting inference
         test_for_robot(args.data_dir, args.anno_dir, args.inference_assets_dir, args.results_save_dir, model, args.test_videos, args.inference_step)
+    '''
+
+    # make patinets aggregation file from DATA SHEET and convert to info_dict
+    patinets_info_save_path = os.path.join(args.results_save_dir, 'patiensts_info.yaml') # save path of patinets aggregation file (.yaml)
+    info_dict = prepare_test_info_dict(patient_list, data_sheet_dir, patinets_info_save_path) # load Data sheet and make patinets aggregation file, then convert to info_dict
+
+    exit(0)
+    
+    # test
+    test(info_dict, model, results_save_dir, args.inference_step)
 
     # finish time stamp
     finishTime = time.time()
@@ -400,6 +423,7 @@ def test_start() :
     log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
     save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
 
+'''
 def test_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, model, patient_list, inference_step):
     """
     - Create info_dict (gettering_information_for_oob, sanity_check_info_dict) 
@@ -505,6 +529,29 @@ def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, mo
 
     # inference step
     test(info_dict, model, results_save_dir, inference_step) # 21.06.10 HG 수정 - automatic FPS setting for each video FPS
+'''
+
+# load Data sheet and make patinets aggregation file, then convert to info_dict
+def prepare_test_info_dict(patient_list, data_sheet_dir, patinets_info_save_path):
+    # make DATA SHEET
+    make_data_sheet(data_sheet_dir)
+
+    # load DATA SHEET
+    VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet(data_sheet_dir)
+    
+    # make patinets aggregation file
+    make_patients_aggregate_info(patient_list, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, patinets_info_save_path)
+
+    # print patinets aggregation file
+    print_patients_info_yaml(patinets_info_save_path)
+
+    # convert patients aggregation file to info_dict
+    info_dict = patients_yaml_to_test_info_dict(patinets_info_save_path)
+
+    # sanity check and modify info_dict
+    info_dict = sanity_check_info_dict(info_dict)
+
+    return info_dict
 
 # project_name is only for use for title in total_metric_df.csv
 def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수정 - automatic FPS setting for each video FPS
@@ -538,10 +585,26 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
     patient_total_metric_df = pd.DataFrame(index=range(0, 0), columns=['Patient', 'FP', 'TP', 'FN', 'TN', 'TOTAL', 'GT_OOB', 'GT_IB', 'PREDICT_OOB', 'PREDICT_IB', 'GT_OOB_1FPS', 'GT_IB_1FPS', 'Confidence_Ratio', 'Over_Ratio', 'Under_Ratio', 'Correspondence', 'Un_Correspondence']) # row cnt is same as total_videoset_cnt
 
     # loop from total_videoset_cnt
-    for i, (video_path_list, anno_info_list, infernece_assets_path_list) in enumerate(zip(info_dict['video'], info_dict['anno'], info_dict['inference_assets']), 1):
+    for i, (video_path_list, anno_info_list, DB_path_list, infernece_assets_path_list) in enumerate(zip(info_dict['video'], info_dict['anno'], info_dict['DB'], info_dict['inference_assets']), 1):
+        ##### PARSING VIDEOSET NAME #####
+        if args.mode == 'ROBOT': # R000001, ch1_video_01.mp4
+            ### EXCEPTION RULE
+            EXCEPTION_RULE = {'ch1_video_01_6915320_RDB.mp4': 'R_76_ch1_01',
+                       'ch1_video_01_8459178_robotic subtotal.mp4': 'R_84_ch1_01',
+                       '01_G_01_R_391_ch2_06.mp4': 'R_391_ch2_06'}
+
+            if os.path.basename(video_path_list[0]) in EXCEPTION_RULE:
+                new_nas_policy_name = EXCEPTION_RULE[video_path_list[0]]
+            else: 
+                new_nas_policy_name = convert_video_name_from_old_nas_policy(video_path_list[0]) # R_1_ch1_01
+            
+            op_method, patient_idx, video_channel, video_slice = new_nas_policy_name.split('_')
         
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(os.path.basename(video_path_list[0]))[0].split('_') # parsing videoset name
+        elif args.mode == 'LAPA':
+            hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(os.path.basename(video_path_list[0]))[0].split('_') # parsing videoset name
+
         videoset_name = '{}_{}'.format(op_method, patient_idx)
+        ##### ##### ##### ##### ##### #####
 
         # init for patient results_dict
         patient_video_list = []
@@ -562,19 +625,35 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
 
 
         print('COUNT OF VIDEO SET | {} / {} \t\t ======>  VIDEO SET | {}'.format(i, total_videoset_cnt, videoset_name))
-        print('NUMBER OF VIDEO : {} | NUMBER OF ANNOTATION INFO : {}'.format(len(video_path_list), len(anno_info_list)))
+        print('NUMBER OF VIDEO : {} | NUMBER OF ANNOTATION INFO : {} | NUMBER OF DB_PATH : {}'.format(len(video_path_list), len(anno_info_list), len(DB_path_list)))
         print('NUMBER OF INFERNECE ASSETS {} \n==> ASSETS LIST : {}'.format(len(infernece_assets_path_list), infernece_assets_path_list))
         print('RESULTS SAVED AT \t\t\t ======>  {}'.format(each_videoset_result_dir))
         print('\n')
-            
-
-
-        #### 
+             
         
         # extract info for each video_path
-        for video_path, anno_info, each_video_infernece_assets_path_list in zip(video_path_list, anno_info_list, infernece_assets_path_list) :
+        for video_path, anno_info, DB_path, each_video_infernece_assets_path_list in zip(video_path_list, anno_info_list, DB_path_list, infernece_assets_path_list) :
+            ##### PARSING VIDEO NAME #####
+
+            video_file_name = os.path.basename(video_path)
+
+            if args.mode == 'ROBOT': # R000001, ch1_video_01.mp4
+                ### EXCEPTION RULE
+                EXCEPTION_RULE = {'ch1_video_01_6915320_RDB.mp4': 'R_76_ch1_01',
+                        'ch1_video_01_8459178_robotic subtotal.mp4': 'R_84_ch1_01',
+                        '01_G_01_R_391_ch2_06.mp4': 'R_391_ch2_06'}
+
+                if video_file_name in EXCEPTION_RULE:
+                    new_nas_policy_name = EXCEPTION_RULE[video_file_name]
+                else: 
+                    new_nas_policy_name = convert_video_name_from_old_nas_policy(video_file_name) # R_1_ch1_01
+                
+                video_name = '01_G_01_'+ new_nas_policy_name # 01_G_01_R_1_ch1_01
             
-            video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
+            elif args.mode == 'LAPA':
+                video_name = os.path.splitext(video_file_name)[0] # only video name
+
+            ##### ##### ##### ##### ##### #####
 
             # inference results saved folder for each video
             each_video_result_dir = os.path.join(each_videoset_result_dir, video_name) # '~~~/results/R022/R022_ch1_video_01' , '~~~/results/R022/R022_ch1_video_04' ..
@@ -721,6 +800,43 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                 ######### ######### ######### #########
                 
                 # ---------------------------------- #
+                ######### ######### ######### #########
+                ########## FOR USING TENSOR #########  
+                elif args.assets_mode == 'DB' :
+                    print('\n\t########## FOR USING DB #########\n')
+
+                    # DB dataset
+                    test_dataset = OOB_DB_Dataset(DB_path)
+
+                    # check video len with DB dataset
+                    assert video_len == len(test_dataset), 'NOT COMPATIABLE LENGTH | video_len : {} | DB_len : {}'.format(video_len, len(test_dataset))
+
+                    # target idx
+                    TARGET_IDX_LIST = [i for i in len(test_dataset) if i % inference_step == 0]
+
+                    # Set index for batch
+                    s = IDX_Sampler(TARGET_IDX_LIST, batch_size=BATCH_SIZE)
+
+                    # set dataloader with custom batch sampler
+                    dl = DataLoader(test_dataset, batch_sampler=list(s))
+                    
+                    # inferencing model
+                    for sample in dl :
+                        BATCH_INPUT = sample['img'].cuda()
+                        BATCH_OUTPUT = model(BATCH_INPUT)
+
+                        # predict
+                        BATCH_PREDICT = torch.argmax(BATCH_OUTPUT.cpu(), 1)
+                        BATCH_PREDICT = BATCH_PREDICT.tolist()
+
+                        # save results
+                        predict_list+= list(BATCH_PREDICT)
+                    
+                    frame_idx_list += TARGET_IDX_LIST
+                    gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, TARGET_IDX_LIST) # get in_list elements from indices index 
+                    time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in TARGET_IDX_LIST] # FRAME INDICES -> time
+                   
+                
 
                 ######### ######### ######### #########
                 ########## FOR USING TENSOR #########  
@@ -1128,6 +1244,6 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
     
 if __name__ == "__main__":
     ###  base setting for model testing ### 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     test_start()
     
