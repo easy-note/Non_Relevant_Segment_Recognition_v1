@@ -5,6 +5,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
+from PIL import Image
+import natsort
 
 data_transforms = {
     'test': transforms.Compose([
@@ -20,7 +22,9 @@ IB_CLASS, OOB_CLASS = (0,1)
 class OOB_DB_Dataset(Dataset): 
 
     def __init__(self, DB_path): 
-        self.img_list = glob.glob(DB_path) # ALL img into DB path
+        self.img_list = glob.glob(os.path.join(DB_path, '*.jpg')) # ALL img into DB path
+        self.img_list = natsort.natsorted(self.img_list) # sorting
+
         self.aug = data_transforms['test']
     
     def __len__(self):
@@ -32,7 +36,12 @@ class OOB_DB_Dataset(Dataset):
         img = Image.open(img_path)
         img = self.aug(img)
 
-        return {'img': img}
+        video_name, idx = os.path.splitext(os.path.basename(img_path))[0].split('-') # ~/01_G_01_R_999_ch1_1-0000000001.jpg
+        
+
+        return {'img': img,
+                'idx': idx,
+                'img_path': img_path}
 
 
 # IT'S NOT UNIFORM SAMPLER
