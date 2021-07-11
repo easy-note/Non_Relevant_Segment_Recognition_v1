@@ -284,14 +284,13 @@ def sanity_check_info_dict(info_dict) :
 
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(os.path.basename(video_path_list[0]))[0].split('_') # parsing videoset name # 21.06.25 HG 수정, Bug Fix
-        videoset_name = '{}_{}'.format(op_method, patient_idx)
+        # hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(os.path.basename(video_path_list[0]))[0].split('_') # parsing videoset name # 21.06.25 HG 수정, Bug Fix
+        # videoset_name = '{}_{}'.format(op_method, patient_idx)
 
         for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
             
             video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
             print('----- ANNOTATION CHECK => \t VIDEO\t {} \t-----'.format(video_name))
-            print(info_dict['anno'][i][j])
             
             ##### video info and ####
             # open video cap for parse frame
@@ -327,7 +326,6 @@ def sanity_check_info_dict(info_dict) :
 
                 ##### update redefined annotation info #### 
                 info_dict['anno'][i][j] = anno_info
-                print(info_dict['anno'][i][j])
 
             else : # empty
                 print(anno_info)
@@ -965,7 +963,6 @@ def patients_yaml_to_test_info_dict(patients_yaml_path) : # paring video from an
             
             if annotation_path != '': # EVENT
                 target_idx_list = annotation_parser(annotation_path)
-                target_anno_list.append(target_idx_list)
             
             # save gettering info
             target_video_list.append(video_path) # [video1_1, video_1_2, ...]
@@ -1032,8 +1029,8 @@ def make_data_sheet(save_dir):
     ANNOTATION_V1_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V1'
     ANNOTATION_V2_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2'
     
-    ROBOT_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V1_ROOT_PATH, OOB_robot_list) # V1 - ROBOT
-    LAPA_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V1_ROOT_PATH, OOB_lapa_list) # V1 - LAPA
+    ROBOT_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_robot_list) # V1 - ROBOT
+    LAPA_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_lapa_list) # V1 - LAPA
     
     # 3. SET DB PATH
     ROBOT_DB_ROOT_PATH = '/data2/Public/OOB_Recog/img_db/ROBOT'
