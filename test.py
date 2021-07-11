@@ -36,6 +36,7 @@ from test_info_dict import convert_video_name_from_old_nas_policy
 from torch.utils.data import Dataset, DataLoader
 import shutil
 
+import natsort
 
 
 from test_dataset import OOB_DB_Dataset, IDX_Sampler
@@ -47,7 +48,7 @@ from decord import cpu, gpu
 from PIL import ImageFilter
 
 # 21.06.25 HG 추가 - for FP frame Gradcam 
-from visual_gradcam import get_oob_grad_cam_from_video, img_seq_to_gif, return_group
+from visual_gradcam import get_oob_grad_cam_from_video, get_oob_grad_cam_img, img_seq_to_gif, return_group
 
 matplotlib.use('Agg')
 EXCEPTION_NUM = -100 # full TN
@@ -289,15 +290,15 @@ def save_DB_frame(DB_path, frame_list, save_path, video_fps) : # for DB rule
             cnt+=1
     
     
-    print('SAVE DB FRAME : SUCESS {} | REQUEST {}'.format(cnt, len(frame_list)))
+    print('SAVE DB FRAME : SUCCESS {} | REQUEST {}'.format(cnt, len(frame_list)))
             
     
 
 
 
 # 21.06.25 HG 추가 - GRADCAM for FP Frame => call function in visual_gradcam.py [return_group, get_oob_grad_cam_from_video, img_seq_to_gif]
-def save_fp_frame_gradcam(model_path, model_name, data_sheet_dir, consensus_results_path, save_dir, title_name) :
-    
+def save_fp_frame_gradcam(model_path, model_name, data_sheet_dir, consensus_results_path, inference_img_dir_dict, save_dir, title_name, assets_mode) :
+    assert assets_mode in ['VIDEO', 'DB'], 'NO SUPPORT ASSETS MODE [GRADCAM] INPUT ASSETS MODE : {}'.format(assets_mode)
     # video_dir의 모든 video parsing
     '''
     all_video_path = []
@@ -330,31 +331,42 @@ def save_fp_frame_gradcam(model_path, model_name, data_sheet_dir, consensus_resu
         # video_dir 찾기
         # video_path_list = [v_path for v_path in all_video_path if video_name in v_path]
         video_sheet_key = '_'.join(video_name.split('_')[-4:]) # 01_G_01_R_1_ch1_11
-        video_path_list = [VIDEO_PATH_SHEET[video_sheet_key]]
+        video_path = [VIDEO_PATH_SHEET.get(video_sheet_key, '')]
 
-        # video_dir 찾은 Video가 1개일 경우에만 처리
-        if len(video_path_list) == 1 :
-            video_path = video_path_list[0]
+        # for DB, set inference img path 
+        inference_img_dir = inference_img_dir_dict[video_name]
+
+        # non video_dir 
+        if video_path != '' : # has video_dir
+            # video_path = video_path_list[0]
 
             # set save dir and make dir
-            each_save_dir = os.path.join(save_dir, os.path.splitext(os.path.basename(video_path))[0])
-            try :
+            # each_save_dir = os.path.join(save_dir, os.path.splitext(os.path.basename(video_path))[0])
+            each_save_dir = os.path.join(save_dir, video_name)
+
+            try:
                 if not os.path.exists(each_save_dir) :
-                    os.makedirs(each_save_dir)
+                        os.makedirs(each_save_dir)
             except OSError :
                 print('ERROR : Creating Directory, ' + each_save_dir)
 
             # gradcam visual save in each save_dir
-            get_oob_grad_cam_from_video(model_path, model_name, video_path, FP_df, each_save_dir, title_name)
+            if assets_mode == 'VIDEO':
+                get_oob_grad_cam_from_video(model_path, model_name, video_path, FP_df, each_save_dir, title_name)
+            
+            elif assets_mode == 'DB':
+                get_oob_grad_cam_img(model_path, model_name, inference_img_dir, each_save_dir, title_name)
 
             # save_dir img to gif
             print('\n\n===> CONVERTING GIF\n\n')
-            all_results_img_path = sorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
+            all_results_img_path = natsort.natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
             img_seq_to_gif(all_results_img_path, os.path.join(each_save_dir, '{}-GRADCAM.gif'.format(video_name))) # seqence 이므로 sort 하여 append
             print('\n\n===> DONE\n\n')
     
-        else : # 비디오 여러개일 경우 오류
-            assert False, "ERROR : Duplicatied Video Exist"
+        else : # no video_dir
+            assert False, "ERROR : Video No Exist"
+
+
 
 # HG 추가 - 기존 calc_OOB_metric function 대체
 # calc OOB Evaluation Metric
@@ -592,7 +604,7 @@ def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, mo
 # load Data sheet and make patinets aggregation file, then convert to info_dict
 def prepare_test_info_dict(patient_list, data_sheet_dir, patinets_info_save_path):
     # make DATA SHEET
-    make_data_sheet(data_sheet_dir)
+    # make_data_sheet(data_sheet_dir)
 
     # load DATA SHEET
     VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet(data_sheet_dir)
@@ -673,6 +685,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         patient_predict_list = []
         patient_truth_oob_count = 0
         patient_truth_ib_count = 0
+        
+        # for DB gradcam
+        fp_frame_saved_dir_dict = {}
 
         # create base folder for save results each video set
         each_videoset_result_dir = os.path.join(results_save_dir, videoset_name) # '~~~/results/R022' , '~~~/results/R011' ..
@@ -747,6 +762,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             video.release()
             del video
             '''
+            
+            # for DB gradcam
+            fp_frame_saved_dir_dict[video_name] = fp_frame_saved_dir
 
             # using VR(len) & CV (fps) # 21.06.10 HG Change to VideoRecoder
             video_cap = cv2.VideoCapture(video_path)
@@ -1107,7 +1125,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             # for DB
             elif args.assets_mode == 'DB':
                 save_DB_frame(DB_path, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_fps) # Saving FP
-                save_DB_frame(DB_path, list(metric_frame['FN_df']['frame']), fp_frame_saved_dir, video_fps) # Saving FN
+                save_DB_frame(DB_path, list(metric_frame['FN_df']['frame']), fn_frame_saved_dir, video_fps) # Saving FN
 
             del video # delete Video
 
@@ -1340,7 +1358,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         # FP Frame GRADCAM saved folder for each video
         print('\n\n=============== \t\t GRADCAM PROCESSING \t\t ============= \n\n')
         fp_frame_gradcam_saved_dir = os.path.join(each_videoset_result_dir, 'GRADCAM', 'FP') # '~~~/results/R022/GRADCAM/FP'
-    
+        fp_gradcam_title = 'FP | {} | {}'.format(args.model, videoset_name) # 'FP | mobilenet_v3_large | R_1'
+
         try :
             if not os.path.exists(fp_frame_gradcam_saved_dir) :
                 os.makedirs(fp_frame_gradcam_saved_dir)
@@ -1348,8 +1367,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             print('ERROR : Creating Directory, ' + fp_frame_gradcam_saved_dir)
         
         print('GRADCAM FP Result Saved at \t ====> ', fp_frame_gradcam_saved_dir)
-        # def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, save_dir, title_name)
-        save_fp_frame_gradcam(args.model_path, args.model, args.data_sheet_dir, patient_inference_results_df_save_path, fp_frame_gradcam_saved_dir, videoset_name) # GRADCAM to sequcence gif
+        # def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, inference_dir_dict, save_dir, title_name, assets_mode)
+        # fp_frame_saved_dir_dict is only use for DB
+        save_fp_frame_gradcam(args.model_path, args.model, args.data_sheet_dir, patient_inference_results_df_save_path, fp_frame_saved_dir_dict,fp_frame_gradcam_saved_dir, fp_gradcam_title, args.assets_mode) # GRADCAM to sequcence gif
         ######  GRADCAM  ######
         #######################
 
