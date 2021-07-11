@@ -32,6 +32,8 @@ import tqdm
 from decord import VideoReader
 from decord import cpu, gpu
 
+import natsort
+
 data_transforms = {
     'test': transforms.Compose([
         transforms.Resize(256),
@@ -241,6 +243,10 @@ def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_re
         elif model_name == 'mobilenet_v3_small' :
             print('MODEL = MOBILENET_V3_SMALL')
             target_layer = models.model.features[-1][-1] # ConvBNActivation // Hardwish
+        
+        elif model_name == 'mobilenet_v3_large' :
+            print('MODEL = MOBILENET_V3_LARGE')
+            target_layer = models.model.features[-1][-1] # ConvBNActivation // Hardwish
             
         else :
             assert(False, '=== Not supported MobileNet model ===')
@@ -296,8 +302,8 @@ def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_re
 
     # init batch size and Gradcam output
     BATCH_SIZE = 32
-    grayscale_cam_IB = np.empty((1,224,224)) # (batch, w, h) or (batch, h, w)
-    grayscale_cam_OOB = np.empty((1,224,224))
+    grayscale_cam_IB = np.empty((0,224,224)) # (batch, w, h) or (batch, h, w)
+    grayscale_cam_OOB = np.empty((0,224,224))
 
     for i in range((len(input_tensor) + BATCH_SIZE - 1) // BATCH_SIZE ) :
         batch_input_tensor = input_tensor[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]
@@ -413,7 +419,9 @@ def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_re
 def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, title_name) : 
 
     ### 0. inference img to input tensor and log img to numpy
-    all_inference_img_path = sorted(glob.glob(inference_img_dir +'/*{}'.format('jpg'))) # all inference file list
+    all_inference_img_path = natsort.natsorted(glob.glob(inference_img_dir +'/*{}'.format('jpg'))) # all inference file list
+    print(all_inference_img_path)
+
     input_tensor = torch.Tensor(len(all_inference_img_path), 3, 224, 224) # float32
     rgb_img_list = [] # load rgb img
 
@@ -490,6 +498,10 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
         elif model_name == 'mobilenet_v3_small' :
             print('MODEL = MOBILENET_V3_SMALL')
             target_layer = models.model.features[-1][-1] # ConvBNActivation // Hardwish
+        
+        elif model_name == 'mobilenet_v3_large' :
+            print('MODEL = MOBILENET_V3_LARGE')
+            target_layer = models.model.features[-1][-1] # ConvBNActivation // Hardwish
             
         else :
             assert(False, '=== Not supported MobileNet model ===')
@@ -501,6 +513,31 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
 
         else :
             assert(False, '=== Not supported Squeezenet model ===')
+
+    elif model_name.find('efficientnet') != -1 :
+        if model_name == 'efficientnet_b0' :
+            print('MODEL = EFFICIENTNET-B0')
+            target_layer = None
+
+        elif model_name == 'efficientnet_b1' :
+            print('MODEL = EFFICIENTNET-B1')
+            target_layer = None
+
+        elif model_name == 'efficientnet_b2' :
+            print('MODEL = EFFICIENTNET-B2')
+            target_layer = None
+
+        elif model_name == 'efficientnet_b3' :
+            print('MODEL = EFFICIENTNET-B3')
+            target_layer = models.model._blocks[-1] # final MBConvBlock
+            # target_layer = models.model._conv_head
+
+        elif model_name == 'efficientnet_b4' :
+            print('MODEL = EFFICIENTNET-B4')
+            target_layer = None
+
+        else :
+            assert(False, '=== Not supported Efficient model ===')
 
     
     else :
@@ -520,8 +557,8 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
 
     # init batch size and Gradcam output
     BATCH_SIZE = 32
-    grayscale_cam_IB = np.empty((1,224,224)) # (batch, w, h) or (batch, h, w)
-    grayscale_cam_OOB = np.empty((1,224,224))
+    grayscale_cam_IB = np.empty((0,224,224)) # (batch, w, h) or (batch, h, w) # 21.07.11 HG. Bugfix (1,224,224) => (0,224,224)
+    grayscale_cam_OOB = np.empty((0,224,224))
 
     for i in range((len(input_tensor) + BATCH_SIZE - 1) // BATCH_SIZE ) :
         batch_input_tensor = input_tensor[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]
@@ -536,8 +573,6 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
         print(type(batch_grayscale_cam_IB))
         print(batch_grayscale_cam_IB.shape)
         print(batch_grayscale_cam_IB.dtype)
-        
-
 
     ### 5. gradscale cam
     print(grayscale_cam_IB)
@@ -549,28 +584,28 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
     # grayscale_cam = grayscale_cam[0, :] # 0번째 batch
     
     ### 6. visualization
-
-    for img_idx, img_path in tqdm(enumerate(all_inference_img_path)) : 
+    for img_idx, img_path in enumerate(all_inference_img_path) : 
+        print('GRADCAM VISUALIZATION PROCESSING... \t {} / {}'.format(img_idx+1, len(all_inference_img_path)))
         img_name = os.path.splitext(os.path.basename(img_path))[0]
         
-        print(img_name)
-        print(grayscale_cam_IB[img_idx, :].shape)
-        print(rgb_img_list[img_idx].shape)
+        # print(img_name)
+        # print(grayscale_cam_IB[img_idx, :].shape)
+        # print(rgb_img_list[img_idx].shape)
 
         # https://github.com/jacobgil/pytorch-grad-cam/blob/137dbd18df363ac0fc8af9df9091f098aaf3c2b6/pytorch_grad_cam/base_cam.py#L27
         visualization_IB = show_cam_on_image(rgb_img_list[img_idx], grayscale_cam_IB[img_idx, :], use_rgb=True) # numpy[0-1], numpy
         visualization_OOB = show_cam_on_image(rgb_img_list[img_idx], grayscale_cam_OOB[img_idx, :], use_rgb=True) # numpy[0-1], numpy
 
-        print(visualization_IB.shape)
-        print(visualization_IB.dtype)
+        # print(visualization_IB.shape)
+        # print(visualization_IB.dtype)
 
         #######  plt setting #######
-        fig = plt.figure(figsize=(18,10))
+        fig = plt.figure(figsize=(18,12))
         label_names = ('IB', 'OOB')
         colors = ('cadetblue', 'orange')
         
         #### 1. fig title
-        fig.suptitle('{}'.format(title_name), fontsize=25)
+        fig.suptitle('{}'.format(title_name), fontsize=20)
 
         #### 2. shape, location, rowspan, colspane
         ax1 = plt.subplot2grid((3,6), (0,0), rowspan=2, colspan=2) # Input 
@@ -620,7 +655,7 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
 
         ### 11. save img
         plt.show()
-        plt.savefig(os.path.join(save_dir, '{}_GRADCAM.jpg'.format(img_name)), format='jpg', dpi=100)
+        plt.savefig(os.path.join(save_dir, '{}-GRADCAM.jpg'.format(img_name)), format='jpg', dpi=100)
         plt.clf() # clear figure
         plt.cla() # clear axis
 
@@ -672,7 +707,7 @@ def main(model_path, model_name, video_dir, consensus_results_path, save_dir) :
 
             # save_dir img to gif
             print('\n\n===> CONVERTING GIF\n\n')
-            all_results_img_path = sorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
+            all_results_img_path = natsort.natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
             img_seq_to_gif(all_results_img_path, os.path.join(each_save_dir, '{}-GRADCAM.gif'.format(video_name))) # seqence 이므로 sort 하여 append
             print('\n\n===> DONE\n\n')
     
