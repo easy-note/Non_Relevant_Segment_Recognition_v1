@@ -604,7 +604,7 @@ def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, mo
 # load Data sheet and make patinets aggregation file, then convert to info_dict
 def prepare_test_info_dict(patient_list, data_sheet_dir, patinets_info_save_path):
     # make DATA SHEET
-    # make_data_sheet(data_sheet_dir)
+    make_data_sheet(data_sheet_dir)
 
     # load DATA SHEET
     VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet(data_sheet_dir)
@@ -891,6 +891,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                     
                     test_dataset = OOB_DB_Dataset(DB_path)
 
+                    # target idx
+                    TARGET_IDX_LIST = list(range(0, len(test_dataset), inference_step))
+
                     # check video len with DB dataset
                     try : 
                         log_txt='\nVIDEO NAME : {} \t CHECK LENGTH | video_len : {} | DB_len : {} '.format(video_name, video_len, len(test_dataset))
@@ -901,10 +904,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                         log_txt='\t===> NOT COMPATIABLE(OVER)'
                         print('NOT COMPATIABLE(OVER) LENGTH | video_len : {} | DB_len : {}'.format(video_len, len(test_dataset)))
                         save_log(log_txt, os.path.join(results_save_dir, 'log.txt')) # save log
+                        TARGET_IDX_LIST = list(range(0, video_len, inference_step)) # because of truth_list index (out of index)
                         pass
-
-                    # target idx
-                    TARGET_IDX_LIST = list(range(0, len(test_dataset), inference_step))
 
                     # Set index for batch
                     s = IDX_Sampler(TARGET_IDX_LIST, batch_size=BATCH_SIZE)
