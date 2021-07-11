@@ -33,6 +33,8 @@ from test_info_dict import make_data_sheet, load_data_sheet
 from test_info_dict import make_patients_aggregate_info, print_patients_info_yaml, patients_yaml_to_test_info_dict, sanity_check_info_dict
 from test_info_dict import convert_video_name_from_old_nas_policy
 
+from torch.utils.data import Dataset, DataLoader
+import shutil
 
 
 
@@ -50,7 +52,23 @@ from visual_gradcam import get_oob_grad_cam_from_video, img_seq_to_gif, return_g
 matplotlib.use('Agg')
 EXCEPTION_NUM = -100 # full TN
 
+LAPA_CASE = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442', 'L_443',
+                'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550', 'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625',
+                'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676', 'L_310', 'L_311', 'L_330', 'L_333', 'L_367', 'L_370', 'L_377', 'L_379', 'L_385',
+                'L_387', 'L_389', 'L_391', 'L_393', 'L_400', 'L_402', 'L_406', 'L_408', 'L_413', 'L_414', 'L_415', 'L_418', 'L_419', 'L_427', 'L_428', 'L_430', 'L_433',
+                'L_434', 'L_436', 'L_439', 'L_471', 'L_473', 'L_475', 'L_477', 'L_478', 'L_479', 'L_481', 'L_482', 'L_484', 'L_513', 'L_514', 'L_515', 'L_517', 'L_537',
+                'L_539', 'L_542', 'L_543', 'L_545', 'L_546', 'L_556', 'L_558', 'L_560', 'L_563', 'L_565', 'L_568', 'L_572', 'L_574', 'L_575', 'L_577', 'L_580']
 
+ROBOT_CASE = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 'R_19', 'R_22', 'R_48', 'R_56', 'R_74',
+                'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301',
+                'R_302', 'R_303', 'R_304', 'R_305', 'R_310', 'R_311', 'R_312', 'R_313', 'R_320', 'R_321', 'R_324', 'R_329', 'R_334', 'R_336', 'R_338', 'R_339', 'R_340',
+                'R_342', 'R_345', 'R_346', 'R_347', 'R_348', 'R_349', 'R_355', 'R_357', 'R_358', 'R_362', 'R_363', 'R_369', 'R_372', 'R_376', 'R_378', 'R_379', 'R_386',
+                'R_391', 'R_393', 'R_399', 'R_400', 'R_402', 'R_403', 'R_405', 'R_406', 'R_409', 'R_412', 'R_413', 'R_415', 'R_418', 'R_419', 'R_420', 'R_423', 'R_424',
+                'R_427', 'R_436', 'R_445', 'R_449', 'R_455', 'R_480', 'R_493', 'R_501', 'R_510', 'R_522', 'R_523', 'R_526', 'R_532', 'R_533']
+
+SUPPORT_MODEL = ['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
+                    'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
+                    'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7']
 
 parser = argparse.ArgumentParser()
 
@@ -59,6 +77,9 @@ parser.add_argument('--data_dir', type=str,
                     default='/data/ROBOT/Video', help='video_path :) ')
 parser.add_argument('--anno_dir', type=str,
                     default='/data/OOB/V1_40', help='annotation_path :) ')
+parser.add_argument('--data_sheet_dir', type=str,
+                    default='./DATA_SHEET', help='datasheet_path, should include 3 file;[~/ANNOTATION_PATH_SHEET.yaml, DB_PATH_SHEET.yaml, VIDEO_PATH_SHEET.yaml] ')
+
 parser.add_argument('--results_save_dir', type=str, help='inference results save path')
 
 parser.add_argument('--mode', type=str, choices=['ROBOT', 'LAPA'], help='inference results save path')
@@ -68,21 +89,14 @@ parser.add_argument('--assets_mode', type=str, default='VIDEO', choices=['VIDEO'
 
 ## test model # 21.06.03 HG 수정 - Supported model [VGG]에 따른 choices 추가 # 21.06.05 HG 수정 [Squeezenet1_1] 추가 # 21.06.09 HG 추가 [EfficientNet Family]
 parser.add_argument('--model', type=str,
-                    choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
-                    'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
-                    'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='backbone model')
+                    choices=SUPPORT_MODEL, help='backbone model')
 
 # inference frame step
 parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
 
 # inference video
 parser.add_argument('--test_videos', type=str, nargs='+',
-                    choices=['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 
-                            'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 
-                            'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_313'] + 
-                            ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442',
-                            'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550',
-                            'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676'],
+                    choices= LAPA_CASE + ROBOT_CASE,
                     help='inference video')
 
 # infernece assets root path
@@ -101,10 +115,6 @@ data_transforms = {
     ]),
 }
 aug = data_transforms['test']
-
-
-
-
 
 
 
@@ -246,19 +256,66 @@ def save_video_frame_for_loaded_VR(video, frame_list, save_path, video_name, vid
 
         pil_image.save(fp=os.path.join(save_path, '{}-{:010d}-{}.jpg'.format(video_name, frame_idx, idx_to_time(frame_idx, video_fps))))
 
-# 21.06.25 HG 추가 - GRADCAM for FP Frame => call function in visual_gradcam.py [get_oob_grad_cam_from_video, img_seq_to_gif]
-def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, save_dir, title_name) :
+# video index == 0 => DB idx == 1
+def idx_to_DB_idx(idx):
+    return idx+1
+
+# DB_path : ~/L_301/01_G_01_L_301_xx0_01
+def save_DB_frame(DB_path, frame_list, save_path, video_fps) : # for DB rule
+ 
+    print('TARGET FRAME : ', frame_list)
+    
+    video_name = os.path.basename(DB_path) # parents name (01_G_01_L_301_xx0_01)
+    cnt = 0
+
+    img_list = glob.glob(os.path.join(DB_path, '*.jpg')) # ALL img into DB path
+    
+    for target_idx in tqdm(frame_list, desc='Saving Frame From {} to {}...'.format(video_name, save_path)): 
+        target_img = '{}-{:010d}.jpg'.format(video_name, idx_to_DB_idx(target_idx)) # 01_G_01_L_301_xx0_01-0000000001.jpg
+        target_path = os.path.join(DB_path, target_img)
+        
+        if target_path in img_list :
+            save_file_name = '{}-{:010d}-{}.jpg'.format(video_name, target_idx, idx_to_time(target_idx, video_fps))
+            
+            # PIL LOAD SAVE
+            '''
+            pil_img = Image.open(target_path)     
+            pil_img.save(fp=os.path.join(save_path, save_file_name))
+            '''
+
+            # COPY
+            shutil.copy(target_path, os.path.join(save_path, save_file_name))
+
+            cnt+=1
+    
+    
+    print('SAVE DB FRAME : SUCESS {} | REQUEST {}'.format(cnt, len(frame_list)))
+            
+    
+
+
+
+# 21.06.25 HG 추가 - GRADCAM for FP Frame => call function in visual_gradcam.py [return_group, get_oob_grad_cam_from_video, img_seq_to_gif]
+def save_fp_frame_gradcam(model_path, model_name, data_sheet_dir, consensus_results_path, save_dir, title_name) :
     
     # video_dir의 모든 video parsing
+    '''
     all_video_path = []
     video_ext_list = ['mp4', 'MP4', 'mpg']
 
     for ext in video_ext_list :
         all_video_path.extend(glob.glob(video_dir +'/*.{}'.format(ext)))
+    '''
+
+    # load DATA SHEET
+    VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet(data_sheet_dir)
+
 
     # consensus_results csv loading
     consensus_results_df = pd.read_csv(consensus_results_path)
     
+
+
     # calc FP frame
     metric_frame_dict = return_metric_frame(consensus_results_df)
     FP_consensus_df = metric_frame_dict['FP_df']
@@ -271,7 +328,9 @@ def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_p
         print('video_name : ', video_name)
 
         # video_dir 찾기
-        video_path_list = [v_path for v_path in all_video_path if video_name in v_path]
+        # video_path_list = [v_path for v_path in all_video_path if video_name in v_path]
+        video_sheet_key = '_'.join(video_name.split('_')[-4:]) # 01_G_01_R_1_ch1_11
+        video_path_list = [VIDEO_PATH_SHEET[video_sheet_key]]
 
         # video_dir 찾은 Video가 1개일 경우에만 처리
         if len(video_path_list) == 1 :
@@ -409,12 +468,11 @@ def test_start() :
 
     # make patinets aggregation file from DATA SHEET and convert to info_dict
     patinets_info_save_path = os.path.join(args.results_save_dir, 'patiensts_info.yaml') # save path of patinets aggregation file (.yaml)
-    info_dict = prepare_test_info_dict(patient_list, data_sheet_dir, patinets_info_save_path) # load Data sheet and make patinets aggregation file, then convert to info_dict
-
-    exit(0)
+    data_sheet_dir = args.data_sheet_dir
+    info_dict = prepare_test_info_dict(args.test_videos, data_sheet_dir, patinets_info_save_path) # load Data sheet and make patinets aggregation file, then convert to info_dict
     
     # test
-    test(info_dict, model, results_save_dir, args.inference_step)
+    test(info_dict, model, args.results_save_dir, args.inference_step)
 
     # finish time stamp
     finishTime = time.time()
@@ -611,6 +669,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         patient_frame_idx_list = []
         patient_time_list = []
         patient_gt_list = []
+        patient_target_img_list = [] # for DB
         patient_predict_list = []
         patient_truth_oob_count = 0
         patient_truth_ib_count = 0
@@ -646,7 +705,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                 if video_file_name in EXCEPTION_RULE:
                     new_nas_policy_name = EXCEPTION_RULE[video_file_name]
                 else: 
-                    new_nas_policy_name = convert_video_name_from_old_nas_policy(video_file_name) # R_1_ch1_01
+                    new_nas_policy_name = convert_video_name_from_old_nas_policy(video_path) # ~/R00001/R_1_ch1_01
                 
                 video_name = '01_G_01_'+ new_nas_policy_name # 01_G_01_R_1_ch1_01
             
@@ -738,6 +797,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             predict_list = [] # predict
             frame_idx_list = [] # frmae info
             time_list = [] # frame to time
+            target_img_list = [] # target img path from DB # only for using in args.mode=DB
 
             FP_frame_cnt = 0
             FN_frame_cnt = 0
@@ -749,7 +809,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             # temp_cnt = 0 ### dummy for test
             # for video inference
             # batch slice from infernece_frame_idx
-            BATCH_SIZE = 64
+            BATCH_SIZE = 256
             
             
             with torch.no_grad() : # autograd 끔 - 메모리 사용량 줄이고, 연산 속도 높힘. 사실상 안 쓸 gradient 라서 inference 시에 굳이 계산할 필요 없음. 
@@ -789,6 +849,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                             gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
                             time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
 
+                            target_img_list+= '-' * len(FRAME_INDICES)
+
                             # print('FRAME_INDICES :', FRAME_INDICES)
                             # print('BATCH INPUT TENSOR SIZE : {}'.format(BATCH_TENSOR.size))
                             # print('frame_idx_list : {} \n predict_list : {} \n gt_list : {}'.format(frame_idx_list, predict_list, gt_list))
@@ -801,18 +863,30 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                 
                 # ---------------------------------- #
                 ######### ######### ######### #########
-                ########## FOR USING TENSOR #########  
+                ########## FOR USING DB #########  
                 elif args.assets_mode == 'DB' :
                     print('\n\t########## FOR USING DB #########\n')
 
                     # DB dataset
+                    print('VIDEO :', video_path)
+                    print('DB PATH : ', DB_path)
+                    
                     test_dataset = OOB_DB_Dataset(DB_path)
 
                     # check video len with DB dataset
-                    assert video_len == len(test_dataset), 'NOT COMPATIABLE LENGTH | video_len : {} | DB_len : {}'.format(video_len, len(test_dataset))
+                    try : 
+                        log_txt='\nVIDEO NAME : {} \t CHECK LENGTH | video_len : {} | DB_len : {} '.format(video_name, video_len, len(test_dataset))
+                        print(log_txt)
+                        save_log(log_txt, os.path.join(results_save_dir, 'log.txt')) # save log
+                        assert video_len >= len(test_dataset), 'NOT COMPATIABLE(OVER) LENGTH | video_len : {} | DB_len : {}'.format(video_len, len(test_dataset))
+                    except :
+                        log_txt='\t===> NOT COMPATIABLE(OVER)'
+                        print('NOT COMPATIABLE(OVER) LENGTH | video_len : {} | DB_len : {}'.format(video_len, len(test_dataset)))
+                        save_log(log_txt, os.path.join(results_save_dir, 'log.txt')) # save log
+                        pass
 
                     # target idx
-                    TARGET_IDX_LIST = [i for i in len(test_dataset) if i % inference_step == 0]
+                    TARGET_IDX_LIST = list(range(0, len(test_dataset), inference_step))
 
                     # Set index for batch
                     s = IDX_Sampler(TARGET_IDX_LIST, batch_size=BATCH_SIZE)
@@ -821,7 +895,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                     dl = DataLoader(test_dataset, batch_sampler=list(s))
                     
                     # inferencing model
-                    for sample in dl :
+                    for sample in tqdm(dl, desc='Inferencing... \t ==> {} | {}'.format(video_name, DB_path)) :
                         BATCH_INPUT = sample['img'].cuda()
                         BATCH_OUTPUT = model(BATCH_INPUT)
 
@@ -831,6 +905,11 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
 
                         # save results
                         predict_list+= list(BATCH_PREDICT)
+                        target_img_list+=sample['img_path'] # target img path
+
+                        
+
+
                     
                     frame_idx_list += TARGET_IDX_LIST
                     gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, TARGET_IDX_LIST) # get in_list elements from indices index 
@@ -935,6 +1014,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                                 
                                 gt_list+=(lambda in_list, indices_list : [in_list[i] for i in indices_list])(truth_list, FRAME_INDICES) # get in_list elements from indices index 
                                 time_list+=[idx_to_time(frame_idx, video_fps) for frame_idx in FRAME_INDICES] # FRAME INDICES -> time
+                                
+                                target_img_list+= '-' * len(FRAME_INDICES)
 
 
                             start_pos = start_pos + BATCH_SIZE
@@ -960,7 +1041,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                 'frame' : frame_idx_list,
                 'time' : time_list,
                 'truth' : gt_list,
-                'predict' : predict_list
+                'predict' : predict_list,
+                'target_img_list': target_img_list # for DB
             }
 
             # append inference results for patient
@@ -969,6 +1051,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             patient_time_list.append(time_list)
             patient_gt_list.append(gt_list)
             patient_predict_list.append(predict_list)
+            patient_target_img_list.append(target_img_list) # for DB
             patient_truth_oob_count+=truth_oob_count
             patient_truth_ib_count+=truth_ib_count
 
@@ -1017,11 +1100,17 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             # FP & FN frame
             print('\n\n=============== \tSAVE FP & FN frame \t ============= \n\n')
             #save_video_frame_for_VR(video_path, [list(metric_frame['FP_df']['frame']), list(metric_frame['FN_df']['frame'])], [fp_frame_saved_dir, fn_frame_saved_dir], video_name)
-            save_video_frame_for_loaded_VR(video, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_name, video_fps) # Saving FP
-            save_video_frame_for_loaded_VR(video, list(metric_frame['FN_df']['frame']), fn_frame_saved_dir, video_name, video_fps) # Saving FN
-        
+            if args.assets_mode == 'VIDEO': 
+                save_video_frame_for_loaded_VR(video, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_name, video_fps) # Saving FP
+                save_video_frame_for_loaded_VR(video, list(metric_frame['FN_df']['frame']), fn_frame_saved_dir, video_name, video_fps) # Saving FN
+
+            # for DB
+            elif args.assets_mode == 'DB':
+                save_DB_frame(DB_path, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_fps) # Saving FP
+                save_DB_frame(DB_path, list(metric_frame['FN_df']['frame']), fp_frame_saved_dir, video_fps) # Saving FN
+
             del video # delete Video
-    
+
             # Evalutation Metric per VIDEO
             # CONFIDENCE_metric | correspondence | UN_correspondence | OVER_estimation | UNDER_estimtation | FN | FP | TN | TP | TOTAL
             # inital value
@@ -1111,14 +1200,15 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         patient_inference_results_df = df(range(0,0), columns=['video_name', 'frame', 'consensus_frame', 'time', 'consensus_time', 'truth', 'predict'])
 
         # make results for patient
-        for patient_video, patient_frame_idx, patient_time, patient_gt, patient_predict in zip(patient_video_list, patient_frame_idx_list, patient_time_list, patient_gt_list, patient_predict_list) :
+        for patient_video, patient_frame_idx, patient_time, patient_gt, patient_predict, patient_target_img in zip(patient_video_list, patient_frame_idx_list, patient_time_list, patient_gt_list, patient_predict_list, patient_target_img_list) :
             # saving inferece result per patient
             temp_patient_result_dict = {
                 'video_name' : [patient_video]*len(patient_gt),
                 'frame' : patient_frame_idx,
                 'time' : patient_time,
                 'truth' : patient_gt,
-                'predict' : patient_predict
+                'predict' : patient_predict,
+                'target_img': patient_target_img,
             }
 
             # re-index time and frame_idx
@@ -1215,6 +1305,36 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print(patient_total_metric_df)
         patient_total_metric_df.to_csv(os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))), mode="w") # save on project direc
 
+        ############################
+        ######  VISUAL_FRAME  ######
+        visual_frame_save_dir = os.path.join(each_videoset_result_dir, 'VISUAL')
+
+        try :
+            if not os.path.exists(visual_frame_save_dir) :
+                os.makedirs(visual_frame_save_dir)
+        except OSError :
+            print('ERROR : Creating Directory, ' + visual_frame_save_dir)
+
+        visual_sh_command = \
+        "python visual_frame.py " +\
+        "--title_name " + '"{}-INFERENCE STEP_{}" '.format(args.model, inference_step) +\
+        "--sub_title_name " + '"{}" '.format(videoset_name) +\
+        "--GT_path " + '"{}" '.format(patient_inference_results_df_save_path) +\
+        "--model_name " + '"{}" '.format(args.model) +\
+        "--model_infernce_path " + '"{}" '.format(patient_inference_results_df_save_path) +\
+        "--results_save_dir " + '"{}" '.format(visual_frame_save_dir) +\
+        "--INFERENCE_STEP " + '{} '.format(inference_step) +\
+        "--WINDOW_SIZE " + '{} '.format(1000) +\
+        "--OVERLAP_SECTION_NUM " + '{} '.format(2)
+
+        print(visual_sh_command)
+        
+        subprocess.run(visual_sh_command, shell=True)
+
+        ######  VISUAL_FRAME  ######
+        ############################
+
+
         #######################
         ######  GRADCAM  ######
         # FP Frame GRADCAM saved folder for each video
@@ -1222,14 +1342,14 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         fp_frame_gradcam_saved_dir = os.path.join(each_videoset_result_dir, 'GRADCAM', 'FP') # '~~~/results/R022/GRADCAM/FP'
     
         try :
-            if not os.path.exists(os.path.join(fp_frame_gradcam_saved_dir)) :
+            if not os.path.exists(fp_frame_gradcam_saved_dir) :
                 os.makedirs(fp_frame_gradcam_saved_dir)
         except OSError :
             print('ERROR : Creating Directory, ' + fp_frame_gradcam_saved_dir)
         
         print('GRADCAM FP Result Saved at \t ====> ', fp_frame_gradcam_saved_dir)
         # def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, save_dir, title_name)
-        save_fp_frame_gradcam(args.model_path, args.model, args.data_dir, patient_inference_results_df_save_path, fp_frame_gradcam_saved_dir, videoset_name) # GRADCAM to sequcence gif
+        save_fp_frame_gradcam(args.model_path, args.model, args.data_sheet_dir, patient_inference_results_df_save_path, fp_frame_gradcam_saved_dir, videoset_name) # GRADCAM to sequcence gif
         ######  GRADCAM  ######
         #######################
 
@@ -1244,6 +1364,6 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
     
 if __name__ == "__main__":
     ###  base setting for model testing ### 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
     test_start()
     

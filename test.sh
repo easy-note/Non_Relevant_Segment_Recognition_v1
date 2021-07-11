@@ -28,23 +28,28 @@ END
 model_array=("wide_resnet50_2" \
             "resnext50_32x4d" \
             "mobilenet_v3_small" \
-            "squeezenet1_0")
+            "squeezenet1_0" \
+            "mobilenet_v3_large")
 
 model_path_array=("./logs/LAPA/OOB/lapa-oob-0608-fold_3/ckpoint_wide_resnet50_2-fold3-model=wide_resnet50_2-batch=32-lr=0.001-fold=3-ratio=3-epoch=24-last.ckpt" \
                 "./logs/LAPA/OOB/lapa-oob-0608-fold_3/ckpoint_resnext50_32x4d-fold3-model=resnext50_32x4d-batch=32-lr=0.001-fold=3-ratio=3-epoch=32-last.ckpt" \
                 "./logs/LAPA/OOB/lapa-oob-0608-fold_3/ckpoint_mobilenet_v3_small-fold3-model=mobilenet_v3_small-batch=32-lr=0.001-fold=3-ratio=3-epoch=24-last.ckpt" \
-                "./logs/LAPA/OOB/lapa-oob-0608-fold_3/ckpoint_squeezenet1_0-fold3-model=squeezenet1_0-batch=32-lr=0.001-fold=3-ratio=3-epoch=24-last.ckpt")
+                "./logs/LAPA/OOB/lapa-oob-0608-fold_3/ckpoint_squeezenet1_0-fold3-model=squeezenet1_0-batch=32-lr=0.001-fold=3-ratio=3-epoch=24-last.ckpt" \
+                "/OOB_RECOG/logs/ROBOT/OOB/mobilenet_v3_large/ckpoint_mobilenet_v3_large-model=mobilenet_v3_large-batch=32-lr=0.001-fold=1-ratio=3-epoch=24-last.ckpt")
 
 results_save_dir_array=("./temp_results-robot_oob-wide_resnet50_2-fold_3-last" \
                 "./temp_results-robot_oob-resnext50_32x4d-fold_3-last" \
                 "./temp_results-robot_oob-mobilenet_v3_small-fold_3-last" \
-                "./temp_results-robot_oob-squeezenet1_0-fold_3-last")
+                "./temp_results-robot_oob-squeezenet1_0-fold_3-last" \
+                "./results_v2_robot_oob-mobilenet_v3_large-fold_1-last")
 
 
-for (( i = 0 ; i < ${#model_path_array[@]} ; i++ ))
+for (( i = 4 ; i < ${#model_path_array[@]} ; i++ ))
 do
     python test.py \
-    --mode "LAPA" \
+    --mode "ROBOT" \
+    --assets_mode "DB" \
+    --data_sheet_dir "./DATA_SHEET" \
     --model_path ${model_path_array[$i]} \
     --data_dir "/data/LAPA/Video" \
     --anno_dir "/data/OOB" \
@@ -52,5 +57,5 @@ do
     --results_save_dir ${results_save_dir_array[$i]} \
     --model ${model_array[$i]} \
     --inference_step 5 \
-    --test_videos 'L_450' 'L_669' 'L_676' 'L_535' 'L_496'
+    --test_videos 'R_2' 'R_6' 'R_13' 'R_74' 'R_100' 'R_202' 'R_301' 'R_302' 'R_311' 'R_312' 'R_313' 'R_336' 'R_362' 'R_363' 'R_386' 'R_405' 'R_418' 'R_423' 'R_424' 'R_526'
 done
