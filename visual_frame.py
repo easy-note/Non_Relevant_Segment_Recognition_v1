@@ -15,6 +15,11 @@ import copy
 
 EXCEPTION_NUM = -100 # full TN
 
+SUPPORT_MODEL = ['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
+                    'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
+                    'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7']
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--title_name', type=str, help='plot title, and save file name')
@@ -25,9 +30,7 @@ parser.add_argument('--GT_path', type=str, help='GT model_inference assets path'
 
 # 21.06.04 HG 수정 - Add supported model [VGG Family]
 parser.add_argument('--model_name', type=str, nargs='+',
-                    choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
-                    'mobilenet_v2', 'mobilenet_v3_small', 'squeezenet1_0', 'squeezenet1_1',
-                    'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'], help='trained backborn model, it will be yticks name')
+                    choices=SUPPORT_MODEL, help='trained backborn model, it will be yticks name')
 
 parser.add_argument('--model_infernce_path', type=str, nargs='+', help='model_inference_assets path. this order should be pair with --model_name. if not, results is not unpair.')
 
@@ -380,7 +383,11 @@ def main():
 	OVERLAP_OVERLAP_SECTION_NUM = args.OVERLAP_SECTION_NUM # overlap section count, if you set OVERLAP_OVERLAP_SECTION_NUM = 1, it means non overlap
 
 	slide_window_start_end_idx= [[start_idx * WINDOW_SIZE, (start_idx+OVERLAP_OVERLAP_SECTION_NUM) * WINDOW_SIZE] for start_idx in range(int(math.ceil(total_len/WINDOW_SIZE)))]
-
+	
+	print(slide_window_start_end_idx)
+	print(slide_window_start_end_idx)
+	print(total_len)
+	
 	# affine end_idx (last)
 	for z in range(1, OVERLAP_OVERLAP_SECTION_NUM+1) : 
 		slide_window_start_end_idx[z*-1][1] = total_len
