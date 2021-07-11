@@ -36,11 +36,12 @@ class OOB_DB_Dataset(Dataset):
         img = Image.open(img_path)
         img = self.aug(img)
 
+        # parsing DB img idx
         video_name, idx = os.path.splitext(os.path.basename(img_path))[0].split('-') # ~/01_G_01_R_999_ch1_1-0000000001.jpg
         
 
         return {'img': img,
-                'idx': idx,
+                'DB_idx': idx,
                 'img_path': img_path}
 
 
