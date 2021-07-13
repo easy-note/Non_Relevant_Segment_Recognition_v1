@@ -456,9 +456,18 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
     print('\n\n==== MODEL SUMMARY ====\n\n')
     summary(models.model, (3,224,224))
 
-    # Model predict
+    outputs = torch.empty((len(input_tensor), 2), dtype=torch.float64, device = 'cuda')
+
+    # Model predict, 21.07.13 HG 수정 - 개별 처리로 변경 (input tensor 클 경우 한번에 처리시 GPU 부족)
     with torch.no_grad() :
-        outputs = models(input_tensor.cuda())
+    	for idx in range(len(input_tensor)) :
+    		print('INFERENCE FOR GRACAM ===> DATA NUM : {} | {}'.format(idx, len(input_tensor)))
+    		outputs[idx] = models(input_tensor[idx, ...].unsqueeze(dim=0).cuda())
+ 
+    # outputs = models(input_tensor.cuda())
+    
+    predict = torch.nn.Softmax(dim=1)(outputs.cpu()) # softmax
+    print(torch.argmax(predict.cpu(), 1)) # predict class
 
 
     predict = torch.nn.Softmax(dim=1)(outputs.cpu()) # softmax
