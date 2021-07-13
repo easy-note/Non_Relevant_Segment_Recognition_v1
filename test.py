@@ -50,6 +50,8 @@ from PIL import ImageFilter
 # 21.06.25 HG 추가 - for FP frame Gradcam 
 from visual_gradcam import get_oob_grad_cam_from_video, get_oob_grad_cam_img, img_seq_to_gif, return_group
 
+from visual_model import visual_metric_per_patients
+
 matplotlib.use('Agg')
 EXCEPTION_NUM = -100 # full TN
 
@@ -58,7 +60,7 @@ LAPA_CASE = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_3
                 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676', 'L_310', 'L_311', 'L_330', 'L_333', 'L_367', 'L_370', 'L_377', 'L_379', 'L_385',
                 'L_387', 'L_389', 'L_391', 'L_393', 'L_400', 'L_402', 'L_406', 'L_408', 'L_413', 'L_414', 'L_415', 'L_418', 'L_419', 'L_427', 'L_428', 'L_430', 'L_433',
                 'L_434', 'L_436', 'L_439', 'L_471', 'L_473', 'L_475', 'L_477', 'L_478', 'L_479', 'L_481', 'L_482', 'L_484', 'L_513', 'L_514', 'L_515', 'L_517', 'L_537',
-                'L_539', 'L_542', 'L_543', 'L_545', 'L_546', 'L_556', 'L_558', 'L_560', 'L_563', 'L_565', 'L_568', 'L_572', 'L_574', 'L_575', 'L_577', 'L_580']
+                'L_539', 'L_542', 'L_543', 'L_545', 'L_546', 'L_556', 'L_558', 'L_560', 'L_563', 'L_565', 'L_568', 'L_569', 'L_572', 'L_574', 'L_575', 'L_577', 'L_580']
 
 ROBOT_CASE = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 'R_19', 'R_22', 'R_48', 'R_56', 'R_74',
                 'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301',
@@ -490,7 +492,7 @@ def test_start() :
     finishTime = time.time()
     f_tm = time.localtime(finishTime)
 
-    log_txt = 'FINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
+    log_txt = '\n\nFINISHED AT : \t' + time.strftime('%Y-%m-%d %I:%M:%S %p \n', f_tm)
     save_log(log_txt, os.path.join(args.results_save_dir, 'log.txt')) # save log
 
 '''
@@ -659,12 +661,12 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         ##### PARSING VIDEOSET NAME #####
         if args.mode == 'ROBOT': # R000001, ch1_video_01.mp4
             ### EXCEPTION RULE
-            EXCEPTION_RULE = {'ch1_video_01_6915320_RDB.mp4': 'R_76_ch1_01',
-                       'ch1_video_01_8459178_robotic subtotal.mp4': 'R_84_ch1_01',
+            EXCEPTION_RULE = {'ch1_video_01_6915320_RDG.mp4': 'R_76_ch1_01',
+                       'ch1_video_01_8459178_robotic\ subtotal.mp4': 'R_84_ch1_01',
                        '01_G_01_R_391_ch2_06.mp4': 'R_391_ch2_06'}
 
             if os.path.basename(video_path_list[0]) in EXCEPTION_RULE:
-                new_nas_policy_name = EXCEPTION_RULE[video_path_list[0]]
+                new_nas_policy_name = EXCEPTION_RULE.get(video_path_list[0], '-')
             else: 
                 new_nas_policy_name = convert_video_name_from_old_nas_policy(video_path_list[0]) # R_1_ch1_01
             
@@ -1370,7 +1372,10 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print('GRADCAM FP Result Saved at \t ====> ', fp_frame_gradcam_saved_dir)
         # def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, inference_dir_dict, save_dir, title_name, assets_mode)
         # fp_frame_saved_dir_dict is only use for DB
-        save_fp_frame_gradcam(args.model_path, args.model, args.data_sheet_dir, patient_inference_results_df_save_path, fp_frame_saved_dir_dict,fp_frame_gradcam_saved_dir, fp_gradcam_title, args.assets_mode) # GRADCAM to sequcence gif
+        try:
+            save_fp_frame_gradcam(args.model_path, args.model, args.data_sheet_dir, patient_inference_results_df_save_path, fp_frame_saved_dir_dict,fp_frame_gradcam_saved_dir, fp_gradcam_title, args.assets_mode) # GRADCAM to sequcence gif
+        except:
+            pass
         ######  GRADCAM  ######
         #######################
 
@@ -1379,6 +1384,17 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         subprocess.run('sync', shell=True)
         subprocess.run('echo 1 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
     
+    print('\n\n=============== \t\t ============= \t\t ============= \n\n')
+    
+    ###########################################
+    ######  METRIC VISUAL PER PATIENTS  ######
+    metric_visual_csv_path = os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir)))
+    metric_visual_results_path = os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.png'.format(args.mode, os.path.basename(results_save_dir)))
+    metric_visual_title = 'Metric per Patients'
+    visual_metric_per_patients(metric_visual_csv_path, args.model, metric_visual_title, metric_visual_results_path)
+    ######  METRIC VISUAL PER PATIENTS  ######
+    ###########################################
+
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
 
 
