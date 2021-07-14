@@ -1434,7 +1434,7 @@ def convert_to_visual_assets(patient_total_metric_csv_path, model_name, value_co
 
     convert_df = patient_total_metric_df.pivot(index='Model', columns=target_col_name, values=value_col_name)
 
-    convert_df.to_csv(os.path.join(save_path, mode="w")
+    convert_df.to_csv(os.path.join(save_path, mode="w"))
     
     print(convert_df)
 
