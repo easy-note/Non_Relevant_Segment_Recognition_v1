@@ -32,7 +32,7 @@ import tqdm
 from decord import VideoReader
 from decord import cpu, gpu
 
-import natsort
+from natsort import natsorted, index_natsorted, order_by_index
 
 data_transforms = {
     'test': transforms.Compose([
@@ -419,7 +419,7 @@ def get_oob_grad_cam_from_video(model_path, model_name, video_path, consensus_re
 def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, title_name) : 
 
     ### 0. inference img to input tensor and log img to numpy
-    all_inference_img_path = natsort.natsorted(glob.glob(inference_img_dir +'/*{}'.format('jpg'))) # all inference file list
+    all_inference_img_path = natsorted(glob.glob(inference_img_dir +'/*{}'.format('jpg'))) # all inference file list
     print(all_inference_img_path)
 
     input_tensor = torch.Tensor(len(all_inference_img_path), 3, 224, 224) # float32
@@ -466,9 +466,8 @@ def get_oob_grad_cam_img(model_path, model_name, inference_img_dir, save_dir, ti
  
     # outputs = models(input_tensor.cuda())
     
-    predict = torch.nn.Softmax(dim=1)(outputs.cpu()) # softmax
-    print(torch.argmax(predict.cpu(), 1)) # predict class
-
+    print('input', input_tensor)
+    print(outputs)
 
     predict = torch.nn.Softmax(dim=1)(outputs.cpu()) # softmax
     print(torch.argmax(predict.cpu(), 1)) # predict class
@@ -716,7 +715,7 @@ def main(model_path, model_name, video_dir, consensus_results_path, save_dir) :
 
             # save_dir img to gif
             print('\n\n===> CONVERTING GIF\n\n')
-            all_results_img_path = natsort.natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
+            all_results_img_path = natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
             img_seq_to_gif(all_results_img_path, os.path.join(each_save_dir, '{}-GRADCAM.gif'.format(video_name))) # seqence 이므로 sort 하여 append
             print('\n\n===> DONE\n\n')
     

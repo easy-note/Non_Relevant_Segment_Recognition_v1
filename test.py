@@ -361,7 +361,7 @@ def save_fp_frame_gradcam(model_path, model_name, data_sheet_dir, consensus_resu
 
             # save_dir img to gif
             print('\n\n===> CONVERTING GIF\n\n')
-            all_results_img_path = natsort.natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
+            all_results_img_path = natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
             img_seq_to_gif(all_results_img_path, os.path.join(each_save_dir, '{}-GRADCAM.gif'.format(video_name))) # seqence 이므로 sort 하여 append
             print('\n\n===> DONE\n\n')
     
@@ -1434,7 +1434,7 @@ def convert_to_visual_assets(patient_total_metric_csv_path, model_name, value_co
 
     convert_df = patient_total_metric_df.pivot(index='Model', columns=target_col_name, values=value_col_name)
 
-    convert_df.to_csv(os.path.join(save_path, mode="w"))
+    convert_df.to_csv(save_path, mode="w")
     
     print(convert_df)
 
@@ -1443,6 +1443,7 @@ def convert_to_visual_assets(patient_total_metric_csv_path, model_name, value_co
 
 if __name__ == "__main__":
     ###  base setting for model testing ### 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
-    test_start()
+
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
+    # test_start()
     
