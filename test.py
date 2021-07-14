@@ -36,7 +36,7 @@ from test_info_dict import convert_video_name_from_old_nas_policy
 from torch.utils.data import Dataset, DataLoader
 import shutil
 
-import natsort
+from natsort import natsorted, index_natsorted, order_by_index
 
 
 from test_dataset import OOB_DB_Dataset, IDX_Sampler
@@ -1395,10 +1395,52 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
     ######  METRIC VISUAL PER PATIENTS  ######
     ###########################################
 
+    #####################################
+    ######  FOR VISUAL ASSETS CSV  ######
+    metric_pivot_save_dir = os.path.join(results_save_dir, 'PIVOT')
+    
+    try :
+        if not os.path.exists(metric_pivot_save_dir) :
+            os.makedirs(metric_pivot_save_dir)
+    except OSError :
+        print('ERROR : Creating Directory, ' + metric_pivot_save_dir)
+    
+    # CR Pivot
+    convert_to_visual_assets(metric_visual_csv_path, args.model, 'Confidence_Ratio', os.path.join(metric_pivot_save_dir, 'Patinet_CR-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))))
+
+    # OR Pivot
+    convert_to_visual_assets(metric_visual_csv_path, args.model, 'Over_Ratio', os.path.join(metric_pivot_save_dir, 'Patinet_OR-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))))
+    ######  FOR VISUAL ASSETS CSV  ######
+    #####################################
+
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
 
 
+def convert_to_visual_assets(patient_total_metric_csv_path, model_name, value_col_name, save_path):
+
+    assert value_col_name in ['Confidence_Ratio', 'Over_Ratio', 'Under_Ratio', 'Correspondence', 'Un_Correspondence'], 'NOT SOPPORT VALUE'
     
+    # 0. load csv and set init val
+    patient_total_metric_df = pd.read_csv(patient_total_metric_csv_path)
+
+    #### Confidence
+    # 1. sorting by patinets
+    target_col_name = 'Patient'
+    patient_total_metric_df['Model'] = model_name
+    
+    patient_total_metric_df = patient_total_metric_df.reindex(index=order_by_index(patient_total_metric_df.index, index_natsorted(patient_total_metric_df[target_col_name])))
+
+    print(patient_total_metric_df)
+
+    convert_df = patient_total_metric_df.pivot(index='Model', columns=target_col_name, values=value_col_name)
+
+    convert_df.to_csv(os.path.join(save_path, mode="w")
+    
+    print(convert_df)
+
+
+
+
 if __name__ == "__main__":
     ###  base setting for model testing ### 
     os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
