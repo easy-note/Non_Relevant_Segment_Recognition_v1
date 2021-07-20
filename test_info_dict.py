@@ -41,7 +41,6 @@ def time_to_idx(time, fps):
 # check over frame and modify last annotation info
 def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False  
     has_not_over_frame = False
-    
     last_start, last_end = anno_info[-1]
     
     if last_end < video_len : 
@@ -533,7 +532,7 @@ def get_video_path_for_robot(video_root_path, video_list) :
                 video_path_dict[video_name] = path # add dict | new_nas_video_name : video_path
                 USE_VIDEO_LIST.remove(video_name)
                 cnt+=1
-                
+
 
         else : # UNMATCHED
             pass
@@ -585,7 +584,7 @@ def get_video_path(video_root_path, video_list) :
 
     for ext in video_ext_list :
         all_video_path.extend(glob.glob(os.path.join(video_root_path, '*.{}'.format(ext))))
-    
+
     cnt = 0 # PROCESSED CNT
 
     # check which idx is included parser_str in all_video_path
@@ -1029,8 +1028,8 @@ def make_data_sheet(save_dir):
     ANNOTATION_V1_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V1'
     ANNOTATION_V2_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2'
     
-    ROBOT_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V1_ROOT_PATH, OOB_robot_list) # V1 - ROBOT
-    LAPA_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V1_ROOT_PATH, OOB_lapa_list) # V1 - LAPA
+    ROBOT_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_robot_list) # V1 - ROBOT
+    LAPA_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_lapa_list) # V1 - LAPA
     
     # 3. SET DB PATH
     ROBOT_DB_ROOT_PATH = '/data2/Public/OOB_Recog/img_db/ROBOT'
@@ -1071,6 +1070,7 @@ def load_data_sheet(data_sheet_dir):
 
 
 def main():
+
     # make DATA SHEET
     make_data_sheet('./DATA_SHEET')
 

@@ -6,6 +6,8 @@ import csv
 from collections import defaultdict
 from matplotlib import pyplot as plt
 
+from natsort import natsorted, index_natsorted, order_by_index
+
 
 def over_estimation_ratio(total_fold):
 
@@ -256,10 +258,11 @@ def total_inference_visualization(file_path, output_path):
 
 
 def data_compare(new_data_path, output_path):
-    old_data_path = '/Users/jihyunlee/Desktop/robot_0423_Consensus/Total_inference/mAP/FOLD_total_inference.csv'
+    old_data_path = './results_v1_robot_oob-mobilenet_v3_large-fold_1-last/Patient_Total_metric-ROBOT-results_v1_robot_oob-mobilenet_v3_large-fold_1-last.csv'
     new_data_path = new_data_path
 
     x_values = ['R017', 'R022', 'R116', 'R208', 'R303', 'R003', 'R004', 'R006', 'R013', 'R018', 'R007', 'R010', 'R019', 'R056', 'R074']
+    x_values = ['R_2' 'R_6' 'R_13' 'R_74' 'R_100' 'R_202' 'R_301']
     x_values.sort()
 
     model = ['wide_resnet50_2', 'resnext50_32x4d', 'mobilenet_v3_small', 'squeezenet1_0']
@@ -286,7 +289,65 @@ def data_compare(new_data_path, output_path):
 
         plt.clf()
 
-    param_visu(new_data_path, output_path)
+    # param_visu(new_data_path, output_path)
+
+def visual_metric_per_patients(patient_total_metric_csv_path, model_name, title, save_path):
+    
+    x_ticks = 'Patient' # per patinets => it will be sorting by this column ['Patient', 'Video_name']
+    # set value column | target_col = ['Confidence_Ratio', 'Over_Ratio', 'Under_Ratio', 'Correspondence', 'Un_Correspondence']
+    
+    patient_total_metric_df = pd.read_csv(patient_total_metric_csv_path)
+    # 0. set plt
+    fig, ax1 = plt.subplots(figsize=(12,8), tight_layout=True)
+    ax2 = ax1.twinx()
+    
+    #### Confidence
+    # 1. sorting by x_ticks
+    patient_total_metric_df = patient_total_metric_df.reindex(index=order_by_index(patient_total_metric_df.index, index_natsorted(patient_total_metric_df[x_ticks])))
+
+    print(patient_total_metric_df)
+
+    # 2. plot
+    target_col = 'Confidence_Ratio'
+    y_value = patient_total_metric_df[target_col] * 100
+    line1 = ax1.plot(patient_total_metric_df[x_ticks], y_value, marker='o', color='green', label=target_col)
+
+    # 3. change xticks
+    #ax1.set_xticklabels(rotation=45)
+    ax1.tick_params(axis='x', labelrotation=45)
+
+    # 4. set label
+    ax1.set_xlabel(x_ticks)
+    ax1.set_ylabel(target_col + ' (Unit: %)')
+
+    # 5. set title
+    ax1.set_title(model_name, size='12')
+    plt.suptitle(title, size='15')
+
+    #### Over Estimation
+    target_col = 'Over_Ratio'
+    y_value = patient_total_metric_df[target_col] * 100
+    # ax2.plot(patient_total_metric_df[x_ticks], y_value, marker='x', color='deeppink')
+    line2 = ax2.bar(patient_total_metric_df[x_ticks], y_value, color='deeppink', alpha=0.5, label=target_col)
+
+    target_col = 'Under_Ratio'
+    y_value = patient_total_metric_df[target_col] * 100
+    # ax2.plot(patient_total_metric_df[x_ticks], y_value, marker='x', color='deeppink')
+    line3 = ax2.bar(patient_total_metric_df[x_ticks], y_value, color='orange', alpha=0.5, label=target_col)
+
+    ax2.set_ylabel('{} | {} (Unit: %)'.format('Over_Ratio', 'Under_Ratio'))
+
+    # 6. set legend 
+    ax1.grid(True)
+
+    ax1.legend(loc='upper left')
+    ax2.legend(loc='upper right')
+    # 6. save
+    plt.savefig(save_path)
+
+    # 7. clear plt
+    plt.clf()
+    
 
 
 def param_visu(data_path, output_path):
@@ -320,5 +381,16 @@ def param_visu(data_path, output_path):
 
 
 
+def visual_oob_duration(anno_meta_info): 
+    pass
+
+
+
+
 if __name__ == '__main__':
-    fold_inference(['fold1', 'fold2', 'fold3'])
+    # fold_inference(['fold1', 'fold2', 'fold3'])
+
+    # new_data_path = './results_v2_robot_oob-mobilenet_v3_large-fold_1-last/Patient_Total_metric-ROBOT-results_v2_robot_oob-mobilenet_v3_large-fold_1-last.csv'
+    # data_compare(new_data_path, output_path)
+
+    visual_metric_per_patients('./results_v2_new_robot_oob-mobilenet_v3_large-fold_1-last/Patient_Total_metric-ROBOT-results_v2_new_robot_oob-mobilenet_v3_large-fold_1-last.csv', 'mobilenet', 'title_value', './temp_results.png')
