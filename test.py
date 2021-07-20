@@ -36,7 +36,7 @@ from test_info_dict import convert_video_name_from_old_nas_policy
 from torch.utils.data import Dataset, DataLoader
 import shutil
 
-import natsort
+from natsort import natsorted, index_natsorted, order_by_index
 
 
 from test_dataset import OOB_DB_Dataset, IDX_Sampler
@@ -354,14 +354,20 @@ def save_fp_frame_gradcam(model_path, model_name, data_sheet_dir, consensus_resu
 
             # gradcam visual save in each save_dir
             if assets_mode == 'VIDEO':
-                get_oob_grad_cam_from_video(model_path, model_name, video_path, FP_df, each_save_dir, title_name)
+                try :
+                    get_oob_grad_cam_from_video(model_path, model_name, video_path, FP_df, each_save_dir, title_name)
+                except:
+                    pass
             
             elif assets_mode == 'DB':
-                get_oob_grad_cam_img(model_path, model_name, inference_img_dir, each_save_dir, title_name)
+                try :
+                    get_oob_grad_cam_img(model_path, model_name, inference_img_dir, each_save_dir, title_name)
+                except :
+                    pass
 
             # save_dir img to gif
             print('\n\n===> CONVERTING GIF\n\n')
-            all_results_img_path = natsort.natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
+            all_results_img_path = natsorted(glob.glob(each_save_dir +'/*{}'.format('jpg'))) # 위에서 저장한 img 모두 parsing
             img_seq_to_gif(all_results_img_path, os.path.join(each_save_dir, '{}-GRADCAM.gif'.format(video_name))) # seqence 이므로 sort 하여 append
             print('\n\n===> DONE\n\n')
     
@@ -1372,10 +1378,9 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
         print('GRADCAM FP Result Saved at \t ====> ', fp_frame_gradcam_saved_dir)
         # def save_fp_frame_gradcam(model_path, model_name, video_dir, consensus_results_path, inference_dir_dict, save_dir, title_name, assets_mode)
         # fp_frame_saved_dir_dict is only use for DB
-        try:
-            save_fp_frame_gradcam(args.model_path, args.model, args.data_sheet_dir, patient_inference_results_df_save_path, fp_frame_saved_dir_dict,fp_frame_gradcam_saved_dir, fp_gradcam_title, args.assets_mode) # GRADCAM to sequcence gif
-        except:
-            pass
+        
+        save_fp_frame_gradcam(args.model_path, args.model, args.data_sheet_dir, patient_inference_results_df_save_path, fp_frame_saved_dir_dict,fp_frame_gradcam_saved_dir, fp_gradcam_title, args.assets_mode) # GRADCAM to sequcence gif
+
         ######  GRADCAM  ######
         #######################
 
@@ -1395,12 +1400,56 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
     ######  METRIC VISUAL PER PATIENTS  ######
     ###########################################
 
+    #####################################
+    ######  FOR VISUAL ASSETS CSV  ######
+    metric_pivot_save_dir = os.path.join(results_save_dir, 'PIVOT')
+    
+    try :
+        if not os.path.exists(metric_pivot_save_dir) :
+            os.makedirs(metric_pivot_save_dir)
+    except OSError :
+        print('ERROR : Creating Directory, ' + metric_pivot_save_dir)
+    
+    # CR Pivot
+    convert_to_visual_assets(metric_visual_csv_path, args.model, 'Confidence_Ratio', os.path.join(metric_pivot_save_dir, 'Patinet_CR-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))))
+
+    # OR Pivot
+    convert_to_visual_assets(metric_visual_csv_path, args.model, 'Over_Ratio', os.path.join(metric_pivot_save_dir, 'Patinet_OR-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir))))
+    ######  FOR VISUAL ASSETS CSV  ######
+    #####################################
+
     print('\n\n=============== \t\t ============= \t\t ============= \n\n')
 
 
+def convert_to_visual_assets(patient_total_metric_csv_path, model_name, value_col_name, save_path):
+
+    assert value_col_name in ['Confidence_Ratio', 'Over_Ratio', 'Under_Ratio', 'Correspondence', 'Un_Correspondence'], 'NOT SOPPORT VALUE'
     
+    # 0. load csv and set init val
+    patient_total_metric_df = pd.read_csv(patient_total_metric_csv_path)
+
+    #### Confidence
+    # 1. sorting by patinets
+    target_col_name = 'Patient'
+    patient_total_metric_df['Model'] = model_name
+    
+    patient_total_metric_df = patient_total_metric_df.reindex(index=order_by_index(patient_total_metric_df.index, index_natsorted(patient_total_metric_df[target_col_name])))
+
+    print(patient_total_metric_df)
+
+    convert_df = patient_total_metric_df.pivot(index='Model', columns=target_col_name, values=value_col_name)
+
+    convert_df.to_csv(save_path, mode="w")
+    
+    print(convert_df)
+
+
+
+
 if __name__ == "__main__":
     ###  base setting for model testing ### 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
+    # convert_to_visual_assets ('./results_v1_new_robot_oob-mobilenet_v3_large-fold_1-last/Patient_Total_metric-ROBOT-results_v1_new_robot_oob-mobilenet_v3_large-fold_1-last.csv', 'mobilenet_v3_large', 'Confidence_Ratio', './results_v1_new_robot_oob-mobilenet_v3_large-fold_1-last/PIVOT/Patinet_CR-ROBOT-results_v1_new_robot_oob-mobilenet_v3_large-fold_1-last.csv')
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
     test_start()
     
