@@ -20,6 +20,18 @@ VI Hub를 통해 녹화되는 영상에 대해 환자의 몸속 영상인지, �
     - validation dataset (fold 1)
         - R_2, R_6, R_13, R_74, R_100, R_202, R_301, R_302, R_311, R_312, R_313, R_336, R_362, R_363, R_386, R_405, R_418, R_423, R_424, R_526
     
+---
+## Notice
+Class
+- Binary Classification
+  - In Body (0), Out of Body (1)
+
+Estimation Metrics
+- Over Estimation Ratio
+  - `FP / (FP+TP+FN)`
+- Confidence Ratio
+  - `(TP-FP) / (FP+TP+FN)`
+
 
 --- 
 ## Development Log
@@ -27,7 +39,7 @@ VI Hub를 통해 녹화되는 영상에 대해 환자의 몸속 영상인지, �
     1. Create init code
 ---
 
-## 초기 환경 설정
+## Init Environment Setting
 ```bash
 # nvidia-docker repository 등록
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
@@ -69,10 +81,6 @@ docker run -it --name oob_inference -v /home/hyeongyuc/code/OOB_RECOG:/OOB_RECOG
 ```shell
 watch -d -n 0.5 nvidia-smi
 ```
----
-## Notice
-Binary Classification
-- In Body (0), Out of Body (1)
 
 ---
 ## Input constraints
