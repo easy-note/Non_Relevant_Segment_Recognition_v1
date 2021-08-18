@@ -161,7 +161,7 @@ def make_oob_csv(anno_base_path, device):
                         inbody_list.append([target_img, 0])
             
     inbody_list = natsort.natsorted(inbody_list)
-    oob_list = natsort.natsorted(oob_list)
+    outbody_list = natsort.natsorted(outbody_list)
 
     # ## save
     # if 'V1' in anno_base_path:
