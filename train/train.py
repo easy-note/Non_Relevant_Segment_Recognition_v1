@@ -53,8 +53,7 @@ def train():
     ## data_path (.csv dir)
     parser.add_argument('--data_path', type=str, 
                         default = '/raid/img_db/oob_assets/V2/ROBOT')
-                        # default = '/hdd_ext/sdb1/OOB_Recog/oob_assets/V1/ROBOT')
-                        # default='/data/ROBOT/Img', help='Data path :)')
+                        # default = '/hdd_ext/sdb1/OOB_Recog/oob_assets/V1/ROBOT', help='Data path :)')
 
     ## log save path
     parser.add_argument('--log_path', type=str, 
@@ -173,6 +172,7 @@ def train():
 
     # model load
     model = CAMIO(config_hparams) # Trainer에서 사용할 모델 // add config_hparams 
+    # model = CAMIO.load_from_checkpoint('/OOB_RECOG/logs/ROBOT/OOB/0816-test-mobilenet_v3_large/ckpoint_0816-test-mobilenet_v3_large-model=mobilenet_v3_large-batch=32-lr=0.001-fold=1-ratio=3-epoch=24-last.ckpt')
 
     # model param save
     print('\n\n==== MODEL SUMMARY ====\n\n')

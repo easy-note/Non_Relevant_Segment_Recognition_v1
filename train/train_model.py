@@ -129,7 +129,6 @@ class CAMIO(pl.LightningModule):
                     torch.nn.Dropout(p=0.2, inplace=True),
                     torch.nn.Linear(self.num_ftrs, 2) #last_channel, num_classes
                 )
-
             elif self.backborn == 'mobilenet_v3_large' :
                 print('MODEL = MOBILENET_V3_LARGE')
                 self.model = models.mobilenet_v3_large(pretrained=True)

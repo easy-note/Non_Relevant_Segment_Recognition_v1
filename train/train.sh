@@ -20,12 +20,12 @@ do
 done
 END
 
-model_array=("mobilenet_v3_large")
+model_array=("efficientnet_b3")
 
 for ((i=0; i<${#model_array[@]}; i++))
 do
     python train.py \
-    --project_name "0816-test-mobilenet_v3_large" \
+    --project_name "efficientnet_b3" \
     --dataset "ROBOT" \
     --data_path "/raid/img_db/oob_assets/V2/ROBOT" \
     --max_epoch 50 \
