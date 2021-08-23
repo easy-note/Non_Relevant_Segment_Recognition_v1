@@ -36,14 +36,14 @@ from natsort import natsorted, index_natsorted, order_by_index
 
 data_transforms = {
     'test': transforms.Compose([
-        transforms.Resize(256),
+        transforms.Resize((256, 256)),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
 
     'gradcam' : transforms.Compose([
-        transforms.Resize(256),
+        transforms.Resize((256, 256)),
         transforms.CenterCrop(224)
     ]),
 }
@@ -64,7 +64,7 @@ def preprocessing_pil_img(im) :
 
     ### 2. processing img    
     # 1. resize : 50 %
-    processed_img = im.resize((int(width / 2), int(height / 2)))
+    processed_img = im.resize((int(width / 3), int(height / 3)))
 
     ### 3. return
     return processed_img
@@ -93,7 +93,7 @@ def img_seq_to_gif(img_path_list, results_path) :
     if len(images) <= 1 : # one img
         images[0].save(results_path)
     else :                # seq img
-        images[0].save(results_path, save_all=True, append_images=images[1:], optimize=False, duration=1500, loop=1) # 200 ms == 1/2 s, inf loop, no ommit img
+        images[0].save(results_path, save_all=True, append_images=images[1:], optimize=False, duration=2000, loop=1) # 1000 ms == 1s, inf loop, no ommit img
 
 
 # input|DataFrame = 'frame' 'time' truth' 'predict'
