@@ -29,6 +29,7 @@ import copy
 import natsort
 import yaml
 
+
 matplotlib.use('Agg')
 
 def time_to_idx(time, fps):
@@ -39,7 +40,7 @@ def time_to_idx(time, fps):
     return idx
 
 # check over frame and modify last annotation info
-def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False  
+def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False
     has_not_over_frame = False
     last_start, last_end = anno_info[-1]
     
@@ -53,7 +54,8 @@ def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 
 
     return has_not_over_frame, anno_info
 
-def check_anno_int(anno_info:list): # anno int = True, anno Float = False
+def check_anno_int(anno_info:list):
+    # anno int = True, anno Float = False
     is_int = True
     
     for start, end in anno_info : 
@@ -1019,21 +1021,22 @@ def make_data_sheet(save_dir):
     ROBOT_DATASET_1_VIDEO_ROOT_PATH = '/data1/HuToM/Video_Robot_cordname' # Dataset 1 - ROBOT
     ROBOT_DATASET_2_VIDEO_ROOT_PATH = '/data2/Video/Robot/Dataset2_60case' # Dataset 2 - ROBOT
     ROBOT_VIDEO_PATH_SHEET = {**get_video_path_for_robot(ROBOT_DATASET_1_VIDEO_ROOT_PATH, OOB_robot_40), **get_video_path_for_robot(ROBOT_DATASET_2_VIDEO_ROOT_PATH, OOB_robot_60)}
+    
 
     LAPA_DATASET_1_VIDEO_ROOT_PATH = '/data2/Public/IDC_21.06.25/Dataset1' # Dataset 1 - LAPA
     LAPA_DATASET_2_VIDEO_ROOT_PATH = '/data2/Public/IDC_21.06.25/Dataset2' # Dataset 2 - LAPA
     LAPA_VIDEO_PATH_SHEET = {**get_video_path(LAPA_DATASET_1_VIDEO_ROOT_PATH, OOB_lapa_40), **get_video_path(LAPA_DATASET_2_VIDEO_ROOT_PATH, OOB_lapa_60)}
 
     # 2. SET ANNOTATION PATH
-    ANNOTATION_V1_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V1'
+    ANNOTATION_V1_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2'
     ANNOTATION_V2_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2'
     
-    ROBOT_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_robot_list) # V1 - ROBOT
-    LAPA_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_lapa_list) # V1 - LAPA
+    ROBOT_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_robot_list) # V2 - ROBOT
+    LAPA_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_lapa_list) # V2 - LAPA
     
     # 3. SET DB PATH
-    ROBOT_DB_ROOT_PATH = '/data2/Public/OOB_Recog/img_db/ROBOT'
-    LAPA_DB_ROOT_PATH = '/data2/Public/OOB_Recog/img_db/LAPA'
+    ROBOT_DB_ROOT_PATH = '/data3/img_db/ROBOT'
+    LAPA_DB_ROOT_PATH = '/data2/Public/OOB_Recog/img_db_new/LAPA'
     
     ROBOT_DB_PATH_SHEET = get_DB_path(ROBOT_DB_ROOT_PATH, OOB_robot_list) # ROBOT
     LAPA_DB_PATH_SHEET = get_DB_path(LAPA_DB_ROOT_PATH, OOB_lapa_list) # LAPA
@@ -1067,28 +1070,163 @@ def load_data_sheet(data_sheet_dir):
 
 
 
+from subprocess import Popen, PIPE
+EXCEPTION_NUM = -100
+
+# save log 
+def save_log(log_txt, save_dir) :
+    print('=========> SAVING LOG ... | {}'.format(save_dir))
+    with open(save_dir, 'a') as f :
+        f.write(log_txt)
+
+
+def get_totalFrame_from_anno(annotation_path):
+    _, ext = os.path.splitext(annotation_path)
+
+    assert ext in ['.json'], 'CANT PARSING, SUPPOERT ANNOTATION FORMAT [.json] | TARGET FORMAT : {}'.format(ext)
+
+    totalFrame = EXCEPTION_NUM
+                    
+    if ext == '.json' : # json
+        with open(annotation_path) as json_file :
+                json_data = json.load(json_file)
+
+        # annotation totalframe
+        totalFrame = json_data['totalFrame']
+
+    # when annotation contents nothing, return -1
+    return totalFrame
+
+
+def get_video_length(video_path):
+    cmds_list = []
+
+    out = EXCEPTION_NUM
+
+    cmd = ['ffprobe', '-v', 'error', '-select_streams v:0', '-count_packets', '-show_entries stream=nb_read_packets', '-of', 'csv=p=0', video_path]
+    cmd = ' '.join(cmd)
+    cmds_list.append([cmd])
+    
+    print('GET VIDEO LENGTH USIGN FFPROBE : {}'.format(cmd), end= ' ')
+    
+    # procs_list = [subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE  , shell=True) for cmd in cmds_list]
+    procs_list = [Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True) for cmd in cmds_list]
+
+    for proc in procs_list:
+        print('ing ...')
+        # proc.wait() # communicate() # 자식 프로세스들이 I/O를 마치고 종료하기를 기다림
+        out = proc.communicate()
+        print("Processes are done")
+
+    return out
+
+
+
+
+
+def check_correspondence_db_with_anno(patients_yaml_path) : # paring from db, annotation info from patinets_yaml file
+
+    print('\n\n\n\t\t\t ### STARTING DEF [check_correspondence_db_with_anno] ### \n\n')
+
+    with open(patients_yaml_path, 'r') as f : # in yaml, list sequence is preserved, key:value sequence is not preserved
+        load_patients = yaml.load(f, Loader=yaml.FullLoader)
+    
+    patients = load_patients['patients']
+    patients_count = len(patients)
+
+    log_txt = '\n\n ===== ===== \t CHECK CORRESPONDENCE DB LENGTH WITH ANNOTATION TOTAL FRAME \t ===== ===== \n\n'
+    log_txt += '\n\nCHEKED PATINET COUNT : {}\n\n'.format(patients_count)
+    log_txt += 'PATIENT \t VIDEO \t DB_PATH \t ANNOTATION_PATH\n'
+    
+    save_log(log_txt, os.path.join('.', 'check_correspondence_db_with_anno_lapa.txt')) # save log
+
+
+    for idx in range(patients_count): 
+        patient = patients[idx]
+        patient_no = patient['patient_no']
+        patient_video = patient['patient_video']
+
+        # it will be append to info_dict
+        target_video_list = []
+        target_anno_list = []
+        target_inference_assets_list = []
+        target_DB_list = []
+
+        # enter to video info
+        for video_path_info in patient['path_info']:
+            video_name = video_path_info['video_name']
+            video_path = video_path_info['video_path']
+            annotation_path = video_path_info['annotation_path']
+            DB_path = video_path_info['DB_path']
+
+            db_length = -1
+
+            if DB_path != '': # exist DB path
+                all_db_img_path = glob.glob(DB_path + '/*.jpg') # all img file list
+                db_length = len(all_db_img_path)
+
+            totalFrame = EXCEPTION_NUM
+            
+            if annotation_path != '': # EVENT
+                totalFrame = get_totalFrame_from_anno(annotation_path)
+
+            # logging
+            log_txt = '{} \t {} \t {} \t {} \t {} \t {} \t {}'.format(patient_no, video_name, video_path, DB_path, annotation_path, db_length, totalFrame)
+            
+            # check correspondence length db len with totalFrame 
+            if db_length != totalFrame :
+                log_txt += '\t ===> UNMATCHED'
+                # get video length
+                video_len = get_video_length(video_path)
+
+                log_txt += '\t ({})'.format(video_len)
+
+            log_txt += '\n'
+
+            print(log_txt)
+            save_log(log_txt, os.path.join('.', 'check_correspondence_db_with_anno_lapa.txt')) # save log
 
 
 def main():
 
     # make DATA SHEET
-    make_data_sheet('./DATA_SHEET')
+    make_data_sheet('./DATA_SHEET/NEW_LAPA')
 
+    
+    ROBOT_CASE = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 'R_19', 'R_22', 'R_48', 'R_56', 'R_74',
+                'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301',
+                'R_302', 'R_303', 'R_304', 'R_305', 'R_310', 'R_311', 'R_312', 'R_313', 'R_320', 'R_321', 'R_324', 'R_329', 'R_334', 'R_336', 'R_338', 'R_339', 'R_340',
+                'R_342', 'R_345', 'R_346', 'R_347', 'R_348', 'R_349', 'R_355', 'R_357', 'R_358', 'R_362', 'R_363', 'R_369', 'R_372', 'R_376', 'R_378', 'R_379', 'R_386',
+                'R_391', 'R_393', 'R_399', 'R_400', 'R_402', 'R_403', 'R_405', 'R_406', 'R_409', 'R_412', 'R_413', 'R_415', 'R_418', 'R_419', 'R_420', 'R_423', 'R_424',
+                'R_427', 'R_436', 'R_445', 'R_449', 'R_455', 'R_480', 'R_493', 'R_501', 'R_510', 'R_522', 'R_523', 'R_526', 'R_532', 'R_533']
+
+    LAPA_CASE = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442', 'L_443',
+                'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550', 'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625',
+                'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676', 'L_310', 'L_311', 'L_330', 'L_333', 'L_367', 'L_370', 'L_377', 'L_379', 'L_385',
+                'L_387', 'L_389', 'L_391', 'L_393', 'L_400', 'L_402', 'L_406', 'L_408', 'L_413', 'L_414', 'L_415', 'L_418', 'L_419', 'L_427', 'L_428', 'L_430', 'L_433',
+                'L_434', 'L_436', 'L_439', 'L_471', 'L_473', 'L_475', 'L_477', 'L_478', 'L_479', 'L_481', 'L_482', 'L_484', 'L_513', 'L_514', 'L_515', 'L_517', 'L_537',
+                'L_539', 'L_542', 'L_543', 'L_545', 'L_546', 'L_556', 'L_558', 'L_560', 'L_563', 'L_565', 'L_568', 'L_569', 'L_572', 'L_574', 'L_575', 'L_577', 'L_580']
+
+    LAPA_CASE_40 = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442', 'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550', 'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676']
+    
     # load DATA SHEET
-    VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet('./DATA_SHEET')
+    VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet('./DATA_SHEET/NEW_LAPA')
 
-    patient_list = ['R_210', 'R_424', 'R_391', 'L_676', 'E_999']
+    patient_list = LAPA_CASE_40
 
     # make patinets aggregation file
-    make_patients_aggregate_info(patient_list, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, './patients_info.yaml')
+    # make_patients_aggregate_info(patient_list, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, './patients_info_robot.yaml')
 
     # print patinets aggregation file
-    print_patients_info_yaml('./patients_info.yaml')
+    # print_patients_info_yaml('./patients_info_robot.yaml')
     
     # convert patients aggregation file to info_dict
-    info_dict = patients_yaml_to_test_info_dict('./patients_info.yaml')
+    # info_dict = patients_yaml_to_test_info_dict('./patients_info_robot.yaml')
 
-    print(info_dict)
+    # check db length with annotation info 
+    check_correspondence_db_with_anno('./patients_info_robot.yaml')
+
+    # print(info_dict)
 
 
 
