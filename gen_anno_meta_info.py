@@ -25,7 +25,8 @@ import copy
 import natsort
 import yaml
 
-from test_info_dict import parsing_patient_video, pateint_video_sort, return_idx_is_str_in_list, check_anno_over_frame
+from test_info_dict import parsing_patient_video, pateint_video_sort, return_idx_is_str_in_list, check_anno_over_frame, load_yaml_to_dict
+from test import idx_to_time
 
 matplotlib.use('Agg')
 
@@ -276,8 +277,8 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
     print('{}\n'.format('=====' * 10))
 
     # init df
-    total_anno_meta_info_per_patient_df = pd.DataFrame(index=range(0, 0), columns=['Patient', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'IB_event_time', 'OOB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'OOB_event_duration'])
-    total_anno_meta_info_df = pd.DataFrame(index=range(0, 0), columns=['Video_name', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'IB_event_time', 'OOB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'OOB_event_duration'])
+    total_anno_meta_info_per_patient_df = pd.DataFrame(index=range(0, 0), columns=['Patient', 'Method', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'IB_event_time', 'OOB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'OOB_event_duration'])
+    total_anno_meta_info_df = pd.DataFrame(index=range(0, 0), columns=['Video_name', 'Method', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'IB_event_time', 'OOB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'OOB_event_duration'])
 
     # set USE VIDEO LIST
     USE_VIDEO_LIST = video_list.copy()
@@ -341,6 +342,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
                 if video_name == 'R_14_ch1_05':
                     anno_meta_info_per_each_video_dict = {
                         'Video_name':'R_14_ch1_05',
+                        'Method': 'R',
                         'totalFrame':4060,
                         'fps':30,
                         'IB_count':0,
@@ -371,6 +373,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
                 elif video_name == 'R_17_ch1_06':
                     anno_meta_info_per_each_video_dict = {
                         'Video_name':'R_17_ch1_06',
+                        'Method': 'R',
                         'totalFrame':1476,
                         'fps':30,
                         'IB_count':0,
@@ -420,6 +423,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
                 # per video info (each row)
                 anno_meta_info_per_each_video_dict = {
                     'Video_name':video_name,
+                    'Method': video_name.split('_')[0],
                     'totalFrame':EXCEPTION_NUM,
                     'fps':EXCEPTION_NUM,
                     'IB_count':EXCEPTION_NUM,
@@ -470,7 +474,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
                     print(anno_meta_info_per_each_video_df)
                 
                     # 7. append metric per video
-                    # columns=['Video_name', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'OOB_event_time', 'IB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'OOB_event_duration']
+                    # columns=['Video_name', 'Method', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'OOB_event_time', 'IB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'OOB_event_duration']
                     total_anno_meta_info_df = pd.concat([total_anno_meta_info_df, anno_meta_info_per_each_video_df], ignore_index=True) # should synk with col name
                     print(total_anno_meta_info_df)
                 
@@ -492,7 +496,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
                         print(anno_meta_info_per_each_video_df)
                     
                         # 7. append metric per video
-                        # columns=['Video_name', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'OOB_event_time', 'IB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame', 'end_frame', 'OOB_event_duration']
+                        # columns=['Video_name', 'Method', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'OOB_event_time', 'IB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame', 'end_frame', 'OOB_event_duration']
                         total_anno_meta_info_df = pd.concat([total_anno_meta_info_df, anno_meta_info_per_each_video_df], ignore_index=True) # should synk with col name
                         print(total_anno_meta_info_df)
 
@@ -510,6 +514,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
 
         anno_meta_info_per_each_patient_dict = {
             'Patient':patient,
+            'Method': patient.split('_')[0],
             'totalFrame':EXCEPTION_NUM,
             'fps':EXCEPTION_NUM,
             'IB_count':EXCEPTION_NUM,
@@ -543,7 +548,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
         # add more info
         patient_anno_meta_info_dict['Patient'] = patient
 
-        oob_duration_list = anno_meta_info_per_each_patient_dict['OOB_event_duration'] # per patient anno meta info
+        oob_duration_list = patient_anno_meta_info_dict['OOB_event_duration'] # per patient anno meta info
         anno_meta_info_per_each_patient_dict['OOB_event_time'] = frame_to_sec(anno_meta_info_per_each_patient_dict['OOB_count'], anno_meta_info_per_each_patient_dict['fps'])
         anno_meta_info_per_each_patient_dict['IB_event_time'] = frame_to_sec(anno_meta_info_per_each_patient_dict['IB_count'], anno_meta_info_per_each_patient_dict['fps'])
         anno_meta_info_per_each_patient_dict['total_time'] = frame_to_sec(anno_meta_info_per_each_patient_dict['totalFrame'], anno_meta_info_per_each_patient_dict['fps'])
@@ -563,7 +568,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
             print(anno_meta_info_per_each_patient_df)
         
             # 7. append metric per patient
-            # columns=['Patient', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'IB_event_time', 'OOB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'start_frame_time', 'end_frame_time', 'OOB_event_duration']
+            # columns=['Patient', 'Method', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'IB_event_time', 'OOB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'start_frame_time', 'end_frame_time', 'OOB_event_duration']
             total_anno_meta_info_per_patient_df = pd.concat([total_anno_meta_info_per_patient_df, anno_meta_info_per_each_patient_df], ignore_index=True) # should synk with col name
             print(total_anno_meta_info_per_patient_df)
         
@@ -585,7 +590,7 @@ def gen_anno_meta_info(anno_root_path, video_list, patient_list, results_dir) :
                 print(anno_meta_info_per_each_patient_df)
             
                 # 7. append metric per patient
-                # columns=['Patient', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'OOB_event_time', 'IB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'start_frame_time', 'end_frame_time','OOB_event_duration']
+                # columns=['Patient', 'Method', 'totalFrame', 'fps', 'IB_count', 'OOB_count', 'total_time', 'OOB_event_time', 'IB_event_time', 'OOB_event_cnt', 'annotation_start_point', 'annotation_end_point', 'start_frame_idx', 'end_frame_idx', 'start_frame_time', 'end_frame_time','OOB_event_duration']
                 total_anno_meta_info_per_patient_df = pd.concat([total_anno_meta_info_per_patient_df, anno_meta_info_per_each_patient_df], ignore_index=True) # should synk with col name
                 print(total_anno_meta_info_per_patient_df)
 
@@ -687,16 +692,189 @@ def aggregation_annotation_info_for_patient(patient_total_frame_list, patient_an
     return patient_anno_meta_info_dict
 
 
+
+#### for save still cut of short oob event
+# from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE
+
+import natsort
+from natsort import natsorted
+from visual_gradcam import img_seq_to_gif
+
+
+
+def still_cut_of_oob_event(video_path, fps, start_idx, end_idx, margin, result_dir):
+
+    cmds_list = []
+
+    stdin_r, stdin_w = os.pipe()
+    stdout_r, stdout_w = os.pipe()
+
+    video_name = os.path.splitext(os.path.basename(video_path))[0]
+    os.makedirs(result_dir, exist_ok=True)
+
+    # make all cmd
+    '''
+    for target_idx in range(start_idx-margin, end_idx+margin):
+
+        out_path = os.path.join(result_dir, '{}-fps_{}-frame_{:010d}-time_{}.jpg'.format(video_name, fps, target_idx, idx_to_time(target_idx, fps)))
+
+        meta_info = '{} | fps = {} | frame = {:010d} | sec = {:.2f}'.format(video_name, fps, target_idx, frame_to_sec(target_idx, fps))
+        # meta_info = 'HELLO'
+
+        # ffmpeg -i /data2/Public/IDC_21.06.25/Dataset1/01_G_01_L_301_xx0_01.MP4 -vframes 1 -vf "fps=30,select=eq(n\,222)" -vsync 0 ./ffmpeg/x.jpg
+        if (target_idx >= start_idx) and (target_idx <= end_idx) : # emphasis
+            cmd = 'ffmpeg -i {} -vframes 1 -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf: text=\[OOB\] - ({}) : x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=30: box=1: boxcolor=red: boxborderw=5,fps={},select=eq(n\,{})" -vsync 0 {} -y'.format(video_path, meta_info, fps, target_idx, out_path)
+            pass
+        
+        else :
+            # cmd = 'ffmpeg -i {} -vframes 1 -vf "fps={},select=eq(n\,{})" -vsync 0 {}'.format(video_path, fps, target_idx, out_path)
+            cmd = 'ffmpeg -i {} -vframes 1 -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf: text=\[IB\] - ({}) : x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=30: box=1: boxcolor=white: boxborderw=5,fps={},select=eq(n\,{})" -vsync 0 {} -y'.format(video_path, meta_info, fps, target_idx, out_path)
+            pass
+            
+        cmds_list.append([cmd])
+        print(cmd)
+    '''
+
+    cmds_list = []
+
+    pre_frame_idx = (start_idx - margin, start_idx - 1)
+    post_frame_idx = (end_idx + 1, end_idx + margin)
+    pre_frame_cnt = pre_frame_idx[1] - pre_frame_idx[0] + 1
+    post_frame_cnt = post_frame_idx[1] - post_frame_idx[0] + 1
+    target_frame_cnt = end_idx - start_idx + 1
+
+    # make cmd (pre)
+    text = "'" + '[{}]-({} | {}fps | {} | {})'.format('IB', video_name, fps, '%{'+'frame_num'+'}', '%{'+'pts \:hms'+'}' + "'")
+    out_path = os.path.join(result_dir, '{}-frame_'.format(video_name) + '%d.jpg')
+    cmd = ['ffmpeg', '-i', video_path, '-vframes', str(pre_frame_cnt), '-vf', '"' + 'drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf: text={}:x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=30: box=1: boxcolor=white: boxborderw=5'.format(text) + ',' + 'fps=30' + ',' + "select='between(n\,{},{})'".format(pre_frame_idx[0], pre_frame_idx[1]) + '"', '-vsync', '0', '-start_number', str(pre_frame_idx[0]), out_path, '-y']
+    cmd = ' '.join(cmd)
+    cmd = cmd.replace("\'", "'")
+    cmd = cmd.replace("\\\\", "\\")
+    cmds_list.append([cmd])
+
+    print(cmd)
+
+    # make cmd (target)
+    text = "'" + '[{}]-({} | {}fps | {} | {})'.format('OOB', video_name, fps, '%{'+'frame_num'+'}', '%{'+'pts \:hms'+'}' + "'")
+    out_path = os.path.join(result_dir, '{}-frame_'.format(video_name) + '%d.jpg')
+    cmd = ['ffmpeg', '-i', video_path, '-vframes', str(target_frame_cnt), '-vf', '"' + 'drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf: text={}:x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=30: box=1: boxcolor=red: boxborderw=5'.format(text) + ',' + 'fps=30' + ',' + "select='between(n\,{},{})'".format(start_idx, end_idx) + '"', '-vsync', '0', '-start_number', str(start_idx), out_path, '-y']
+    cmd = ' '.join(cmd)
+    cmd = cmd.replace("\'", "'")
+    cmd = cmd.replace("\\\\", "\\")
+    cmds_list.append([cmd])
+
+    print(cmd)
+
+    # make cmd (post)
+    text = "'" + '[{}]-({} | {}fps | {} | {})'.format('IB', video_name, fps, '%{'+'frame_num'+'}', '%{'+'pts \:hms'+'}' + "'")
+    out_path = os.path.join(result_dir, '{}-frame_'.format(video_name) + '%d.jpg')
+    cmd = ['ffmpeg', '-i', video_path, '-vframes', str(post_frame_cnt), '-vf', '"' + 'drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf: text={}:x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=30: box=1: boxcolor=white: boxborderw=5'.format(text) + ',' + 'fps=30' + ',' + "select='between(n\,{},{})'".format(post_frame_idx[0], post_frame_idx[1]) + '"', '-vsync', '0', '-start_number', str(post_frame_idx[0]), out_path, '-y']
+    cmd = ' '.join(cmd)
+    cmd = cmd.replace("\'", "'")
+    cmd = cmd.replace("\\\\", "\\")
+    cmds_list.append([cmd])
+
+    print(cmd)
+    
+    # procs_list = [subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE  , shell=True) for cmd in cmds_list]
+    procs_list = [Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True) for cmd in cmds_list]
+    for proc in procs_list:
+        print('Cutting ...')
+        # proc.wait() # communicate() # 자식 프로세스들이 I/O를 마치고 종료하기를 기다림
+        out = proc.communicate()
+        print(out)
+        '''
+        try : 
+            out, err = proc.communicate(timeout = 10)
+            # print(out.strip())
+            # print(err.strip())
+        
+        except subprocess.TimeoutExpired: 
+            # print(out.strip())
+            # print(err.strip())
+            proc.terminate()
+            proc.wait()
+
+        '''
+
+    
+        print("Processes are done")
+    
+
+
+def collect_oob_event(anno_meta_info_csv_path, VIDEO_PATH_SHEET_path, results_dir, min_event_duration = 0.0, max_event_duration = 2.0):
+    # columns=[Video_name, totalFrame, fps, IB_count, OOB_count, total_time, IB_event_time, OOB_event_time, OOB_event_cnt, annotation_start_point, annotation_end_point, start_frame_idx,end_frame_idx, OOB_event_duration, start_frame_time, end_frame_time]
+
+    VIDEO_PATH_SHEET = load_yaml_to_dict(VIDEO_PATH_SHEET_path)
+    os.makedirs(results_dir, exist_ok=True)
+
+    anno_meta_info_df = pd.read_csv(anno_meta_info_csv_path)
+
+    # check oob duration
+    over_min_event_duration = anno_meta_info_df['OOB_event_duration'] > min_event_duration
+    under_max_event_duration = anno_meta_info_df['OOB_event_duration'] < max_event_duration
+
+
+    # extract target df
+    target_df = anno_meta_info_df[over_min_event_duration & under_max_event_duration]
+
+    target_df = target_df.sort_values(['OOB_event_duration'], ascending=[True])
+    print(target_df)
+
+    for idx, row in target_df.iterrows():
+        print(row)
+        
+        video_name = row['Video_name']
+        fps = row['fps']
+        start_frame_idx = row['start_frame_idx']
+        end_frame_idx = row['end_frame_idx']
+        
+        oob_event_duration = row['OOB_event_duration']
+        margin = int(fps * 2) # 2 sec
+        
+        target_video_path = VIDEO_PATH_SHEET.get(video_name, '0')
+        target_result_dir = os.path.join(results_dir, video_name, '{}-{}'.format(idx_to_time(start_frame_idx, fps), idx_to_time(end_frame_idx, fps)))
+
+        os.makedirs(target_result_dir, exist_ok=True)
+        
+
+        print('\n--- --- --- ---\n')
+        print('VIDEO_NAME : {} | TARGET VIDEO : {}'.format(video_name, target_video_path))
+        print('\n--- --- --- ---\n')
+
+        # still cut oob event
+        still_cut_of_oob_event(target_video_path, fps, start_frame_idx, end_frame_idx, margin, target_result_dir)
+
+        # make img to seqeuence gif
+        # all_results_img_path = natsorted(glob.glob(target_result_dir +'/*.{}'.format('jpg')), key=lambda x : os.path.splitext(os.path.basename(x))[0].split('-')[2], alg=natsort.ns.INT) # 위에서 저장한 img 모두 parsing
+        all_results_img_path = natsorted(glob.glob(target_result_dir +'/*.{}'.format('jpg')), key=lambda x : os.path.splitext(os.path.basename(x))[0].split('-')[-1], alg=natsort.ns.INT) # 위에서 저장한 img 모두 parsing
+
+        img_seq_to_gif(all_results_img_path, os.path.join(target_result_dir, '{}-start-{}-end-{}-duration-{}.gif'.format(video_name, start_frame_idx, end_frame_idx, oob_event_duration))) # seqence 이므로 sort 하여 append
+
+        print('\n\n=== === === === ===\n\n')
+
+    
+
+
+
 def main():
-
+    
     # make_data_sheet('./DATA_SHEET')
-
+    '''
     ANNOTATION_V2_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2'
     results_dir = './DATA_SHEET'
     
     print(len(OOB_robot_list + OOB_lapa_list), len(OOB_robot_list), len(OOB_lapa_list))
     
     gen_anno_meta_info(ANNOTATION_V2_ROOT_PATH, OOB_robot_list + OOB_lapa_list, ROBOT_CASE + LAPA_CASE, results_dir)
+    '''
+
+    anno_meta_info_csv_path = './DATA_SHEET/ROBOT_V2_anno_meta_info_per_video.csv'
+    results_dir = './OOB_EVENT_NEW_2_5'
+    VIDEO_PATH_SHEET_path = './DATA_SHEET/VIDEO_PATH_SHEET.yaml'
+
+    collect_oob_event(anno_meta_info_csv_path, VIDEO_PATH_SHEET_path, results_dir, min_event_duration=2.0, max_event_duration=5.0)
 
 
     
