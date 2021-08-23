@@ -50,7 +50,9 @@ from PIL import ImageFilter
 # 21.06.25 HG 추가 - for FP frame Gradcam 
 from visual_gradcam import get_oob_grad_cam_from_video, get_oob_grad_cam_img, img_seq_to_gif, return_group
 
-from visual_model import visual_metric_per_patients
+from visual_model import visual_metric_per_patients_ver2
+
+from subprocess import Popen, PIPE
 
 matplotlib.use('Agg')
 EXCEPTION_NUM = -100 # full TN
@@ -111,7 +113,7 @@ args, _ = parser.parse_known_args()
 # data transforms (output: tensor)
 data_transforms = {
     'test': transforms.Compose([
-        transforms.Resize(256),
+        transforms.Resize((256,256)),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -259,9 +261,9 @@ def save_video_frame_for_loaded_VR(video, frame_list, save_path, video_name, vid
 
         pil_image.save(fp=os.path.join(save_path, '{}-{:010d}-{}.jpg'.format(video_name, frame_idx, idx_to_time(frame_idx, video_fps))))
 
-# video index == 0 => DB idx == 1
+# video index == 0 => DB idx == 0
 def idx_to_DB_idx(idx):
-    return idx+1
+    return idx
 
 # DB_path : ~/L_301/01_G_01_L_301_xx0_01
 def save_DB_frame(DB_path, frame_list, save_path, video_fps) : # for DB rule
@@ -420,6 +422,60 @@ def save_log(log_txt, save_dir) :
     print('=========> SAVING LOG ... | {}'.format(save_dir))
     with open(save_dir, 'a') as f :
         f.write(log_txt)
+
+
+# parsing video info from ffmpeg
+def get_video_fps(video_path):
+    cmds_list = []
+
+    fps = EXCEPTION_NUM
+    cmd = ['ffmpeg', '-i', video_path, '2>&1', '|', 'sed', '-n', '"s/.*, \(.*\) fp.*/'+'\\'+'1/p"']
+    # sed -n "s/.*, \(.*\) fp.*/\1/p"
+    # cmd = ['ffprobe', '-v', 'error', '-select_streams v:0', '-count_packets', '-show_entries stream=nb_read_packets', '-of', 'csv=p=0', video_path]
+    cmd = ' '.join(cmd)
+    cmds_list.append([cmd])
+    
+    print('GET VIDEO FPS USIGN FFMPEG : {}'.format(cmd), end= ' ')
+    
+    # procs_list = [subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE  , shell=True) for cmd in cmds_list]
+    procs_list = [Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True) for cmd in cmds_list]
+
+    for proc in procs_list:
+        print('ing ...')
+        # proc.wait() # communicate() # 자식 프로세스들이 I/O를 마치고 종료하기를 기다림
+        out = proc.communicate()
+        print("Processes are done")
+
+    fps = out[0].decode('UTF-8').rstrip() # byte to str
+    fps = float(fps)
+    return fps
+
+
+def get_video_length(video_path):
+    cmds_list = []
+
+    video_len = EXCEPTION_NUM
+
+    cmd = ['ffprobe', '-v', 'error', '-select_streams v:0', '-count_packets', '-show_entries stream=nb_read_packets', '-of', 'csv=p=0', video_path]
+    cmd = ' '.join(cmd)
+    cmds_list.append([cmd])
+    
+    print('GET VIDEO LENGTH USIGN FFPROBE : {}'.format(cmd), end= ' ')
+    
+    # procs_list = [subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE  , shell=True) for cmd in cmds_list]
+    procs_list = [Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True) for cmd in cmds_list]
+
+    for proc in procs_list:
+        print('ing ...')
+        # proc.wait() # communicate() # 자식 프로세스들이 I/O를 마치고 종료하기를 기다림
+        out = proc.communicate()
+        print("Processes are done")
+
+    video_len = out[0].decode('UTF-8').rstrip() # byte to str
+    video_len = int(video_len)
+    return video_len
+
+
 
 
 def test_start() :
@@ -775,6 +831,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             fp_frame_saved_dir_dict[video_name] = fp_frame_saved_dir
 
             # using VR(len) & CV (fps) # 21.06.10 HG Change to VideoRecoder
+            '''
             video_cap = cv2.VideoCapture(video_path)
             video_fps = video_cap.get(cv2.CAP_PROP_FPS)
 
@@ -784,6 +841,11 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
             video = VideoReader(video_path, ctx=cpu())
             video_len = len(video)
             # del video, video_cap
+            '''
+
+            # using ffmpeg
+            video_len = get_video_length(video_path)
+            video_fps = get_video_fps(video_path)
 
             print('\tTarget video : {} | Total Frame : {} | Video FPS : {} '.format(video_name, video_len, video_fps))
             print('\tAnnotation Info : {}'.format(anno_info))
@@ -1136,7 +1198,7 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
                 save_DB_frame(DB_path, list(metric_frame['FP_df']['frame']), fp_frame_saved_dir, video_fps) # Saving FP
                 save_DB_frame(DB_path, list(metric_frame['FN_df']['frame']), fn_frame_saved_dir, video_fps) # Saving FN
 
-            del video # delete Video
+            # del video # delete Video
 
             # Evalutation Metric per VIDEO
             # CONFIDENCE_metric | correspondence | UN_correspondence | OVER_estimation | UNDER_estimtation | FN | FP | TN | TP | TOTAL
@@ -1395,8 +1457,8 @@ def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수
     ######  METRIC VISUAL PER PATIENTS  ######
     metric_visual_csv_path = os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.csv'.format(args.mode, os.path.basename(results_save_dir)))
     metric_visual_results_path = os.path.join(results_save_dir, 'Patient_Total_metric-{}-{}.png'.format(args.mode, os.path.basename(results_save_dir)))
-    metric_visual_title = 'Metric per Patients'
-    visual_metric_per_patients(metric_visual_csv_path, args.model, metric_visual_title, metric_visual_results_path)
+    metric_visual_title = 'Metric per Patients ({})'.format(args.model)
+    visual_metric_per_patients_ver2(metric_visual_csv_path, metric_visual_title, metric_visual_results_path)
     ######  METRIC VISUAL PER PATIENTS  ######
     ###########################################
 
