@@ -12,12 +12,36 @@ import os
 import math
 import copy
 
+from glob import glob
+from natsort import natsorted
+
+from skimage.morphology import binary_erosion, binary_dilation, opening, closing, erosion, dilation
+
 
 EXCEPTION_NUM = -100 # full TN
 
 SUPPORT_MODEL = ['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
                     'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
-                    'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7']
+                    'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
+					'median-1', 'median-3', 'median-5', 'median-7', 'median-9', 'median-11', 'median-15', 'median-21', 'median-29', 'median-35', 'median-45', 'median-59',
+					'morphology-1', 'morphology-3', 'morphology-6',
+					'morphology-1-median-5', 'morphology-1-median-9', 'morphology-1-median-15', 'morphology-1-median-21', 'morphology-1-median-29', 'morphology-1-median-35', 'morphology-1-median-45', 'morphology-1-median-59',
+					'morphology-3-median-5', 'morphology-3-median-9', 'morphology-3-median-15', 'morphology-3-median-21', 'morphology-3-median-29', 'morphology-3-median-35', 'morphology-3-median-45', 'morphology-3-median-59',
+					'morphology-6-median-5', 'morphology-6-median-9', 'morphology-6-median-15', 'morphology-6-median-21', 'morphology-6-median-29', 'morphology-6-median-35', 'morphology-6-median-45', 'morphology-6-median-59',
+					'median-5-morphology-1', 'median-9-morphology-1', 'median-15-morphology-1', 'median-21-morphology-1', 'median-29-morphology-1', 'median-35-morphology-1', 'median-45-morphology-1', 'median-59-morphology-1',
+					'median-5-morphology-3', 'median-9-morphology-3', 'median-15-morphology-3', 'median-21-morphology-3', 'median-29-morphology-3', 'median-35-morphology-3', 'median-45-morphology-3', 'median-59-morphology-3',
+					'median-5-morphology-6', 'median-9-morphology-6', 'median-15-morphology-6', 'median-21-morphology-6', 'median-29-morphology-6', 'median-35-morphology-6', 'median-45-morphology-6', 'median-59-morphology-6',
+					'consistency-2-2', 'consistency-2-4', 'consistency-2-6',
+					'consistency-6-2', 'consistency-6-4', 'consistency-6-6',
+					'consistency-12-2', 'consistency-12-4', 'consistency-12-6',
+					'opening-1-closing-1', 'opening-1-closing-2', 'opening-1-closing-3',
+					'opening-2-closing-1', 'opening-2-closing-2', 'opening-2-closing-3',
+					'opening-3-closing-1', 'opening-3-closing-2', 'opening-3-closing-3', 'opening-3-closing-6', 'opening-3-closing-9', 'opening-3-closing-12', 'opening-3-closing-15', 'opening-3-closing-18',
+					'opening-6-closing-3', 'opening-6-closing-6', 'opening-6-closing-9', 'opening-6-closing-12', 'opening-6-closing-15', 'opening-6-closing-18',
+					'opening-9-closing-3', 'opening-9-closing-6', 'opening-9-closing-9', 'opening-9-closing-12', 'opening-9-closing-15', 'opening-9-closing-18',
+					'opening-12-closing-3', 'opening-12-closing-6', 'opening-12-closing-9', 'opening-12-closing-12', 'opening-12-closing-15', 'opening-12-closing-18',
+					'opening-15-closing-3', 'opening-15-closing-6', 'opening-15-closing-9', 'opening-15-closing-12', 'opening-15-closing-15', 'opening-15-closing-18',
+					'opening-18-closing-3', 'opening-18-closing-6', 'opening-18-closing-9', 'opening-18-closing-12', 'opening-18-closing-15', 'opening-18-closing-18']
 
 
 parser = argparse.ArgumentParser()
@@ -41,15 +65,32 @@ parser.add_argument('--INFERENCE_STEP', type=int, help='Original Experimental Se
 parser.add_argument('--WINDOW_SIZE', type=int, help='How many frame count in One section')
 parser.add_argument('--OVERLAP_SECTION_NUM', type=int, help='Overap Count for Section number inference results save path, 1 is non-overlap')
 
-parser.add_argument('--filter', type=str, nargs='?', choices=['mean', 'median'], help='only predict results will be apply')
+parser.add_argument('--filter', type=str, nargs='+', choices=['median', 'opening', 'closing'], help='only predict results will be apply')
 
-parser.add_argument('--kernel_size', type=int, default=1, choices=[1,3,5,7,9,11,19], help='filter kernel size')
+parser.add_argument('--kernel_size', type=int, default=1, nargs='+', choices=[1,2,3,4,5,6,7,9,11,12,13,15,17,18,19,21,35,29,45,59], help='filter kernel size')
+parser.add_argument('--ignore_kernel_size', type=int, default=0, choices=[2,4,6], help='ignore filter kernel size [consistency]')
 
 args, _ = parser.parse_known_args()
 
 def encode_list(s_list): # run-length encoding from list
     return [[len(list(group)), key] for key, group in groupby(s_list)] # [[length, value], [length, value]...]
 
+
+# 30fps = 30's predict frame in 1 sec
+# 6fps = 6's predict frame in 1 sec
+# 1fps = 1's predict frame in 1 sec
+# 0.5 fps = 2's predict frame in 1 sec
+def time_to_filtersize(filter_sec, fps):
+	'''
+	filter_time = float (second)
+	fps = float
+	'''
+	filter_size = EXCEPTION_NUM
+	
+	filter_size = filter_sec * fps
+
+	return int(filter_size)
+	
 
 def medfilter (x, k):
 	"""Apply a length-k median filter to a 1D array x.
@@ -99,9 +140,76 @@ def meanfilter (x, k):
 		y[-j:,-(i+1)] = x[-1]
 	return np.mean (y, axis=1)
 
-def apply_filter(assets, filter_type:str, kernel_size) : # input = numpy, kernel should be odd
 
-	print('\n\n\t\t ===== APPLYING FILTER | type : {} | kernel_size = {} =====\n\n'.format(filter_type, kernel_size))
+def consistencyfilter(x, k, ignore_k=0):
+	run_length = encode_list(x)
+	print(run_length)
+
+	total_len = 0
+
+	IB_CLASS, OOB_CLASS  = (0,1)
+	CONVERTED_FLAG = OOB_CLASS - IB_CLASS
+
+	convert_run_length = run_length.copy()
+
+	# 1. convert OOB chunk under count of k to IB chunk
+	for idx, (length, group) in enumerate(run_length) : 
+		if group == OOB_CLASS : # if OOB chunk,
+			if length <= k : # is unber count of k
+				convert_run_length[idx] = [length, IB_CLASS]
+
+		total_len += length 
+
+	# 2. check converted chunk
+	converted_chunk = np.array(run_length) - np.array(convert_run_length) # if converted [0 1], not converted [0 0]
+	print(converted_chunk)
+
+	# 3. unconverted (redefine ignore block) - if converted chunk is in zig-zag, ignore filtering
+	for idx, (_, flags) in enumerate(converted_chunk) : 
+		if flags == CONVERTED_FLAG:
+			pre_length, pre_group = (ignore_k + 10, ignore_k + 10)
+			post_length, post_group = (ignore_k + 10, ignore_k + 10)
+
+			if idx == 0 : # first chunk of sequence
+				post_length, post_group = run_length[idx + 1]
+
+			elif idx == len(converted_chunk) : # last chunk of sequence
+				pre_length, pre_group = run_length[idx - 1]
+
+			else : 
+				pre_length, pre_group = run_length[idx - 1]
+				post_length, post_group = run_length[idx + 1]
+
+			# check zig-zag if ignore_k = 3, [0, 2] / [k, CONVERTED(OOB CLASS -> IB CLASS)] / [0, 9] ==> [0, 2] / [k, UN CONVERTED (IB CLASS -> OOB CLASS)] / [0, 9]
+			if (pre_length <= ignore_k) or  (post_length <= ignore_k):
+				target_chunk_length, target_chunk_group = run_length[idx]
+				convert_run_length[idx] = [target_chunk_length, target_chunk_group]
+
+	final_results = decode_list(convert_run_length)
+	final_results = np.array(final_results)
+	
+	return final_results
+
+	
+
+
+def decode_list(run_length): # run_length -> [0,1,1,1,1,0 ...]
+	decode_list = []
+
+	for length, group in run_length : 
+		decode_list += [group] * length
+	
+	# print(decode_list)
+
+	return decode_list
+	
+	
+
+def apply_filter(assets, filter_type:str, kernel_size, ignore_kernel_size) : # input = numpy, kernel should be odd
+
+	assert filter_type in ['median', 'opening', 'closing', 'consistency'], "NOT SUPPORT FILTER"
+
+	print('\n\n\t\t ===== APPLYING FILTER | type : {} | kernel_size = {} | ignore_kernel_size = {} =====\n\n'.format(filter_type, kernel_size, ignore_kernel_size))
 
 	results = -1 # reutrn
 	
@@ -116,9 +224,97 @@ def apply_filter(assets, filter_type:str, kernel_size) : # input = numpy, kernel
 
 	elif filter_type == 'mean' :
 		pass
+	
+	elif filter_type == 'opening' :
+		results = openingfilter(assets, kernel_size) # 1D numpy
+		results = results.astype(assets.dtype) # convert to original dtype
+
+	elif filter_type == 'closing' :
+		results = closingfilter(assets, kernel_size) # 1D numpy
+		results = results.astype(assets.dtype) # convert to original dtype
+
+	elif filter_type == 'consistency' :
+		results = consistencyfilter(assets, kernel_size, ignore_kernel_size) # 1D numpy # add ignore_kernel_size
+		results = results.astype(assets.dtype) # convert to original dtype
 
 	return results # numpy
 
+
+
+
+def openingfilter(x, iter_count): # x:1d-numpy, count : 1*2 = 2 frame, 2*2 = 4 frame, 2*3 = 6 frame 
+	out = np.copy(x)
+
+	# opening
+	for i in range(iter_count):	
+		out = erosion(out)
+	
+	for j in range(iter_count):
+		out = dilation(out)
+
+	return out
+
+def closingfilter(x, iter_count): # x:1d-numpy, count : 1*2 = 2 frame, 2*2 = 4 frame, 2*3 = 6 frame 
+	out = np.copy(x)
+
+	# closing
+	for i in range(iter_count):	
+		out = dilation(out)
+	
+	for j in range(iter_count):
+		out = erosion(out)
+
+	return out
+
+
+
+def aggregation_post_processing_results(total_eval_root_path):
+	patient_eval_path_list = glob(os.path.join(total_eval_root_path, '*'))
+	patient_eval_path_list = natsorted(patient_eval_path_list)
+
+	aggregation_CR_path = os.path.join(total_eval_root_path, 'aggregation_CR.csv')
+	aggregation_OR_path = os.path.join(total_eval_root_path, 'aggregation_OR.csv')
+
+	
+	aggregation_CR_df = pd.DataFrame()
+	aggregation_OR_df = pd.DataFrame()
+	
+	# parsing only CR, OR
+	for patient_eval_path in patient_eval_path_list:
+		
+		if not os.path.isdir(patient_eval_path):
+			continue
+
+		patient_name = os.path.basename(patient_eval_path)
+
+		print(patient_name)
+		evaluaion_df_path = os.path.join(patient_eval_path, 'mobilenet_v3_large-InferenceStep_30-{}-Evaluation.csv'.format(patient_name))
+
+		evaluation_df = pd.read_csv(evaluaion_df_path)
+		print(evaluation_df)
+
+		model = evaluation_df['Model']
+		CR = evaluation_df['CONFIDENCE_metric']
+		OR = evaluation_df['OVER_estimation']
+		
+		# append CR,OR in aggregation df
+		aggregation_CR_df['Model'] = model.values
+		aggregation_CR_df[patient_name] = CR.values
+
+		aggregation_OR_df['Model'] = model.values
+		aggregation_OR_df[patient_name] = OR.values
+
+		
+	print(aggregation_CR_df)
+	print(aggregation_OR_df)
+
+	# save aggregation df
+	aggregation_CR_df.to_csv(aggregation_CR_path, mode='w')
+	aggregation_OR_df.to_csv(aggregation_OR_path, mode='w')
+
+
+
+		
 
 # for text on bar
 def present_text(ax, bar, text, color='black'):
@@ -210,11 +406,31 @@ def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
 	return EVAL_metric
 
 
+def filter_parity_check(filter_list, filter_kernel_size_list):
+
+	parity_check = False
+
+	if len(filter_list) == len(filter_kernel_size_list):
+			parity_check = True
+	else :
+		print('NOT PAIR OF ARGS LENGTH | filter : {}, kernel_size : {}'.format(filter_list, filter_kernel_size_list))
+
+
+	return parity_check
+	
 
 def main():
 
-	print(json.dumps(args.__dict__, indent=2))
+	print(json.dumps(args.__dict__, indent=2))	
 
+	# args parity check (filter)
+	# assert filter_parity_check(args.filter, args.kernel_size) , "filter's args are Out of Rule [Please check filter's args rule]"
+
+	print(args.filter)
+	print(args.kernel_size)
+
+	# make results dir
+	os.makedirs(args.results_save_dir, exist_ok=True)
 
 	#### 1. bar plot으로 나타낼 데이터 입력
 	IB, OOB = (0,1) # class index
@@ -239,15 +455,27 @@ def main():
 	# pairwise read
 	for y_name, inf_path in zip(args.model_name, args.model_infernce_path) :
 		p_data = pd.read_csv(inf_path)['predict']
+		
+		
+		print('BEFORE')
+		print(p_data)
 
 		# filter processing		
 		if args.filter is not None :
-			p_data = apply_filter(p_data.to_numpy(), args.filter, args.kernel_size) # 1D numpy, 'filter', kernel_size
-			p_data = pd.Series(p_data)
+			for filter_name, filter_size in zip(args.filter, args.kernel_size) : # filter sequence
+				p_data = apply_filter(p_data.to_numpy(), filter_name, filter_size, args.ignore_kernel_size) # 1D numpy, 'filter', kernel_size, ignore_filter_size
+				p_data = pd.Series(p_data)
 
-		
+		print('AFTER')
+		print(p_data)
 		predict_data[y_name] = p_data
 
+		# save post processing df
+		'''
+		p_df = pd.read_csv(inf_path)
+		p_df['predict'] = p_data
+		p_df.to_csv(os.path.join(args.results_save_dir, '{}-{}-Inference-post.csv'.format(args.title_name, args.sub_title_name)), mode='w') # mode='w', 'a' 
+		'''
 
 	print(predict_data)
 	
@@ -350,7 +578,7 @@ def main():
 		Evaluation_metric = calc_OOB_Evaluation_metric(len(metric_frame_df['FN_df']), len(metric_frame_df['FP_df']), len(metric_frame_df['TN_df']), len(metric_frame_df['TP_df']))
 		Evaluation_df = df(Evaluation_metric, index=[0])
 
-		Evaluation_df.insert(0, 'kernel_size', args.kernel_size)
+		# Evaluation_df.insert(0, 'kernel_size', args.kernel_size)
 		Evaluation_df.insert(0, 'Model', model)
 
 		print(Evaluation_df)
@@ -626,4 +854,12 @@ def section_over_metric_plt(Over_metric_per_section_df, model_list, ax, title) :
 	ax.legend(model_list, loc='center left', bbox_to_anchor=(1,0.5), shadow=True, ncol=1)
 
 if __name__=='__main__':
-	main()
+	# main()
+	total_eval_root_path = '/OOB_RECOG/POST_PROCESSING/robot-oob-v2-mobilenet_v3_large-1fps/total-median'
+	aggregation_post_processing_results(total_eval_root_path)
+	
+	
+
+
+
+
