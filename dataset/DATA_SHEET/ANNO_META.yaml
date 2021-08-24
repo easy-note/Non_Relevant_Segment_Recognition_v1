@@ -1,0 +1,3484 @@
+L_301_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_301_xx0_01_OOB_12.json
+- total_frame: 51360
+- frame_rate: 59.94
+L_301_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_301_xx0_02_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_301_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_301_xx0_03_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_301_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_301_xx0_04_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_301_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_301_xx0_05_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_301_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_301_xx0_06_OOB_12.json
+- total_frame: 51180
+- frame_rate: 59.94
+L_303_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_303_xx0_01_OOB_12.json
+- total_frame: 94470
+- frame_rate: 59.94
+L_303_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_303_xx0_02_OOB_12.json
+- total_frame: 94950
+- frame_rate: 59.94
+L_303_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_303_xx0_03_OOB_12.json
+- total_frame: 94980
+- frame_rate: 59.94
+L_303_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_303_xx0_04_OOB_12.json
+- total_frame: 94830
+- frame_rate: 59.94
+L_303_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_303_xx0_05_OOB_12.json
+- total_frame: 94950
+- frame_rate: 59.94
+L_303_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_303_xx0_06_OOB_12.json
+- total_frame: 86700
+- frame_rate: 59.94
+L_305_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_01_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_305_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_02_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_305_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_03_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_305_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_04_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_305_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_05_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_305_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_06_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_305_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_07_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_305_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_08_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_305_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_09_OOB_12.json
+- total_frame: 51270
+- frame_rate: 59.94
+L_305_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_10_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_305_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_11_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_305_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_12_OOB_12.json
+- total_frame: 52260
+- frame_rate: 59.94
+L_305_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_13_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_305_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_14_OOB_12.json
+- total_frame: 52140
+- frame_rate: 59.94
+L_305_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_305_xx0_15_OOB_12.json
+- total_frame: 44400
+- frame_rate: 59.94
+L_309_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_309_xx0_01_OOB_12.json
+- total_frame: 51210
+- frame_rate: 59.94
+L_309_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_309_xx0_02_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_309_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_309_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_309_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_309_xx0_04_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_309_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_309_xx0_05_OOB_12.json
+- total_frame: 52080
+- frame_rate: 59.94
+L_309_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_309_xx0_06_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_309_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_309_xx0_07_OOB_12.json
+- total_frame: 16380
+- frame_rate: 59.94
+L_310_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_01_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_310_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_02_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_310_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_03_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_310_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_04_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_310_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_05_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_310_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_06_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_310_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_07_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_310_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_08_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_310_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_09_OOB_12.json
+- total_frame: 38340
+- frame_rate: 59.94
+L_310_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_10_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_310_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_11_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_310_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_310_xx0_12_OOB_12.json
+- total_frame: 37680
+- frame_rate: 59.94
+L_311_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_311_xx0_01_OOB_12.json
+- total_frame: 159120
+- frame_rate: 59.94
+L_311_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_311_xx0_02_OOB_12.json
+- total_frame: 159390
+- frame_rate: 59.94
+L_311_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_311_xx0_03_OOB_12.json
+- total_frame: 159780
+- frame_rate: 59.94
+L_311_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_311_xx0_04_OOB_12.json
+- total_frame: 159240
+- frame_rate: 59.94
+L_311_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_311_xx0_05_OOB_12.json
+- total_frame: 78900
+- frame_rate: 59.94
+L_317_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_317_xx0_01_OOB_12.json
+- total_frame: 159270
+- frame_rate: 59.94
+L_317_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_317_xx0_02_OOB_12.json
+- total_frame: 159600
+- frame_rate: 59.94
+L_317_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_317_xx0_03_OOB_12.json
+- total_frame: 159480
+- frame_rate: 59.94
+L_317_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_317_xx0_04_OOB_12.json
+- total_frame: 100050
+- frame_rate: 59.94
+L_325_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_01_OOB_12.json
+- total_frame: 50910
+- frame_rate: 59.94
+L_325_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_02_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_325_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_325_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_04_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_325_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_05_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_325_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_06_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_325_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_07_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_325_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_08_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_325_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_09_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_325_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_10_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_325_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_11_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_325_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_325_xx0_12_OOB_12.json
+- total_frame: 25710
+- frame_rate: 59.94
+L_326_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_326_xx0_01_OOB_12.json
+- total_frame: 51150
+- frame_rate: 59.94
+L_326_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_326_xx0_02_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_326_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_326_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_326_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_326_xx0_04_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_326_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_326_xx0_05_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_326_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_326_xx0_06_OOB_12.json
+- total_frame: 36540
+- frame_rate: 59.94
+L_330_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_330_ch1_01_OOB_12.json
+- total_frame: 341998
+- frame_rate: 30
+L_333_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_01_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_333_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_02_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_333_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_03_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_333_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_04_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_333_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_05_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_333_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_06_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_333_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_07_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_333_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_08_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_333_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_09_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_333_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_10_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_333_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_333_xx0_11_OOB_12.json
+- total_frame: 20760
+- frame_rate: 59.94
+L_340_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_01_OOB_12.json
+- total_frame: 51240
+- frame_rate: 59.94
+L_340_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_02_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_340_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_03_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_340_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_04_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_340_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_05_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_340_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_06_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_340_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_07_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_340_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_08_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_340_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_09_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_340_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_340_xx0_10_OOB_12.json
+- total_frame: 19590
+- frame_rate: 59.94
+L_346_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_346_xx0_01_OOB_12.json
+- total_frame: 159030
+- frame_rate: 59.94
+L_346_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_346_xx0_02_OOB_12.json
+- total_frame: 150420
+- frame_rate: 59.94
+L_349_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_349_ch1_01_OOB_12.json
+- total_frame: 97795
+- frame_rate: 30
+L_349_ch1_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_349_ch1_02_OOB_12.json
+- total_frame: 98003
+- frame_rate: 30
+L_349_ch1_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_349_ch1_03_OOB_12.json
+- total_frame: 98146
+- frame_rate: 30
+L_349_ch1_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_349_ch1_04_OOB_12.json
+- total_frame: 94726
+- frame_rate: 30
+L_367_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_367_ch1_01_OOB_12.json
+- total_frame: 378307
+- frame_rate: 30
+L_370_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_370_ch1_01_OOB_12.json
+- total_frame: 342043
+- frame_rate: 30
+L_377_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_377_ch1_01_OOB_12.json
+- total_frame: 435119
+- frame_rate: 30
+L_379_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_01_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_379_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_02_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_379_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_03_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_379_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_04_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_379_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_05_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_379_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_06_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_379_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_07_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_379_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_08_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_379_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_09_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_379_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_10_OOB_12.json
+- total_frame: 52260
+- frame_rate: 59.94
+L_379_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_379_xx0_11_OOB_12.json
+- total_frame: 24510
+- frame_rate: 59.94
+L_385_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_01_OOB_12.json
+- total_frame: 23341
+- frame_rate: 29.97
+L_385_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_02_OOB_12.json
+- total_frame: 23343
+- frame_rate: 29.97
+L_385_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_03_OOB_12.json
+- total_frame: 23362
+- frame_rate: 29.97
+L_385_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_04_OOB_12.json
+- total_frame: 23384
+- frame_rate: 30
+L_385_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_05_OOB_12.json
+- total_frame: 23320
+- frame_rate: 29.97
+L_385_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_06_OOB_12.json
+- total_frame: 23337
+- frame_rate: 29.97
+L_385_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_07_OOB_12.json
+- total_frame: 23323
+- frame_rate: 29.97
+L_385_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_08_OOB_12.json
+- total_frame: 23356
+- frame_rate: 29.97
+L_385_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_09_OOB_12.json
+- total_frame: 23340
+- frame_rate: 30
+L_385_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_10_OOB_12.json
+- total_frame: 23349
+- frame_rate: 29.97
+L_385_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_11_OOB_12.json
+- total_frame: 23350
+- frame_rate: 29.97
+L_385_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_12_OOB_12.json
+- total_frame: 23329
+- frame_rate: 29.97
+L_385_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_13_OOB_12.json
+- total_frame: 23355
+- frame_rate: 29.97
+L_385_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_14_OOB_12.json
+- total_frame: 23352
+- frame_rate: 29.97
+L_385_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_385_xx0_15_OOB_12.json
+- total_frame: 2750
+- frame_rate: 29.97
+L_387_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_01_OOB_12.json
+- total_frame: 23348
+- frame_rate: 29.97
+L_387_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_02_OOB_12.json
+- total_frame: 23341
+- frame_rate: 29.97
+L_387_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_03_OOB_12.json
+- total_frame: 23361
+- frame_rate: 29.97
+L_387_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_04_OOB_12.json
+- total_frame: 23331
+- frame_rate: 29.97
+L_387_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_05_OOB_12.json
+- total_frame: 23339
+- frame_rate: 29.97
+L_387_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_06_OOB_12.json
+- total_frame: 23340
+- frame_rate: 29.97
+L_387_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_07_OOB_12.json
+- total_frame: 23354
+- frame_rate: 29.97
+L_387_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_387_xx0_08_OOB_12.json
+- total_frame: 133
+- frame_rate: 30
+L_389_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_01_OOB_12.json
+- total_frame: 7050
+- frame_rate: 59.94
+L_389_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_02_OOB_12.json
+- total_frame: 51300
+- frame_rate: 59.94
+L_389_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_03_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_389_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_04_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_389_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_05_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_389_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_06_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_389_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_07_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_389_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_08_OOB_12.json
+- total_frame: 52080
+- frame_rate: 59.94
+L_389_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_09_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_389_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_10_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_389_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_11_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_389_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_12_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_389_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_389_xx0_13_OOB_12.json
+- total_frame: 35250
+- frame_rate: 59.94
+L_391_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_01_OOB_12.json
+- total_frame: 51240
+- frame_rate: 59.94
+L_391_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_02_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_391_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_03_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_391_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_04_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_391_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_05_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_391_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_06_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_391_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_07_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_391_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_08_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_391_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_391_xx0_09_OOB_12.json
+- total_frame: 8190
+- frame_rate: 59.94
+L_393_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_01_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_393_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_02_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_393_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_03_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_393_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_04_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_393_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_05_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_393_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_06_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_393_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_07_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_393_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_08_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_393_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_09_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_393_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_393_xx0_10_OOB_12.json
+- total_frame: 23010
+- frame_rate: 59.94
+L_400_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_01_OOB_12.json
+- total_frame: 26
+- frame_rate: 29.97
+L_400_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_02_OOB_12.json
+- total_frame: 24
+- frame_rate: 29.97
+L_400_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_03_OOB_12.json
+- total_frame: 11560
+- frame_rate: 29.97
+L_400_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_04_OOB_12.json
+- total_frame: 23316
+- frame_rate: 29.97
+L_400_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_05_OOB_12.json
+- total_frame: 23316
+- frame_rate: 29.97
+L_400_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_06_OOB_12.json
+- total_frame: 23347
+- frame_rate: 29.97
+L_400_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_07_OOB_12.json
+- total_frame: 23335
+- frame_rate: 30
+L_400_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_08_OOB_12.json
+- total_frame: 23326
+- frame_rate: 29.97
+L_400_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_09_OOB_12.json
+- total_frame: 23329
+- frame_rate: 29.97
+L_400_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_10_OOB_12.json
+- total_frame: 23324
+- frame_rate: 29.97
+L_400_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_11_OOB_12.json
+- total_frame: 23319
+- frame_rate: 29.97
+L_400_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_400_xx0_12_OOB_12.json
+- total_frame: 17627
+- frame_rate: 30
+L_402_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_402_xx0_01_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_402_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_402_xx0_02_OOB_12.json
+- total_frame: 51120
+- frame_rate: 59.94
+L_402_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_402_xx0_03_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_402_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_402_xx0_04_OOB_12.json
+- total_frame: 50940
+- frame_rate: 59.94
+L_406_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_01_OOB_12.json
+- total_frame: 51360
+- frame_rate: 59.94
+L_406_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_02_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_406_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_03_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_406_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_04_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_406_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_05_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_406_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_06_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_406_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_07_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_406_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_08_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_406_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_09_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_406_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_10_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_406_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_11_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_406_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_12_OOB_12.json
+- total_frame: 51390
+- frame_rate: 59.94
+L_406_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_406_xx0_13_OOB_12.json
+- total_frame: 37590
+- frame_rate: 59.94
+L_408_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_408_ch1_01_OOB_12.json
+- total_frame: 208613
+- frame_rate: 30
+L_412_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_412_xx0_01_OOB_12.json
+- total_frame: 159420
+- frame_rate: 59.94
+L_412_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_412_xx0_02_OOB_12.json
+- total_frame: 159420
+- frame_rate: 59.94
+L_412_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_412_xx0_03_OOB_12.json
+- total_frame: 108210
+- frame_rate: 59.94
+L_413_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_01_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_413_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_413_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_03_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_413_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_04_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_413_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_05_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_413_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_06_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_413_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_07_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_413_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_08_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_413_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_09_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_413_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_413_xx0_10_OOB_12.json
+- total_frame: 5700
+- frame_rate: 59.94
+L_414_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_01_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_414_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_02_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_414_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_03_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_414_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_04_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_414_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_05_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_414_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_06_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_414_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_07_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_414_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_414_xx0_08_OOB_12.json
+- total_frame: 28260
+- frame_rate: 59.94
+L_415_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_01_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_415_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_02_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_415_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_03_OOB_12.json
+- total_frame: 51330
+- frame_rate: 59.94
+L_415_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_04_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_415_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_05_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_415_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_06_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_415_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_07_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_415_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_08_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_415_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_09_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_415_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_10_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_415_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_11_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_415_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_415_xx0_12_OOB_12.json
+- total_frame: 10650
+- frame_rate: 59.94
+L_418_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_01_OOB_12.json
+- total_frame: 51180
+- frame_rate: 59.94
+L_418_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_418_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_418_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_04_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_418_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_05_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_418_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_06_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_418_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_07_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_418_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_418_xx0_08_OOB_12.json
+- total_frame: 30540
+- frame_rate: 59.94
+L_419_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_419_xx0_01_OOB_12.json
+- total_frame: 51090
+- frame_rate: 59.94
+L_419_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_419_xx0_02_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_419_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_419_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_419_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_419_xx0_04_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_419_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_419_xx0_05_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_419_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_419_xx0_06_OOB_12.json
+- total_frame: 45330
+- frame_rate: 59.94
+L_421_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_421_xx0_01_OOB_12.json
+- total_frame: 159240
+- frame_rate: 59.94
+L_421_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_421_xx0_02_OOB_12.json
+- total_frame: 118590
+- frame_rate: 59.94
+L_423_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_423_xx0_01_OOB_12.json
+- total_frame: 159090
+- frame_rate: 59.94
+L_423_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_423_xx0_02_OOB_12.json
+- total_frame: 159690
+- frame_rate: 59.94
+L_423_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_423_xx0_03_OOB_12.json
+- total_frame: 159300
+- frame_rate: 59.94
+L_423_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_423_xx0_04_OOB_12.json
+- total_frame: 159630
+- frame_rate: 59.94
+L_423_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_423_xx0_05_OOB_12.json
+- total_frame: 4110
+- frame_rate: 59.94
+L_427_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_01_OOB_12.json
+- total_frame: 23336
+- frame_rate: 29.97
+L_427_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_02_OOB_12.json
+- total_frame: 23351
+- frame_rate: 29.97
+L_427_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_03_OOB_12.json
+- total_frame: 23316
+- frame_rate: 29.97
+L_427_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_04_OOB_12.json
+- total_frame: 23363
+- frame_rate: 30
+L_427_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_05_OOB_12.json
+- total_frame: 23369
+- frame_rate: 29.97
+L_427_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_06_OOB_12.json
+- total_frame: 23358
+- frame_rate: 29.97
+L_427_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_07_OOB_12.json
+- total_frame: 23383
+- frame_rate: 29.97
+L_427_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_08_OOB_12.json
+- total_frame: 23363
+- frame_rate: 29.97
+L_427_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_09_OOB_12.json
+- total_frame: 23348
+- frame_rate: 29.97
+L_427_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_10_OOB_12.json
+- total_frame: 23336
+- frame_rate: 29.97
+L_427_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_11_OOB_12.json
+- total_frame: 23345
+- frame_rate: 29.97
+L_427_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_12_OOB_12.json
+- total_frame: 23342
+- frame_rate: 29.97
+L_427_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_13_OOB_12.json
+- total_frame: 23332
+- frame_rate: 29.97
+L_427_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_14_OOB_12.json
+- total_frame: 23346
+- frame_rate: 29.97
+L_427_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_427_xx0_15_OOB_12.json
+- total_frame: 7073
+- frame_rate: 29.97
+L_428_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_428_ch1_01_OOB_12.json
+- total_frame: 168019
+- frame_rate: 30
+L_430_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_430_ch1_01_OOB_12.json
+- total_frame: 353466
+- frame_rate: 30
+L_433_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_01_OOB_12.json
+- total_frame: 51330
+- frame_rate: 59.94
+L_433_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_02_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_433_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_03_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_433_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_04_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_433_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_05_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_433_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_06_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_433_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_07_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_433_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_08_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_433_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_433_xx0_09_OOB_12.json
+- total_frame: 27810
+- frame_rate: 59.94
+L_434_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_01_OOB_12.json
+- total_frame: 51390
+- frame_rate: 59.94
+L_434_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_02_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_434_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_03_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_434_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_04_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_434_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_05_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_434_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_06_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_434_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_07_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_434_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_08_OOB_12.json
+- total_frame: 52440
+- frame_rate: 59.94
+L_434_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_09_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_434_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_434_xx0_10_OOB_12.json
+- total_frame: 29070
+- frame_rate: 59.94
+L_436_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_01_OOB_12.json
+- total_frame: 51330
+- frame_rate: 59.94
+L_436_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_436_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_03_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_436_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_04_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_436_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_05_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_436_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_06_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_436_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_07_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_436_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_08_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_436_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_09_OOB_12.json
+- total_frame: 52140
+- frame_rate: 59.94
+L_436_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_10_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_436_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_11_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_436_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_436_xx0_12_OOB_12.json
+- total_frame: 20790
+- frame_rate: 59.94
+L_439_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_01_OOB_12.json
+- total_frame: 51390
+- frame_rate: 59.94
+L_439_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_02_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_439_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_03_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_439_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_04_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_439_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_05_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_439_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_06_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_439_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_07_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_439_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_08_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_439_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_09_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_439_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_10_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_439_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_11_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_439_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_12_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_439_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_13_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_439_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_14_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_439_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_15_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_439_xx0_16:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_439_xx0_16_OOB_12.json
+- total_frame: 41670
+- frame_rate: 59.94
+L_442_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_01_OOB_12.json
+- total_frame: 51000
+- frame_rate: 59.94
+L_442_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_02_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_442_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_03_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_442_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_04_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_442_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_05_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_442_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_06_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_442_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_07_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_442_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_08_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_442_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_09_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_442_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_10_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_442_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_11_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_442_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_12_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_442_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_13_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_442_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_442_xx0_14_OOB_12.json
+- total_frame: 19530
+- frame_rate: 59.94
+L_443_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_01_OOB_12.json
+- total_frame: 330
+- frame_rate: 59.94
+L_443_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_02_OOB_12.json
+- total_frame: 51360
+- frame_rate: 59.94
+L_443_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_03_OOB_12.json
+- total_frame: 52200
+- frame_rate: 59.94
+L_443_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_04_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_443_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_05_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_443_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_06_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_443_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_07_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_443_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_08_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_443_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_09_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_443_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_10_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_443_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_11_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_443_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_12_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_443_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_13_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_443_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_14_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_443_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_15_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_443_xx0_16:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_443_xx0_16_OOB_12.json
+- total_frame: 4410
+- frame_rate: 59.94
+L_450_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_01_OOB_12.json
+- total_frame: 51270
+- frame_rate: 59.94
+L_450_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_02_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_450_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_03_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_450_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_04_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_450_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_05_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_450_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_06_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_450_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_07_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_450_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_08_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_450_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_09_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_450_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_10_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_450_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_11_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_450_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_12_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_450_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_13_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_450_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_14_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_450_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_15_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_450_xx0_16:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_16_OOB_12.json
+- total_frame: 52380
+- frame_rate: 59.94
+L_450_xx0_17:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_17_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_450_xx0_18:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_18_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_450_xx0_19:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_19_OOB_12.json
+- total_frame: 52140
+- frame_rate: 59.94
+L_450_xx0_20:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_20_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_450_xx0_21:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_21_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_450_xx0_22:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_450_xx0_22_OOB_12.json
+- total_frame: 16050
+- frame_rate: 59.94
+L_458_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_01_OOB_12.json
+- total_frame: 51270
+- frame_rate: 59.94
+L_458_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_02_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_458_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_03_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_458_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_04_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_458_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_05_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_458_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_06_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_458_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_07_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_458_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_08_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_458_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_09_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_458_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_10_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_458_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_11_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_458_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_12_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_458_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_13_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_458_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_14_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_458_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_458_xx0_15_OOB_12.json
+- total_frame: 39780
+- frame_rate: 59.94
+L_465_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_01_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_465_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_02_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_465_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_03_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_465_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_04_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_465_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_05_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_465_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_06_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_465_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_07_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_465_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_08_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_465_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_09_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_465_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_10_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_465_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_11_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_465_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_12_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_465_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_13_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_465_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_14_OOB_12.json
+- total_frame: 52140
+- frame_rate: 59.94
+L_465_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_15_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_465_xx0_16:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_16_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_465_xx0_17:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_17_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_465_xx0_18:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_18_OOB_12.json
+- total_frame: 51390
+- frame_rate: 59.94
+L_465_xx0_19:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_19_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_465_xx0_20:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_20_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_465_xx0_21:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_465_xx0_21_OOB_12.json
+- total_frame: 8580
+- frame_rate: 59.94
+L_471_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_01_OOB_12.json
+- total_frame: 51390
+- frame_rate: 59.94
+L_471_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_02_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_471_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_03_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_471_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_04_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_471_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_05_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_471_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_06_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_471_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_07_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_471_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_08_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_471_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_09_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_471_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_10_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_471_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_471_xx0_11_OOB_12.json
+- total_frame: 50250
+- frame_rate: 59.94
+L_473_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_473_xx0_01_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_473_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_473_xx0_02_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_473_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_473_xx0_03_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_473_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_473_xx0_04_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_473_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_473_xx0_05_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_473_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_473_xx0_06_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_473_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_473_xx0_07_OOB_12.json
+- total_frame: 4800
+- frame_rate: 59.94
+L_475_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_475_ch1_01_OOB_12.json
+- total_frame: 99263
+- frame_rate: 30
+L_475_ch1_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_475_ch1_02_OOB_12.json
+- total_frame: 92180
+- frame_rate: 30
+L_477_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_477_ch1_01_OOB_12.json
+- total_frame: 313185
+- frame_rate: 30
+L_478_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_01_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_478_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_02_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_478_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_03_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_478_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_04_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_478_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_05_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_478_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_06_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_478_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_07_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_478_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_08_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_478_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_09_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_478_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_478_xx0_10_OOB_12.json
+- total_frame: 24690
+- frame_rate: 59.94
+L_479_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_01_OOB_12.json
+- total_frame: 51000
+- frame_rate: 59.94
+L_479_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_02_OOB_12.json
+- total_frame: 52140
+- frame_rate: 59.94
+L_479_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_03_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_479_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_04_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_479_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_05_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_479_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_06_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_479_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_07_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_479_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_08_OOB_12.json
+- total_frame: 52860
+- frame_rate: 59.94
+L_479_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_479_xx0_09_OOB_12.json
+- total_frame: 42330
+- frame_rate: 59.94
+L_481_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_01_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_481_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_02_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_481_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_03_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_481_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_04_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_481_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_05_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_481_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_06_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_481_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_07_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_481_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_08_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_481_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_09_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_481_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_10_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_481_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_11_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_481_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_12_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_481_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_481_xx0_13_OOB_12.json
+- total_frame: 17550
+- frame_rate: 59.94
+L_482_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_01_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_482_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_02_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_482_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_03_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_482_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_04_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_482_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_05_OOB_12.json
+- total_frame: 51090
+- frame_rate: 59.94
+L_482_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_06_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_482_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_07_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_482_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_08_OOB_12.json
+- total_frame: 52080
+- frame_rate: 59.94
+L_482_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_09_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_482_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_10_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_482_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_11_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_482_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_12_OOB_12.json
+- total_frame: 51510
+- frame_rate: 59.94
+L_482_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_13_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_482_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_14_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_482_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_482_xx0_15_OOB_12.json
+- total_frame: 38940
+- frame_rate: 59.94
+L_484_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_01_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_484_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_484_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_484_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_04_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_484_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_05_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_484_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_06_OOB_12.json
+- total_frame: 11820
+- frame_rate: 59.94
+L_484_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_07_OOB_12.json
+- total_frame: 51330
+- frame_rate: 59.94
+L_484_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_08_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_484_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_09_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_484_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_10_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_484_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_484_xx0_11_OOB_12.json
+- total_frame: 15930
+- frame_rate: 59.94
+L_491_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_01_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_491_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_02_OOB_12.json
+- total_frame: 38580
+- frame_rate: 59.94
+L_491_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_03_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_491_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_04_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_491_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_05_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_491_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_06_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_491_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_07_OOB_12.json
+- total_frame: 51270
+- frame_rate: 59.94
+L_491_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_08_OOB_12.json
+- total_frame: 52440
+- frame_rate: 59.94
+L_491_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_09_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_491_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_10_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_491_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_11_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_491_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_491_xx0_12_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_493_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_493_ch1_01_OOB_12.json
+- total_frame: 98326
+- frame_rate: 30
+L_493_ch1_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_493_ch1_02_OOB_12.json
+- total_frame: 98163
+- frame_rate: 30
+L_493_ch1_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_493_ch1_03_OOB_12.json
+- total_frame: 98473
+- frame_rate: 30
+L_493_ch1_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_493_ch1_04_OOB_12.json
+- total_frame: 30684
+- frame_rate: 30
+L_496_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_496_ch1_01_OOB_12.json
+- total_frame: 98754
+- frame_rate: 30
+L_496_ch1_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_496_ch1_02_OOB_12.json
+- total_frame: 98682
+- frame_rate: 30
+L_496_ch1_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_496_ch1_03_OOB_12.json
+- total_frame: 67682
+- frame_rate: 30
+L_507_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_507_xx0_01_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_507_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_507_xx0_02_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_507_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_507_xx0_03_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_507_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_507_xx0_04_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_507_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_507_xx0_05_OOB_12.json
+- total_frame: 52080
+- frame_rate: 59.94
+L_507_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_507_xx0_06_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_507_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_507_xx0_07_OOB_12.json
+- total_frame: 46740
+- frame_rate: 59.94
+L_513_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_01_OOB_12.json
+- total_frame: 23331
+- frame_rate: 29.97
+L_513_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_02_OOB_12.json
+- total_frame: 23327
+- frame_rate: 29.97
+L_513_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_03_OOB_12.json
+- total_frame: 23366
+- frame_rate: 29.97
+L_513_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_04_OOB_12.json
+- total_frame: 23356
+- frame_rate: 29.97
+L_513_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_05_OOB_12.json
+- total_frame: 23328
+- frame_rate: 29.97
+L_513_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_06_OOB_12.json
+- total_frame: 23293
+- frame_rate: 29.917
+L_513_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_07_OOB_12.json
+- total_frame: 22183
+- frame_rate: 29.97
+L_513_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_08_OOB_12.json
+- total_frame: 23345
+- frame_rate: 29.97
+L_513_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_09_OOB_12.json
+- total_frame: 23366
+- frame_rate: 29.97
+L_513_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_10_OOB_12.json
+- total_frame: 23319
+- frame_rate: 29.97
+L_513_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_11_OOB_12.json
+- total_frame: 23354
+- frame_rate: 29.97
+L_513_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_513_xx0_12_OOB_12.json
+- total_frame: 4683
+- frame_rate: 29.97
+L_514_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_01_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_514_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_02_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_514_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_03_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_514_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_04_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_514_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_05_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_514_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_06_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_514_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_07_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_514_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_08_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_514_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_09_OOB_12.json
+- total_frame: 52290
+- frame_rate: 59.94
+L_514_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_514_xx0_10_OOB_12.json
+- total_frame: 5370
+- frame_rate: 59.94
+L_515_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_01_OOB_12.json
+- total_frame: 9300
+- frame_rate: 59.94
+L_515_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_02_OOB_12.json
+- total_frame: 51510
+- frame_rate: 59.94
+L_515_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_03_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_515_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_04_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_515_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_05_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_515_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_06_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_515_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_07_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_515_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_515_xx0_08_OOB_12.json
+- total_frame: 12180
+- frame_rate: 59.94
+L_517_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_01_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_517_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_517_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_03_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_517_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_04_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_517_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_05_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_517_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_06_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_517_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_07_OOB_12.json
+- total_frame: 52050
+- frame_rate: 59.94
+L_517_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_517_xx0_08_OOB_12.json
+- total_frame: 16860
+- frame_rate: 59.94
+L_522_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_01_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_522_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_02_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_522_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_03_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_522_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_04_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_522_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_05_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_522_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_06_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_522_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_07_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_522_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_08_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_522_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_09_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_522_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_10_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_522_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_522_xx0_11_OOB_12.json
+- total_frame: 31620
+- frame_rate: 59.94
+L_534_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_534_xx0_01_OOB_12.json
+- total_frame: 94620
+- frame_rate: 59.94
+L_534_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_534_xx0_02_OOB_12.json
+- total_frame: 94830
+- frame_rate: 59.94
+L_534_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_534_xx0_03_OOB_12.json
+- total_frame: 94920
+- frame_rate: 59.94
+L_534_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_534_xx0_04_OOB_12.json
+- total_frame: 94890
+- frame_rate: 59.94
+L_534_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_534_xx0_05_OOB_12.json
+- total_frame: 94950
+- frame_rate: 59.94
+L_534_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_534_xx0_06_OOB_12.json
+- total_frame: 94980
+- frame_rate: 59.94
+L_534_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_534_xx0_07_OOB_12.json
+- total_frame: 24570
+- frame_rate: 59.94
+L_535_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_535_xx0_01_OOB_12.json
+- total_frame: 94560
+- frame_rate: 59.94
+L_535_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_535_xx0_02_OOB_12.json
+- total_frame: 94860
+- frame_rate: 59.94
+L_535_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_535_xx0_03_OOB_12.json
+- total_frame: 94920
+- frame_rate: 59.94
+L_535_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_535_xx0_04_OOB_12.json
+- total_frame: 94890
+- frame_rate: 59.94
+L_535_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_535_xx0_05_OOB_12.json
+- total_frame: 83160
+- frame_rate: 59.94
+L_537_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_01_OOB_12.json
+- total_frame: 23363
+- frame_rate: 30
+L_537_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_02_OOB_12.json
+- total_frame: 23331
+- frame_rate: 29.97
+L_537_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_03_OOB_12.json
+- total_frame: 23354
+- frame_rate: 30
+L_537_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_04_OOB_12.json
+- total_frame: 23358
+- frame_rate: 29.97
+L_537_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_05_OOB_12.json
+- total_frame: 23335
+- frame_rate: 29.97
+L_537_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_06_OOB_12.json
+- total_frame: 23349
+- frame_rate: 29.97
+L_537_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_07_OOB_12.json
+- total_frame: 23343
+- frame_rate: 29.97
+L_537_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_08_OOB_12.json
+- total_frame: 23331
+- frame_rate: 29.97
+L_537_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_09_OOB_12.json
+- total_frame: 23349
+- frame_rate: 29.97
+L_537_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_10_OOB_12.json
+- total_frame: 23338
+- frame_rate: 29.97
+L_537_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_11_OOB_12.json
+- total_frame: 23342
+- frame_rate: 29.97
+L_537_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_537_xx0_12_OOB_12.json
+- total_frame: 7867
+- frame_rate: 29.97
+L_539_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_539_ch1_01_OOB_12.json
+- total_frame: 267172
+- frame_rate: 30
+L_542_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_01_OOB_12.json
+- total_frame: 51060
+- frame_rate: 59.94
+L_542_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_02_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_542_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_03_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_542_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_04_OOB_12.json
+- total_frame: 51270
+- frame_rate: 59.94
+L_542_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_05_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_542_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_06_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_542_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_07_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_542_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_08_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_542_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_542_xx0_09_OOB_12.json
+- total_frame: 14340
+- frame_rate: 59.94
+L_543_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_01_OOB_12.json
+- total_frame: 23344
+- frame_rate: 29.97
+L_543_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_02_OOB_12.json
+- total_frame: 12137
+- frame_rate: 30
+L_543_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_03_OOB_12.json
+- total_frame: 23350
+- frame_rate: 29.97
+L_543_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_04_OOB_12.json
+- total_frame: 23371
+- frame_rate: 30
+L_543_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_05_OOB_12.json
+- total_frame: 23349
+- frame_rate: 29.97
+L_543_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_06_OOB_12.json
+- total_frame: 23326
+- frame_rate: 29.97
+L_543_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_07_OOB_12.json
+- total_frame: 23347
+- frame_rate: 29.97
+L_543_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_08_OOB_12.json
+- total_frame: 23356
+- frame_rate: 29.97
+L_543_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_09_OOB_12.json
+- total_frame: 23336
+- frame_rate: 29.97
+L_543_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_10_OOB_12.json
+- total_frame: 23378
+- frame_rate: 30
+L_543_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_11_OOB_12.json
+- total_frame: 23340
+- frame_rate: 29.97
+L_543_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_12_OOB_12.json
+- total_frame: 23358
+- frame_rate: 30
+L_543_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_13_OOB_12.json
+- total_frame: 23324
+- frame_rate: 29.97
+L_543_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_543_xx0_14_OOB_12.json
+- total_frame: 15965
+- frame_rate: 29.97
+L_545_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_01_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_545_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_545_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_03_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_545_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_04_OOB_12.json
+- total_frame: 51390
+- frame_rate: 59.94
+L_545_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_05_OOB_12.json
+- total_frame: 52290
+- frame_rate: 59.94
+L_545_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_06_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_545_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_07_OOB_12.json
+- total_frame: 5490
+- frame_rate: 59.94
+L_545_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_08_OOB_12.json
+- total_frame: 51330
+- frame_rate: 59.94
+L_545_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_545_xx0_09_OOB_12.json
+- total_frame: 9420
+- frame_rate: 59.94
+L_546_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_01_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_546_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_02_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_546_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_03_OOB_12.json
+- total_frame: 51360
+- frame_rate: 59.94
+L_546_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_04_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_546_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_05_OOB_12.json
+- total_frame: 52080
+- frame_rate: 59.94
+L_546_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_06_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_546_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_07_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_546_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_08_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_546_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_09_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_546_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_546_xx0_10_OOB_12.json
+- total_frame: 22140
+- frame_rate: 59.94
+L_550_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_01_OOB_12.json
+- total_frame: 51150
+- frame_rate: 59.94
+L_550_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_550_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_03_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_550_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_04_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_550_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_05_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_550_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_06_OOB_12.json
+- total_frame: 51510
+- frame_rate: 59.94
+L_550_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_07_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_550_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_08_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_550_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_09_OOB_12.json
+- total_frame: 52200
+- frame_rate: 59.94
+L_550_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_10_OOB_12.json
+- total_frame: 51510
+- frame_rate: 59.94
+L_550_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_11_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_550_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_550_xx0_12_OOB_12.json
+- total_frame: 24870
+- frame_rate: 59.94
+L_553_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_553_ch1_01_OOB_12.json
+- total_frame: 98430
+- frame_rate: 30
+L_553_ch1_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_553_ch1_02_OOB_12.json
+- total_frame: 97992
+- frame_rate: 30
+L_553_ch1_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_553_ch1_03_OOB_12.json
+- total_frame: 97923
+- frame_rate: 30
+L_553_ch1_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_553_ch1_04_OOB_12.json
+- total_frame: 57195
+- frame_rate: 30
+L_556_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_01_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_556_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_02_OOB_12.json
+- total_frame: 51600
+- frame_rate: 59.94
+L_556_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_03_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_556_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_04_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_556_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_05_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_556_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_06_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_556_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_07_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_556_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_08_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_556_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_09_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_556_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_10_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_556_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_11_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_556_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_12_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_556_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_13_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_556_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_556_xx0_14_OOB_12.json
+- total_frame: 42690
+- frame_rate: 59.94
+L_558_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_558_xx0_01_OOB_12.json
+- total_frame: 34530
+- frame_rate: 59.94
+L_560_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_01_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_560_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_02_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_560_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_560_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_04_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_560_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_05_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_560_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_06_OOB_12.json
+- total_frame: 20520
+- frame_rate: 59.94
+L_560_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_07_OOB_12.json
+- total_frame: 51300
+- frame_rate: 59.94
+L_560_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_08_OOB_12.json
+- total_frame: 52080
+- frame_rate: 59.94
+L_560_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_09_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_560_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_10_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_560_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_11_OOB_12.json
+- total_frame: 52290
+- frame_rate: 59.94
+L_560_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_12_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_560_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_13_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_560_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_14_OOB_12.json
+- total_frame: 52140
+- frame_rate: 59.94
+L_560_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_560_xx0_15_OOB_12.json
+- total_frame: 14160
+- frame_rate: 59.94
+L_563_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_01_OOB_12.json
+- total_frame: 50940
+- frame_rate: 59.94
+L_563_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_02_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_563_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_03_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_563_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_04_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_563_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_05_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_563_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_06_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_563_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_07_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_563_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_08_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_563_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_09_OOB_12.json
+- total_frame: 52170
+- frame_rate: 59.94
+L_563_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_10_OOB_12.json
+- total_frame: 51510
+- frame_rate: 59.94
+L_563_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_11_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_563_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_563_xx0_12_OOB_12.json
+- total_frame: 990
+- frame_rate: 59.94
+L_565_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_01_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_565_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_02_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_565_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_03_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_565_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_04_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_565_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_05_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_565_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_06_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_565_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_07_OOB_12.json
+- total_frame: 51300
+- frame_rate: 59.94
+L_565_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_08_OOB_12.json
+- total_frame: 52380
+- frame_rate: 59.94
+L_565_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_565_xx0_09_OOB_12.json
+- total_frame: 48150
+- frame_rate: 59.94
+L_568_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_01_OOB_12.json
+- total_frame: 23333
+- frame_rate: 29.97
+L_568_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_02_OOB_12.json
+- total_frame: 23332
+- frame_rate: 29.97
+L_568_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_03_OOB_12.json
+- total_frame: 23304
+- frame_rate: 29.97
+L_568_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_04_OOB_12.json
+- total_frame: 23311
+- frame_rate: 29.97
+L_568_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_05_OOB_12.json
+- total_frame: 23326
+- frame_rate: 30
+L_568_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_06_OOB_12.json
+- total_frame: 23319
+- frame_rate: 29.97
+L_568_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_07_OOB_12.json
+- total_frame: 23325
+- frame_rate: 29.97
+L_568_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_08_OOB_12.json
+- total_frame: 23333
+- frame_rate: 29.97
+L_568_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_568_xx0_09_OOB_12.json
+- total_frame: 3453
+- frame_rate: 30
+L_569_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_01_OOB_12.json
+- total_frame: 23339
+- frame_rate: 29.97
+L_569_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_02_OOB_12.json
+- total_frame: 23330
+- frame_rate: 29.97
+L_569_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_03_OOB_12.json
+- total_frame: 23354
+- frame_rate: 29.97
+L_569_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_04_OOB_12.json
+- total_frame: 23361
+- frame_rate: 29.97
+L_569_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_05_OOB_12.json
+- total_frame: 23339
+- frame_rate: 29.97
+L_569_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_06_OOB_12.json
+- total_frame: 23321
+- frame_rate: 29.97
+L_569_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_07_OOB_12.json
+- total_frame: 23360
+- frame_rate: 29.97
+L_569_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_08_OOB_12.json
+- total_frame: 23345
+- frame_rate: 29.97
+L_569_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_09_OOB_12.json
+- total_frame: 23363
+- frame_rate: 29.97
+L_569_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_10_OOB_12.json
+- total_frame: 23338
+- frame_rate: 29.97
+L_569_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_11_OOB_12.json
+- total_frame: 23348
+- frame_rate: 29.97
+L_569_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_569_xx0_12_OOB_12.json
+- total_frame: 13421
+- frame_rate: 29.97
+L_572_ch1_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_572_ch1_01_OOB_12.json
+- total_frame: 276595
+- frame_rate: 30
+L_574_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_01_OOB_12.json
+- total_frame: 30232
+- frame_rate: 59.94
+L_574_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_02_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_574_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_03_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_574_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_04_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_574_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_05_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_574_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_06_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_574_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_07_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_574_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_08_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_574_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_09_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_574_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_10_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_574_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_574_xx0_11_OOB_12.json
+- total_frame: 39900
+- frame_rate: 59.94
+L_575_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_575_xx0_01_OOB_12.json
+- total_frame: 159000
+- frame_rate: 59.94
+L_575_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_575_xx0_02_OOB_12.json
+- total_frame: 159630
+- frame_rate: 59.94
+L_575_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_575_xx0_03_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_575_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_575_xx0_04_OOB_12.json
+- total_frame: 70890
+- frame_rate: 59.94
+L_577_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_01_OOB_12.json
+- total_frame: 50820
+- frame_rate: 59.94
+L_577_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_02_OOB_12.json
+- total_frame: 52290
+- frame_rate: 59.94
+L_577_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_03_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_577_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_04_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_577_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_05_OOB_12.json
+- total_frame: 4380
+- frame_rate: 59.94
+L_577_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_06_OOB_12.json
+- total_frame: 50910
+- frame_rate: 59.94
+L_577_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_07_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_577_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_08_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_577_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_09_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_577_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_577_xx0_10_OOB_12.json
+- total_frame: 33510
+- frame_rate: 59.94
+L_580_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_01_OOB_12.json
+- total_frame: 50880
+- frame_rate: 59.94
+L_580_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_02_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_580_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_03_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_580_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_04_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_580_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_05_OOB_12.json
+- total_frame: 52110
+- frame_rate: 59.94
+L_580_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_06_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_580_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_07_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_580_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_08_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_580_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_09_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_580_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_10_OOB_12.json
+- total_frame: 51510
+- frame_rate: 59.94
+L_580_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_11_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_580_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_12_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_580_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_13_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_580_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_14_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_580_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_580_xx0_15_OOB_12.json
+- total_frame: 47190
+- frame_rate: 59.94
+L_586_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_01_OOB_12.json
+- total_frame: 3480
+- frame_rate: 59.94
+L_586_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_02_OOB_12.json
+- total_frame: 54570
+- frame_rate: 59.94
+L_586_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_03_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_586_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_04_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_586_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_05_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_586_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_06_OOB_12.json
+- total_frame: 52020
+- frame_rate: 59.94
+L_586_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_07_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_586_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_08_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_586_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_09_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_586_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_10_OOB_12.json
+- total_frame: 51630
+- frame_rate: 59.94
+L_586_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_11_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_586_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_12_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_586_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_13_OOB_12.json
+- total_frame: 51750
+- frame_rate: 59.94
+L_586_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_14_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_586_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_15_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_586_xx0_16:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_16_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_586_xx0_17:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_17_OOB_12.json
+- total_frame: 52140
+- frame_rate: 59.94
+L_586_xx0_18:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_18_OOB_12.json
+- total_frame: 51060
+- frame_rate: 59.94
+L_586_xx0_19:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_19_OOB_12.json
+- total_frame: 51510
+- frame_rate: 59.94
+L_586_xx0_20:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_586_xx0_20_OOB_12.json
+- total_frame: 13950
+- frame_rate: 59.94
+L_595_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_01_OOB_12.json
+- total_frame: 94500
+- frame_rate: 59.94
+L_595_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_02_OOB_12.json
+- total_frame: 94890
+- frame_rate: 59.94
+L_595_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_03_OOB_12.json
+- total_frame: 94860
+- frame_rate: 59.94
+L_595_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_04_OOB_12.json
+- total_frame: 94950
+- frame_rate: 59.94
+L_595_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_05_OOB_12.json
+- total_frame: 95010
+- frame_rate: 59.94
+L_595_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_06_OOB_12.json
+- total_frame: 94950
+- frame_rate: 59.94
+L_595_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_07_OOB_12.json
+- total_frame: 94740
+- frame_rate: 59.94
+L_595_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_595_xx0_08_OOB_12.json
+- total_frame: 37020
+- frame_rate: 59.94
+L_605_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_01_OOB_12.json
+- total_frame: 51360
+- frame_rate: 59.94
+L_605_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_02_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_605_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_03_OOB_12.json
+- total_frame: 51330
+- frame_rate: 59.94
+L_605_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_04_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_605_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_05_OOB_12.json
+- total_frame: 51540
+- frame_rate: 59.94
+L_605_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_06_OOB_12.json
+- total_frame: 51960
+- frame_rate: 59.94
+L_605_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_07_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_605_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_08_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_605_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_09_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_605_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_10_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_605_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_11_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_605_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_12_OOB_12.json
+- total_frame: 51900
+- frame_rate: 59.94
+L_605_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_13_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_605_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_14_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_605_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_15_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_605_xx0_16:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_16_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_605_xx0_17:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_17_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_605_xx0_18:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_605_xx0_18_OOB_12.json
+- total_frame: 28140
+- frame_rate: 59.94
+L_607_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_607_xx0_01_OOB_12.json
+- total_frame: 94560
+- frame_rate: 59.94
+L_607_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_607_xx0_02_OOB_12.json
+- total_frame: 94770
+- frame_rate: 59.94
+L_607_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_607_xx0_03_OOB_12.json
+- total_frame: 94950
+- frame_rate: 59.94
+L_607_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_607_xx0_04_OOB_12.json
+- total_frame: 32970
+- frame_rate: 59.94
+L_625_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_01_OOB_12.json
+- total_frame: 51420
+- frame_rate: 59.94
+L_625_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_02_OOB_12.json
+- total_frame: 51450
+- frame_rate: 59.94
+L_625_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_03_OOB_12.json
+- total_frame: 52200
+- frame_rate: 59.94
+L_625_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_04_OOB_12.json
+- total_frame: 51330
+- frame_rate: 59.94
+L_625_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_05_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_625_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_06_OOB_12.json
+- total_frame: 51840
+- frame_rate: 59.94
+L_625_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_07_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_625_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_08_OOB_12.json
+- total_frame: 51780
+- frame_rate: 59.94
+L_625_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_625_xx0_09_OOB_12.json
+- total_frame: 2490
+- frame_rate: 59.94
+L_631_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_01_OOB_12.json
+- total_frame: 159180
+- frame_rate: 59.94
+L_631_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_02_OOB_12.json
+- total_frame: 159630
+- frame_rate: 59.94
+L_631_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_03_OOB_12.json
+- total_frame: 159390
+- frame_rate: 59.94
+L_631_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_04_OOB_12.json
+- total_frame: 159360
+- frame_rate: 59.94
+L_631_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_05_OOB_12.json
+- total_frame: 159720
+- frame_rate: 59.94
+L_631_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_06_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_631_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_07_OOB_12.json
+- total_frame: 159840
+- frame_rate: 59.94
+L_631_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_631_xx0_08_OOB_12.json
+- total_frame: 152160
+- frame_rate: 59.94
+L_647_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_647_xx0_01_OOB_12.json
+- total_frame: 94470
+- frame_rate: 59.94
+L_647_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_647_xx0_02_OOB_12.json
+- total_frame: 94950
+- frame_rate: 59.94
+L_647_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_647_xx0_03_OOB_12.json
+- total_frame: 94860
+- frame_rate: 59.94
+L_647_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_647_xx0_04_OOB_12.json
+- total_frame: 88260
+- frame_rate: 59.94
+L_654_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_01_OOB_12.json
+- total_frame: 33450
+- frame_rate: 59.94
+L_654_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_02_OOB_12.json
+- total_frame: 94380
+- frame_rate: 59.94
+L_654_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_03_OOB_12.json
+- total_frame: 95070
+- frame_rate: 59.94
+L_654_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_04_OOB_12.json
+- total_frame: 95010
+- frame_rate: 59.94
+L_654_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_05_OOB_12.json
+- total_frame: 94830
+- frame_rate: 59.94
+L_654_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_06_OOB_12.json
+- total_frame: 94830
+- frame_rate: 59.94
+L_654_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_07_OOB_12.json
+- total_frame: 94860
+- frame_rate: 59.94
+L_654_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_08_OOB_12.json
+- total_frame: 95100
+- frame_rate: 59.94
+L_654_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_09_OOB_12.json
+- total_frame: 94860
+- frame_rate: 59.94
+L_654_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_10_OOB_12.json
+- total_frame: 94800
+- frame_rate: 59.94
+L_654_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_654_xx0_11_OOB_12.json
+- total_frame: 1920
+- frame_rate: 59.94
+L_659_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_659_xx0_01_OOB_12.json
+- total_frame: 159060
+- frame_rate: 59.94
+L_659_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_659_xx0_02_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_659_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_659_xx0_03_OOB_12.json
+- total_frame: 159510
+- frame_rate: 59.94
+L_659_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_659_xx0_04_OOB_12.json
+- total_frame: 159690
+- frame_rate: 59.94
+L_659_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_659_xx0_05_OOB_12.json
+- total_frame: 132120
+- frame_rate: 59.94
+L_660_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_660_xx0_01_OOB_12.json
+- total_frame: 159060
+- frame_rate: 59.94
+L_660_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_660_xx0_02_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_660_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_660_xx0_03_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_660_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_660_xx0_04_OOB_12.json
+- total_frame: 73380
+- frame_rate: 59.94
+L_661_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_01_OOB_12.json
+- total_frame: 51210
+- frame_rate: 59.94
+L_661_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_02_OOB_12.json
+- total_frame: 51810
+- frame_rate: 59.94
+L_661_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_03_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_661_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_04_OOB_12.json
+- total_frame: 51480
+- frame_rate: 59.94
+L_661_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_05_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_661_xx0_06:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_06_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_661_xx0_07:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_07_OOB_12.json
+- total_frame: 51570
+- frame_rate: 59.94
+L_661_xx0_08:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_08_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_661_xx0_09:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_09_OOB_12.json
+- total_frame: 51990
+- frame_rate: 59.94
+L_661_xx0_10:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_10_OOB_12.json
+- total_frame: 51690
+- frame_rate: 59.94
+L_661_xx0_11:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_11_OOB_12.json
+- total_frame: 51870
+- frame_rate: 59.94
+L_661_xx0_12:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_12_OOB_12.json
+- total_frame: 51720
+- frame_rate: 59.94
+L_661_xx0_13:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_13_OOB_12.json
+- total_frame: 51930
+- frame_rate: 59.94
+L_661_xx0_14:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_14_OOB_12.json
+- total_frame: 51660
+- frame_rate: 59.94
+L_661_xx0_15:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_661_xx0_15_OOB_12.json
+- total_frame: 44430
+- frame_rate: 59.94
+L_669_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_669_xx0_01_OOB_12.json
+- total_frame: 159150
+- frame_rate: 59.94
+L_669_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_669_xx0_02_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_669_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_669_xx0_03_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_669_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_669_xx0_04_OOB_12.json
+- total_frame: 59340
+- frame_rate: 59.94
+L_676_xx0_01:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_676_xx0_01_OOB_12.json
+- total_frame: 159270
+- frame_rate: 59.94
+L_676_xx0_02:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_676_xx0_02_OOB_12.json
+- total_frame: 159420
+- frame_rate: 59.94
+L_676_xx0_03:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_676_xx0_03_OOB_12.json
+- total_frame: 159570
+- frame_rate: 59.94
+L_676_xx0_04:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_676_xx0_04_OOB_12.json
+- total_frame: 159600
+- frame_rate: 59.94
+L_676_xx0_05:
+- anno_path: /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_L_676_xx0_05_OOB_12.json
+- total_frame: 81690
+- frame_rate: 59.94

@@ -562,7 +562,6 @@ def test_for_robot(data_dir, anno_dir, infernece_assets_dir, results_save_dir, m
     """
     - Create info_dict (gettering_information_for_oob, sanity_check_info_dict) 
     - Execute test.py 
-
     Args:
         data_dir: Video root path.
         anno_dir: Annotation root path.
@@ -615,7 +614,6 @@ def test_for_lapa(data_dir, anno_dir, infernece_assets_dir, results_save_dir, mo
     """
     - Create info_dict (gettering_information_for_oob, sanity_check_info_dict) 
     - Execute test.py 
-
     Args:
         data_dir: Video root path.
         anno_dir: Annotation root path.
@@ -691,7 +689,6 @@ def prepare_test_info_dict(patient_list, data_sheet_dir, patinets_info_save_path
 def test(info_dict, model, results_save_dir, inference_step) : # 21.06.10 HG 수정 - automatic FPS setting for each video FPS
     """
     - Model test (inference).
-
     Args:
         info_dict: The final form of 'info_dict'.
             info_dict = {

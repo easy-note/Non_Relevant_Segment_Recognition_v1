@@ -116,10 +116,13 @@ class CAMIO(pl.LightningModule):
                     torch.nn.Dropout(0.2),
                     torch.nn.Linear(self.num_ftrs, 2),
                 )
+            
             elif self.backborn == 'mobilenet_v3_small' :
                 print('MODEL = MOBILENET_V3_SMALL')
-                self.model = models.mobilenet_v3_small(pretrained=True)
+                # self.model = models.mobilenet_v3_small(pretrained=True)
+                self.model = models.mobilenet_v3_small(pretrained=False) # model scretch learning
                 self.num_ftrs = self.model.classifier[-1].in_features
+
                 self.model.classifier = torch.nn.Sequential(
                     torch.nn.Linear(576, self.num_ftrs), #lastconv_output_channels, last_channel
                     torch.nn.Hardswish(inplace=True),
@@ -152,7 +155,7 @@ class CAMIO(pl.LightningModule):
 
             else :
                 assert(False, '=== Not supported Squeezenet model ===')
-
+                
             # change to binary classification
             final_conv = torch.nn.Conv2d(512, 2, 1)
             self.model.classifier[1] = final_conv # change only final conv layer
