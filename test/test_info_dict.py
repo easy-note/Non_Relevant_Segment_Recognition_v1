@@ -1,6 +1,5 @@
 """
 Create final form of 'info_dict' for model test.
-
 Check list
     1. Is the annotation frame longer than the video frame?
     2. Are frames all integers?
@@ -68,14 +67,12 @@ def check_anno_int(anno_info:list): # anno int = True, anno Float = False
 def gettering_information_for_oob(video_root_path, anno_root_path, inference_assets_root_path, video_set, mode) : # paring video from annotation info
     """
     Generate 'info_dict' (Incomplete form of 'info_dict') 
-
     Args:
         video_root_path: Video root path.
         anno_root_path: Annotation file root path.
         inference_assets_root_path: Tensor form test dataset root path.
         video_set: Video set for test.
         mode: For Robot or Lapa? Default - Robot.
-
     Returns:
         info_dict: 
             info_dict = {
@@ -262,10 +259,8 @@ def gettering_information_for_oob(video_root_path, anno_root_path, inference_ass
 def sanity_check_info_dict(info_dict) :
     """
     Generate 'info_dict' (Complete form of 'info_dict') 
-
     Args:
         info_dict: info_dict from 'gettering_information_for_oob'
-
     Returns:
         info_dict: The final form of 'info_dict'.
             info_dict = {

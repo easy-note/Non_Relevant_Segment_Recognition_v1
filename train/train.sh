@@ -20,20 +20,22 @@ do
 done
 END
 
-model_array=("resnet50")
+model_array=("efficientnet_b3")
 
 for ((i=0; i<${#model_array[@]}; i++))
 do
     python train.py \
-    --project_name "resnet50" \
+    --project_name "efficientnet_b3" \
     --dataset "ROBOT" \
+    --data_path "/raid/img_db/oob_assets/V2/ROBOT" \
     --max_epoch 50 \
+    --min_epoch 25 \
     --log_path "/OOB_RECOG/logs" \
     --batch_size 32 \
     --init_lr 1e-3 \
     --model ${model_array[$i]} \
     --IB_ratio 3 \
     --random_seed 10 \
-    --fold '3' \
-    --num_gpus 2
+    --fold '1' \
+    --num_gpus 4
 done

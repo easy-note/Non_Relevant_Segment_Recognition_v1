@@ -1,15 +1,7 @@
-: << "END"
-model_array=("resnet34" \
-            "resnet50" \
-            "wide_resnet50_2")
 
-model_path_array=("./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=resnet34-batch=32-lr=0.001-epoch=49-last.ckpt" \
-                "./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=resnet50-batch=32-lr=0.001-epoch=49-last.ckpt" \
-                "./logs/robot/OOB/robot_oob_0406/ckpoint_robot_oob_0406-model=wide_resnet50_2-batch=32-lr=0.001-epoch=49-last.ckpt")
+model_array=("mobilenet_v3_small")
 
-results_save_dir_array=("./results-robot_oob_resnet34-1_3-last" \
-                "./results-robot_oob_resnet50-1_3-last" \
-                "./results-robot_oob_wide_resnet50_2-1_3-last")
+model_path_array=("/OOB_RECOG/logs/LAPA/OOB/model-scratch-mobilenet_v3_small-fold1/ckpoint_model-scratch-mobilenet_v3_small-fold1-model=mobilenet_v3_small-batch=32-lr=0.001-fold=1-ratio=3-epoch=26-last.ckpt")
 
 
 for (( i = 0 ; i < ${#model_path_array[@]} ; i++ ))
