@@ -8,6 +8,8 @@ from matplotlib import pyplot as plt
 
 from natsort import natsorted, index_natsorted, order_by_index
 
+import seaborn as sns
+
 EXCEPTION_NUM = -100
 
 def calc_OOB_Evaluation_metric(FN_cnt, FP_cnt, TN_cnt, TP_cnt) :
@@ -660,8 +662,6 @@ OOB_lapa_60 = [
 
 # 871ea, 100case
 OOB_lapa_list = OOB_lapa_40 + OOB_lapa_60
-
-import seaborn as sns
 
 def visual_oob_event(anno_meta_info_csv_path):
     # columns=[Patient, 'Method', totalFrame, fps, IB_count, OOB_count, total_time, IB_event_time, OOB_event_time, OOB_event_cnt, annotation_start_point, annotation_end_point, start_frame_idx,end_frame_idx, OOB_event_duration, start_frame_time, end_frame_time]

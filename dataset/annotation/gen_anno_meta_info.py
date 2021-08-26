@@ -1,8 +1,17 @@
 """
 Parsing Annotation info and aggregate for patient level
 """
-
+### for setting import mobule ###
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
+print(sys.path)
+
+from OOB_RECOG.test.test import idx_to_time
+from OOB_RECOG.test.test_info_dict import parsing_patient_video, pateint_video_sort, return_idx_is_str_in_list, check_anno_over_frame, load_yaml_to_dict
+from OOB_RECOG.evaluation.visual_gradcam import img_seq_to_gif
+### for setting import mobule ###
+
 import cv2
 import torch
 import numpy as np
@@ -25,14 +34,9 @@ import copy
 import natsort
 import yaml
 
-from test_info_dict import parsing_patient_video, pateint_video_sort, return_idx_is_str_in_list, check_anno_over_frame, load_yaml_to_dict
-from test import idx_to_time
-
 matplotlib.use('Agg')
 
 EXCEPTION_NUM = -100
-
-
 
 ###### PATINET CASE ########
 
@@ -695,14 +699,6 @@ def aggregation_annotation_info_for_patient(patient_total_frame_list, patient_an
 
 #### for save still cut of short oob event
 # from subprocess import Popen, PIPE
-from subprocess import Popen, PIPE
-
-import natsort
-from natsort import natsorted
-from visual_gradcam import img_seq_to_gif
-
-
-
 def still_cut_of_oob_event(video_path, fps, start_idx, end_idx, margin, result_dir):
 
     cmds_list = []
@@ -848,15 +844,11 @@ def collect_oob_event(anno_meta_info_csv_path, VIDEO_PATH_SHEET_path, results_di
 
         # make img to seqeuence gif
         # all_results_img_path = natsorted(glob.glob(target_result_dir +'/*.{}'.format('jpg')), key=lambda x : os.path.splitext(os.path.basename(x))[0].split('-')[2], alg=natsort.ns.INT) # 위에서 저장한 img 모두 parsing
-        all_results_img_path = natsorted(glob.glob(target_result_dir +'/*.{}'.format('jpg')), key=lambda x : os.path.splitext(os.path.basename(x))[0].split('-')[-1], alg=natsort.ns.INT) # 위에서 저장한 img 모두 parsing
+        all_results_img_path = natsort.natsorted(glob.glob(target_result_dir +'/*.{}'.format('jpg')), key=lambda x : os.path.splitext(os.path.basename(x))[0].split('-')[-1], alg=natsort.ns.INT) # 위에서 저장한 img 모두 parsing
 
         img_seq_to_gif(all_results_img_path, os.path.join(target_result_dir, '{}-start-{}-end-{}-duration-{}.gif'.format(video_name, start_frame_idx, end_frame_idx, oob_event_duration))) # seqence 이므로 sort 하여 append
 
         print('\n\n=== === === === ===\n\n')
-
-    
-
-
 
 def main():
     
@@ -870,11 +862,11 @@ def main():
     gen_anno_meta_info(ANNOTATION_V2_ROOT_PATH, OOB_robot_list + OOB_lapa_list, ROBOT_CASE + LAPA_CASE, results_dir)
     '''
 
-    anno_meta_info_csv_path = './DATA_SHEET/ROBOT_V2_anno_meta_info_per_video.csv'
-    results_dir = './OOB_EVENT_NEW_2_5'
-    VIDEO_PATH_SHEET_path = './DATA_SHEET/VIDEO_PATH_SHEET.yaml'
+    # anno_meta_info_csv_path = './DATA_SHEET/ROBOT_V2_anno_meta_info_per_video.csv'
+    # results_dir = './OOB_EVENT_NEW_2_5'
+    # VIDEO_PATH_SHEET_path = './DATA_SHEET/VIDEO_PATH_SHEET.yaml'
 
-    collect_oob_event(anno_meta_info_csv_path, VIDEO_PATH_SHEET_path, results_dir, min_event_duration=2.0, max_event_duration=5.0)
+    # collect_oob_event(anno_meta_info_csv_path, VIDEO_PATH_SHEET_path, results_dir, min_event_duration=2.0, max_event_duration=5.0)
 
 
     

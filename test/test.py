@@ -1,7 +1,25 @@
 """
 For model test using pre-created test datset in tensor form.
 """
+
+### for setting import mobule ###
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+print(sys.path)
+
+from OOB_RECOG.train.train_model import CAMIO
+
+from OOB_RECOG.test.test_info_dict import make_data_sheet, load_data_sheet
+from OOB_RECOG.test.test_info_dict import make_patients_aggregate_info, print_patients_info_yaml, patients_yaml_to_test_info_dict, sanity_check_info_dict
+from OOB_RECOG.test.test_info_dict import convert_video_name_from_old_nas_policy
+from OOB_RECOG.test.test_dataset import OOB_DB_Dataset, IDX_Sampler
+
+from OOB_RECOG.evaluation.visual_gradcam import get_oob_grad_cam_from_video, get_oob_grad_cam_img, img_seq_to_gif, return_group
+
+from OOB_RECOG.evaluation.visual_model import visual_metric_per_patients_ver2
+### for setting import mobule ###
+
 import cv2
 from PIL import Image
 import torch
@@ -27,30 +45,17 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
-from train_model import CAMIO
-
-from test_info_dict import make_data_sheet, load_data_sheet
-from test_info_dict import make_patients_aggregate_info, print_patients_info_yaml, patients_yaml_to_test_info_dict, sanity_check_info_dict
-from test_info_dict import convert_video_name_from_old_nas_policy
 
 from torch.utils.data import Dataset, DataLoader
 import shutil
 
 from natsort import natsorted, index_natsorted, order_by_index
 
-
-from test_dataset import OOB_DB_Dataset, IDX_Sampler
-
 # 21.06.10 HG 추가 - to load video for capture FP FN frame
 from decord import VideoReader
 from decord import cpu, gpu
 
 from PIL import ImageFilter
-
-# 21.06.25 HG 추가 - for FP frame Gradcam 
-from visual_gradcam import get_oob_grad_cam_from_video, get_oob_grad_cam_img, img_seq_to_gif, return_group
-
-from visual_model import visual_metric_per_patients_ver2
 
 from subprocess import Popen, PIPE
 

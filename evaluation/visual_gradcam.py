@@ -1,3 +1,13 @@
+### for setting import mobule ###
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+print(sys.path)
+
+from OOB_RECOG.train.train_model import CAMIO
+### for setting import mobule ###
+
+
 import os
 import glob
 
@@ -9,7 +19,6 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 
 import torchvision.models as torch_models
 
-from train_model import CAMIO
 from torchvision import transforms
 
 from torchsummary import summary
