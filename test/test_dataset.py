@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
 from PIL import Image
-import natsort
+from natsort import natsorted
 
 data_transforms = {
     'test': transforms.Compose([
@@ -23,7 +23,7 @@ class OOB_DB_Dataset(Dataset):
 
     def __init__(self, DB_path): 
         self.img_list = glob.glob(os.path.join(DB_path, '*.jpg')) # ALL img into DB path
-        self.img_list = natsort.natsorted(self.img_list) # sorting
+        self.img_list = natsorted(self.img_list) # sorting
 
         self.aug = data_transforms['test']
     
