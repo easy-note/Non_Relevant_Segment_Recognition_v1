@@ -9,6 +9,11 @@ VI Hub를 통해 녹화되는 영상에 대해 환자의 몸속 영상인지, �
 1. Inbody, Out of Body [Binary Classification] ==> OOB Task
     - 몸속 안 영상인지, 밖 영상인지 구분하는 Task
     - 해당 Model의 목표치는 FP = 0 에 수렴하도록 학습 (즉, Out body를 Positive라 할때, 모델이 Out Body라고 예측했지만 실제로는 Inbody인 경우) 
+2. NIR, RGB (Binary Classification) ==> NIR Task
+    - NIR (혈관 조영모드) , RGB 인지 구분하는 Task
+
+3. 서로 다른 Device로 획득한 영상 (Robot, Lapa) 에 대한 개별모델이 아닌, 동일한 모델사용시 최적의 성능이 보장되는지에 대한 실험
+    - 개뱔 Dataset에 Fitting된 모델학습 후 다른 Device영상 Inference 하여 성능비교
 
 ### Dataset
 - Robot 100개 [80 / 20] [train / validation]
@@ -162,9 +167,11 @@ Example
 ```shell
 python OOB_inference_module.py --model_output_csv_path <model_output_csv_path> --gt_json_path <gt_json_path> --inference_step <inference_step>
 
+# original verison
 >>> python OOB_inference_module.py --model_output_csv_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Inference/Inference-ROBOT-01_G_01_R_100_ch1_01.csv' --gt_json_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Annotation(V2)/01_G_01_R_100_ch1_01_OOB_27.json' --inference_step 5
+# p.p version
+>>> python OOB_inference_module_pp.py --model_output_csv_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Inference/Inference-ROBOT-01_G_01_R_100_ch1_01.csv' --gt_json_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Annotation(V2)/01_G_01_R_100_ch1_01_OOB_27.json' --inference_step 5
 ```
-
 Output file
 - `results/results_OR_CR.json`
 ```
@@ -175,4 +182,12 @@ Output file
   }
 }
 ``` 
-
+- `results_pp/results_OR_CR.json`
+```
+{
+  "01_G_01_R_100_ch1_01": {
+    "over_estimation_ratio": 0.18316831683168316,
+    "confidence_ratio": 0.6336633663366337
+  }
+}
+```
