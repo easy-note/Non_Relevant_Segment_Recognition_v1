@@ -22,6 +22,13 @@ from pandas import DataFrame as df
 import torch
 import pytorch_lightning as pl
 
+import re
+import copy
+
+import natsort
+import yaml
+
+
 matplotlib.use('Agg')
 
 def time_to_idx(time, fps):
@@ -32,9 +39,8 @@ def time_to_idx(time, fps):
     return idx
 
 # check over frame and modify last annotation info
-def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False  
+def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 않을경우 = True, over frame 존재할 경우 = False
     has_not_over_frame = False
-    
     last_start, last_end = anno_info[-1]
     
     if last_end < video_len : 
@@ -47,7 +53,8 @@ def check_anno_over_frame(anno_info:list, video_len): # over frame 존재하지 
 
     return has_not_over_frame, anno_info
 
-def check_anno_int(anno_info:list): # anno int = True, anno Float = False
+def check_anno_int(anno_info:list):
+    # anno int = True, anno Float = False
     is_int = True
     
     for start, end in anno_info : 
@@ -266,20 +273,20 @@ def sanity_check_info_dict(info_dict) :
             info_dict = {
             'video': [video1_path, video2_path, ... ],
             'anno': [ 1-[[start, end],[start, end]], 2-[[start,end],[start,end]], 3-... ],
+            'DB': [video1_DB_path, video2_DB_path, ... ],
             'inference_assets' : [test_dataset1_path, test_dataset2_path, ...]
             }
     """
 
     # loop from total_videoset_cnt
     for i, (video_path_list, anno_info_list) in enumerate(zip(info_dict['video'], info_dict['anno']), 0): 
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(video_path_list[0])[0].split('_')
-        videoset_name = '{}_{}'.format(op_method, patient_idx)
+        # hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice = os.path.splitext(os.path.basename(video_path_list[0]))[0].split('_') # parsing videoset name # 21.06.25 HG 수정, Bug Fix
+        # videoset_name = '{}_{}'.format(op_method, patient_idx)
 
         for j, (video_path, anno_info) in enumerate(zip(video_path_list, anno_info_list), 0) :
             
             video_name = os.path.splitext(os.path.basename(video_path))[0] # only video name
             print('----- ANNOTATION CHECK => \t VIDEO\t {} \t-----'.format(video_name))
-            print(info_dict['anno'][i][j])
             
             ##### video info and ####
             # open video cap for parse frame
@@ -315,7 +322,6 @@ def sanity_check_info_dict(info_dict) :
 
                 ##### update redefined annotation info #### 
                 info_dict['anno'][i][j] = anno_info
-                print(info_dict['anno'][i][j])
 
             else : # empty
                 print(anno_info)
@@ -324,3 +330,901 @@ def sanity_check_info_dict(info_dict) :
             print('')
 
     return info_dict # redefined info_dict
+
+
+###### OOB VIDEO LIST ########
+# ANNOTATION PATH - /NAS/DATA2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V1 # /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V1
+# ANNOTATION PATH - /NAS/DATA2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2 # /data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2
+
+# 91ea, 40case # /NAS/DATA/HuToM/Video_Robot_cordname # /data1/HuToM/Video_Robot_cordname
+OOB_robot_40 = [
+    'R_1_ch1_01', 'R_1_ch1_03', 'R_1_ch1_06', 'R_2_ch1_01', 'R_2_ch1_03', 'R_3_ch1_01', 'R_3_ch1_03', 'R_3_ch1_05', 'R_4_ch1_01', 'R_4_ch1_04', 
+    'R_5_ch1_01', 'R_5_ch1_03', 'R_6_ch1_01', 'R_6_ch1_03', 'R_6_ch1_05', 'R_7_ch1_01', 'R_7_ch1_04', 'R_10_ch1_01', 'R_10_ch1_03', 'R_13_ch1_01', 
+    'R_13_ch1_03', 'R_14_ch1_01', 'R_14_ch1_03', 'R_14_ch1_05', 'R_15_ch1_01', 'R_15_ch1_03', 'R_17_ch1_01', 'R_17_ch1_04', 'R_17_ch1_06', 'R_18_ch1_01', 
+    'R_18_ch1_04', 'R_19_ch1_01', 'R_19_ch1_03', 'R_19_ch1_05', 'R_22_ch1_01', 'R_22_ch1_03', 'R_22_ch1_05', 'R_48_ch1_01', 'R_48_ch1_02', 'R_56_ch1_01', 
+    'R_56_ch1_03', 'R_74_ch1_01', 'R_74_ch1_03', 'R_76_ch1_01', 'R_76_ch1_03', 'R_84_ch1_01', 'R_84_ch1_03', 'R_94_ch1_01', 'R_94_ch1_03', 'R_100_ch1_01', 
+    'R_100_ch1_03', 'R_100_ch1_05', 'R_116_ch1_01', 'R_116_ch1_03', 'R_116_ch1_06', 'R_117_ch1_01', 'R_117_ch1_03', 'R_201_ch1_01', 'R_201_ch1_03', 'R_202_ch1_01', 
+    'R_202_ch1_03', 'R_202_ch1_05', 'R_203_ch1_01', 'R_203_ch1_03', 'R_204_ch1_01', 'R_204_ch1_02', 'R_205_ch1_01', 'R_205_ch1_03', 'R_205_ch1_05', 'R_206_ch1_01', 
+    'R_206_ch1_03', 'R_207_ch1_01', 'R_207_ch1_03', 'R_208_ch1_01', 'R_208_ch1_03', 'R_209_ch1_01', 'R_209_ch1_03', 'R_210_ch1_01', 'R_210_ch2_04', 'R_301_ch1_01',
+    'R_301_ch1_04', 'R_302_ch1_01', 'R_302_ch1_04', 'R_303_ch1_01', 'R_303_ch1_04', 'R_304_ch1_01', 'R_304_ch1_03', 'R_305_ch1_01', 'R_305_ch1_04', 'R_313_ch1_01', 'R_313_ch1_03']
+
+# 134ea, 60case # /NAS/DATA2/Video/Robot/Dataset2_60case # /data2/Video/Robot/Dataset2_60case
+OOB_robot_60 = [
+    'R_310_ch1_01', 'R_310_ch1_03', 'R_311_ch1_01', 'R_311_ch1_03', 'R_312_ch1_02', 'R_312_ch1_03', 'R_320_ch1_01', 'R_320_ch1_03', 'R_321_ch1_01', 'R_321_ch1_03', 
+    'R_321_ch1_05', 'R_324_ch1_01', 'R_324_ch1_03', 'R_329_ch1_01', 'R_329_ch1_03', 'R_334_ch1_01', 'R_334_ch1_03', 'R_336_ch1_01', 'R_336_ch1_04', 'R_338_ch1_01', 
+    'R_338_ch1_03', 'R_338_ch1_05', 'R_339_ch1_01', 'R_339_ch1_03', 'R_339_ch1_05', 'R_340_ch1_01', 'R_340_ch1_03', 'R_340_ch1_05', 'R_342_ch1_01', 'R_342_ch1_03', 
+    'R_342_ch1_05', 'R_345_ch1_01', 'R_345_ch1_04', 'R_346_ch1_02', 'R_346_ch1_04', 'R_347_ch1_02', 'R_347_ch1_03', 'R_347_ch1_05', 'R_348_ch1_01', 'R_348_ch1_03', 
+    'R_349_ch1_01', 'R_349_ch1_04', 'R_355_ch1_02', 'R_355_ch1_04', 'R_357_ch1_01', 'R_357_ch1_03', 'R_357_ch1_05', 'R_358_ch1_01', 'R_358_ch1_03', 'R_358_ch1_05', 
+    'R_362_ch1_01', 'R_362_ch1_03', 'R_362_ch1_05', 'R_363_ch1_01', 'R_363_ch1_03', 'R_369_ch1_01', 'R_369_ch1_03', 'R_372_ch1_01', 'R_372_ch1_04', 'R_376_ch1_01', 
+    'R_376_ch1_03', 'R_376_ch1_05', 'R_378_ch1_01', 'R_378_ch1_03', 'R_378_ch1_05', 'R_379_ch1_02', 'R_379_ch1_04', 'R_386_ch1_01', 'R_386_ch1_03', 'R_391_ch1_01', 
+    'R_391_ch1_03', 'R_391_ch2_06', 'R_393_ch1_01', 'R_393_ch1_04', 'R_399_ch1_01', 'R_399_ch1_04', 'R_400_ch1_01', 'R_400_ch1_03', 'R_402_ch1_01', 'R_402_ch1_03', 
+    'R_403_ch1_01', 'R_403_ch1_03', 'R_405_ch1_01', 'R_405_ch1_03', 'R_405_ch1_05', 'R_406_ch1_02', 'R_406_ch1_04', 'R_406_ch1_06', 'R_409_ch1_01', 'R_409_ch1_03', 
+    'R_412_ch1_01', 'R_412_ch1_03', 'R_413_ch1_02', 'R_413_ch1_04', 'R_415_ch1_01', 'R_415_ch1_03', 'R_415_ch1_05', 'R_418_ch1_02', 'R_418_ch1_04', 'R_418_ch1_06', 
+    'R_419_ch1_01', 'R_419_ch1_04', 'R_420_ch1_01', 'R_420_ch1_03', 'R_423_ch1_01', 'R_423_ch1_03', 'R_424_ch2_02', 'R_424_ch2_04', 'R_427_ch1_01', 'R_427_ch1_03', 
+    'R_436_ch1_02', 'R_436_ch1_04', 'R_436_ch1_06', 'R_436_ch1_08', 'R_436_ch1_10', 'R_445_ch1_01', 'R_445_ch1_03', 'R_449_ch1_01', 'R_449_ch1_04', 'R_449_ch1_06', 
+    'R_455_ch1_01', 'R_455_ch1_03', 'R_455_ch1_05', 'R_480_ch1_01', 'R_493_ch1_01', 'R_493_ch1_03', 'R_501_ch1_01', 'R_510_ch1_01', 'R_510_ch1_03', 'R_522_ch1_01', 
+    'R_523_ch1_01', 'R_526_ch1_01', 'R_532_ch1_01', 'R_533_ch1_01']
+
+# 225ea & 100case 
+OOB_robot_list = OOB_robot_40 + OOB_robot_60
+
+# 350ea, 40case # /NAS/DATA2/Public/IDC_21.06.25/Dataset1 # /data2/Public/IDC_21.06.25/Dataset1
+OOB_lapa_40 = [
+    'L_301_xx0_01', 'L_301_xx0_02', 'L_301_xx0_03', 'L_301_xx0_04', 'L_301_xx0_05', 'L_301_xx0_06', 'L_303_xx0_01', 'L_303_xx0_02', 'L_303_xx0_03', 'L_303_xx0_04', 
+    'L_303_xx0_05', 'L_303_xx0_06', 'L_305_xx0_01', 'L_305_xx0_02', 'L_305_xx0_03', 'L_305_xx0_04', 'L_305_xx0_05', 'L_305_xx0_06', 'L_305_xx0_07', 'L_305_xx0_08', 
+    'L_305_xx0_09', 'L_305_xx0_10', 'L_305_xx0_11', 'L_305_xx0_12', 'L_305_xx0_13', 'L_305_xx0_14', 'L_305_xx0_15', 'L_309_xx0_01', 'L_309_xx0_02', 'L_309_xx0_03', 
+    'L_309_xx0_04', 'L_309_xx0_05', 'L_309_xx0_06', 'L_309_xx0_07', 'L_317_xx0_01', 'L_317_xx0_02', 'L_317_xx0_03', 'L_317_xx0_04', 'L_325_xx0_01', 'L_325_xx0_02', 
+    'L_325_xx0_03', 'L_325_xx0_04', 'L_325_xx0_05', 'L_325_xx0_06', 'L_325_xx0_07', 'L_325_xx0_08', 'L_325_xx0_09', 'L_325_xx0_10', 'L_325_xx0_11', 'L_325_xx0_12', 
+    'L_326_xx0_01', 'L_326_xx0_02', 'L_326_xx0_03', 'L_326_xx0_04', 'L_326_xx0_05', 'L_326_xx0_06', 'L_340_xx0_01', 'L_340_xx0_02', 'L_340_xx0_03', 'L_340_xx0_04', 
+    'L_340_xx0_05', 'L_340_xx0_06', 'L_340_xx0_07', 'L_340_xx0_08', 'L_340_xx0_09', 'L_340_xx0_10', 'L_346_xx0_01', 'L_346_xx0_02', 'L_349_ch1_01', 'L_349_ch1_02', 
+    'L_349_ch1_03', 'L_349_ch1_04', 'L_412_xx0_01', 'L_412_xx0_02', 'L_412_xx0_03', 'L_421_xx0_01', 'L_421_xx0_02', 'L_423_xx0_01', 'L_423_xx0_02', 'L_423_xx0_03', 
+    'L_423_xx0_04', 'L_423_xx0_05', 'L_442_xx0_01', 'L_442_xx0_02', 'L_442_xx0_03', 'L_442_xx0_04', 'L_442_xx0_05', 'L_442_xx0_06', 'L_442_xx0_07', 'L_442_xx0_08', 
+    'L_442_xx0_09', 'L_442_xx0_10', 'L_442_xx0_11', 'L_442_xx0_12', 'L_442_xx0_13', 'L_442_xx0_14', 'L_443_xx0_01', 'L_443_xx0_02', 'L_443_xx0_03', 'L_443_xx0_04', 
+    'L_443_xx0_05', 'L_443_xx0_06', 'L_443_xx0_07', 'L_443_xx0_08', 'L_443_xx0_09', 'L_443_xx0_10', 'L_443_xx0_11', 'L_443_xx0_12', 'L_443_xx0_13', 'L_443_xx0_14', 
+    'L_443_xx0_15', 'L_443_xx0_16', 'L_450_xx0_01', 'L_450_xx0_02', 'L_450_xx0_03', 'L_450_xx0_04', 'L_450_xx0_05', 'L_450_xx0_06', 'L_450_xx0_07', 'L_450_xx0_08', 
+    'L_450_xx0_09', 'L_450_xx0_10', 'L_450_xx0_11', 'L_450_xx0_12', 'L_450_xx0_13', 'L_450_xx0_14', 'L_450_xx0_15', 'L_450_xx0_16', 'L_450_xx0_17', 'L_450_xx0_18', 
+    'L_450_xx0_19', 'L_450_xx0_20', 'L_450_xx0_21', 'L_450_xx0_22', 'L_458_xx0_01', 'L_458_xx0_02', 'L_458_xx0_03', 'L_458_xx0_04', 'L_458_xx0_05', 'L_458_xx0_06', 
+    'L_458_xx0_07', 'L_458_xx0_08', 'L_458_xx0_09', 'L_458_xx0_10', 'L_458_xx0_11', 'L_458_xx0_12', 'L_458_xx0_13', 'L_458_xx0_14', 'L_458_xx0_15', 'L_465_xx0_01', 
+    'L_465_xx0_02', 'L_465_xx0_03', 'L_465_xx0_04', 'L_465_xx0_05', 'L_465_xx0_06', 'L_465_xx0_07', 'L_465_xx0_08', 'L_465_xx0_09', 'L_465_xx0_10', 'L_465_xx0_11', 
+    'L_465_xx0_12', 'L_465_xx0_13', 'L_465_xx0_14', 'L_465_xx0_15', 'L_465_xx0_16', 'L_465_xx0_17', 'L_465_xx0_18', 'L_465_xx0_19', 'L_465_xx0_20', 'L_465_xx0_21', 
+    'L_491_xx0_01', 'L_491_xx0_02', 'L_491_xx0_03', 'L_491_xx0_04', 'L_491_xx0_05', 'L_491_xx0_06', 'L_491_xx0_07', 'L_491_xx0_08', 'L_491_xx0_09', 'L_491_xx0_10', 
+    'L_491_xx0_11', 'L_491_xx0_12', 'L_493_ch1_01', 'L_493_ch1_02', 'L_493_ch1_03', 'L_493_ch1_04', 'L_496_ch1_01', 'L_496_ch1_02', 'L_496_ch1_03', 'L_507_xx0_01', 
+    'L_507_xx0_02', 'L_507_xx0_03', 'L_507_xx0_04', 'L_507_xx0_05', 'L_507_xx0_06', 'L_507_xx0_07', 'L_522_xx0_01', 'L_522_xx0_02', 'L_522_xx0_03', 'L_522_xx0_04', 
+    'L_522_xx0_05', 'L_522_xx0_06', 'L_522_xx0_07', 'L_522_xx0_08', 'L_522_xx0_09', 'L_522_xx0_10', 'L_522_xx0_11', 'L_534_xx0_01', 'L_534_xx0_02', 'L_534_xx0_03', 
+    'L_534_xx0_04', 'L_534_xx0_05', 'L_534_xx0_06', 'L_534_xx0_07', 'L_535_xx0_01', 'L_535_xx0_02', 'L_535_xx0_03', 'L_535_xx0_04', 'L_535_xx0_05', 'L_550_xx0_01', 
+    'L_550_xx0_02', 'L_550_xx0_03', 'L_550_xx0_04', 'L_550_xx0_05', 'L_550_xx0_06', 'L_550_xx0_07', 'L_550_xx0_08', 'L_550_xx0_09', 'L_550_xx0_10', 'L_550_xx0_11', 
+    'L_550_xx0_12', 'L_553_ch1_01', 'L_553_ch1_02', 'L_553_ch1_03', 'L_553_ch1_04', 'L_586_xx0_01', 'L_586_xx0_02', 'L_586_xx0_03', 'L_586_xx0_04', 'L_586_xx0_05', 
+    'L_586_xx0_06', 'L_586_xx0_07', 'L_586_xx0_08', 'L_586_xx0_09', 'L_586_xx0_10', 'L_586_xx0_11', 'L_586_xx0_12', 'L_586_xx0_13', 'L_586_xx0_14', 'L_586_xx0_15', 
+    'L_586_xx0_16', 'L_586_xx0_17', 'L_586_xx0_18', 'L_586_xx0_19', 'L_586_xx0_20', 'L_595_xx0_01', 'L_595_xx0_02', 'L_595_xx0_03', 'L_595_xx0_04', 'L_595_xx0_05', 
+    'L_595_xx0_06', 'L_595_xx0_07', 'L_595_xx0_08', 'L_605_xx0_01', 'L_605_xx0_02', 'L_605_xx0_03', 'L_605_xx0_04', 'L_605_xx0_05', 'L_605_xx0_06', 'L_605_xx0_07', 
+    'L_605_xx0_08', 'L_605_xx0_09', 'L_605_xx0_10', 'L_605_xx0_11', 'L_605_xx0_12', 'L_605_xx0_13', 'L_605_xx0_14', 'L_605_xx0_15', 'L_605_xx0_16', 'L_605_xx0_17', 
+    'L_605_xx0_18', 'L_607_xx0_01', 'L_607_xx0_02', 'L_607_xx0_03', 'L_607_xx0_04', 'L_625_xx0_01', 'L_625_xx0_02', 'L_625_xx0_03', 'L_625_xx0_04', 'L_625_xx0_05', 
+    'L_625_xx0_06', 'L_625_xx0_07', 'L_625_xx0_08', 'L_625_xx0_09', 'L_631_xx0_01', 'L_631_xx0_02', 'L_631_xx0_03', 'L_631_xx0_04', 'L_631_xx0_05', 'L_631_xx0_06', 
+    'L_631_xx0_07', 'L_631_xx0_08', 'L_647_xx0_01', 'L_647_xx0_02', 'L_647_xx0_03', 'L_647_xx0_04', 'L_654_xx0_01', 'L_654_xx0_02', 'L_654_xx0_03', 'L_654_xx0_04', 
+    'L_654_xx0_05', 'L_654_xx0_06', 'L_654_xx0_07', 'L_654_xx0_08', 'L_654_xx0_09', 'L_654_xx0_10', 'L_654_xx0_11', 'L_659_xx0_01', 'L_659_xx0_02', 'L_659_xx0_03', 
+    'L_659_xx0_04', 'L_659_xx0_05', 'L_660_xx0_01', 'L_660_xx0_02', 'L_660_xx0_03', 'L_660_xx0_04', 'L_661_xx0_01', 'L_661_xx0_02', 'L_661_xx0_03', 'L_661_xx0_04', 
+    'L_661_xx0_05', 'L_661_xx0_06', 'L_661_xx0_07', 'L_661_xx0_08', 'L_661_xx0_09', 'L_661_xx0_10', 'L_661_xx0_11', 'L_661_xx0_12', 'L_661_xx0_13', 'L_661_xx0_14', 
+    'L_661_xx0_15', 'L_669_xx0_01', 'L_669_xx0_02', 'L_669_xx0_03', 'L_669_xx0_04', 'L_676_xx0_01', 'L_676_xx0_02', 'L_676_xx0_03', 'L_676_xx0_04', 'L_676_xx0_05']
+
+# 521ea, 60case # /NAS/DATA2/Public/IDC_21.06.25/Dataset2 # /data2/Public/IDC_21.06.25/Dataset2
+OOB_lapa_60 = [
+    'L_310_xx0_01', 'L_310_xx0_02', 'L_310_xx0_03', 'L_310_xx0_04', 'L_310_xx0_05', 'L_310_xx0_06', 'L_310_xx0_07', 'L_310_xx0_08', 'L_310_xx0_09', 'L_310_xx0_10', 
+    'L_310_xx0_11', 'L_310_xx0_12', 'L_311_xx0_01', 'L_311_xx0_02', 'L_311_xx0_03', 'L_311_xx0_04', 'L_311_xx0_05', 'L_330_ch1_01', 'L_333_xx0_01', 'L_333_xx0_02', 
+    'L_333_xx0_03', 'L_333_xx0_04', 'L_333_xx0_05', 'L_333_xx0_06', 'L_333_xx0_07', 'L_333_xx0_08', 'L_333_xx0_09', 'L_333_xx0_10', 'L_333_xx0_11', 'L_367_ch1_01', 
+    'L_370_ch1_01', 'L_377_ch1_01', 'L_379_xx0_01', 'L_379_xx0_02', 'L_379_xx0_03', 'L_379_xx0_04', 'L_379_xx0_05', 'L_379_xx0_06', 'L_379_xx0_07', 'L_379_xx0_08', 
+    'L_379_xx0_09', 'L_379_xx0_10', 'L_379_xx0_11', 'L_385_xx0_01', 'L_385_xx0_02', 'L_385_xx0_03', 'L_385_xx0_04', 'L_385_xx0_05', 'L_385_xx0_06', 'L_385_xx0_07', 
+    'L_385_xx0_08', 'L_385_xx0_09', 'L_385_xx0_10', 'L_385_xx0_11', 'L_385_xx0_12', 'L_385_xx0_13', 'L_385_xx0_14', 'L_385_xx0_15', 'L_387_xx0_01', 'L_387_xx0_02', 
+    'L_387_xx0_03', 'L_387_xx0_04', 'L_387_xx0_05', 'L_387_xx0_06', 'L_387_xx0_07', 'L_387_xx0_08', 'L_389_xx0_01', 'L_389_xx0_02', 'L_389_xx0_03', 'L_389_xx0_04', 
+    'L_389_xx0_05', 'L_389_xx0_06', 'L_389_xx0_07', 'L_389_xx0_08', 'L_389_xx0_09', 'L_389_xx0_10', 'L_389_xx0_11', 'L_389_xx0_12', 'L_389_xx0_13', 'L_391_xx0_01', 
+    'L_391_xx0_02', 'L_391_xx0_03', 'L_391_xx0_04', 'L_391_xx0_05', 'L_391_xx0_06', 'L_391_xx0_07', 'L_391_xx0_08', 'L_391_xx0_09', 'L_393_xx0_01', 'L_393_xx0_02', 
+    'L_393_xx0_03', 'L_393_xx0_04', 'L_393_xx0_05', 'L_393_xx0_06', 'L_393_xx0_07', 'L_393_xx0_08', 'L_393_xx0_09', 'L_393_xx0_10', 'L_400_xx0_01', 'L_400_xx0_02', 
+    'L_400_xx0_03', 'L_400_xx0_04', 'L_400_xx0_05', 'L_400_xx0_06', 'L_400_xx0_07', 'L_400_xx0_08', 'L_400_xx0_09', 'L_400_xx0_10', 'L_400_xx0_11', 'L_400_xx0_12', 
+    'L_402_xx0_01', 'L_402_xx0_02', 'L_402_xx0_03', 'L_402_xx0_04', 'L_406_xx0_01', 'L_406_xx0_02', 'L_406_xx0_03', 'L_406_xx0_04', 'L_406_xx0_05', 'L_406_xx0_06', 
+    'L_406_xx0_07', 'L_406_xx0_08', 'L_406_xx0_09', 'L_406_xx0_10', 'L_406_xx0_11', 'L_406_xx0_12', 'L_406_xx0_13', 'L_408_ch1_01', 'L_413_xx0_01', 'L_413_xx0_02', 
+    'L_413_xx0_03', 'L_413_xx0_04', 'L_413_xx0_05', 'L_413_xx0_06', 'L_413_xx0_07', 'L_413_xx0_08', 'L_413_xx0_09', 'L_413_xx0_10', 'L_414_xx0_01', 'L_414_xx0_02', 
+    'L_414_xx0_03', 'L_414_xx0_04', 'L_414_xx0_05', 'L_414_xx0_06', 'L_414_xx0_07', 'L_414_xx0_08', 'L_415_xx0_01', 'L_415_xx0_02', 'L_415_xx0_03', 'L_415_xx0_04', 
+    'L_415_xx0_05', 'L_415_xx0_06', 'L_415_xx0_07', 'L_415_xx0_08', 'L_415_xx0_09', 'L_415_xx0_10', 'L_415_xx0_11', 'L_415_xx0_12', 'L_418_xx0_01', 'L_418_xx0_02', 
+    'L_418_xx0_03', 'L_418_xx0_04', 'L_418_xx0_05', 'L_418_xx0_06', 'L_418_xx0_07', 'L_418_xx0_08', 'L_419_xx0_01', 'L_419_xx0_02', 'L_419_xx0_03', 'L_419_xx0_04', 
+    'L_419_xx0_05', 'L_419_xx0_06', 'L_427_xx0_01', 'L_427_xx0_02', 'L_427_xx0_03', 'L_427_xx0_04', 'L_427_xx0_05', 'L_427_xx0_06', 'L_427_xx0_07', 'L_427_xx0_08', 
+    'L_427_xx0_09', 'L_427_xx0_10', 'L_427_xx0_11', 'L_427_xx0_12', 'L_427_xx0_13', 'L_427_xx0_14', 'L_427_xx0_15', 'L_428_ch1_01', 'L_430_ch1_01', 'L_433_xx0_01', 
+    'L_433_xx0_02', 'L_433_xx0_03', 'L_433_xx0_04', 'L_433_xx0_05', 'L_433_xx0_06', 'L_433_xx0_07', 'L_433_xx0_08', 'L_433_xx0_09', 'L_434_xx0_01', 'L_434_xx0_02', 
+    'L_434_xx0_03', 'L_434_xx0_04', 'L_434_xx0_05', 'L_434_xx0_06', 'L_434_xx0_07', 'L_434_xx0_08', 'L_434_xx0_09', 'L_434_xx0_10', 'L_436_xx0_01', 'L_436_xx0_02', 
+    'L_436_xx0_03', 'L_436_xx0_04', 'L_436_xx0_05', 'L_436_xx0_06', 'L_436_xx0_07', 'L_436_xx0_08', 'L_436_xx0_09', 'L_436_xx0_10', 'L_436_xx0_11', 'L_436_xx0_12', 
+    'L_439_xx0_01', 'L_439_xx0_02', 'L_439_xx0_03', 'L_439_xx0_04', 'L_439_xx0_05', 'L_439_xx0_06', 'L_439_xx0_07', 'L_439_xx0_08', 'L_439_xx0_09', 'L_439_xx0_10', 
+    'L_439_xx0_11', 'L_439_xx0_12', 'L_439_xx0_13', 'L_439_xx0_14', 'L_439_xx0_15', 'L_439_xx0_16', 'L_471_xx0_01', 'L_471_xx0_02', 'L_471_xx0_03', 'L_471_xx0_04', 
+    'L_471_xx0_05', 'L_471_xx0_06', 'L_471_xx0_07', 'L_471_xx0_08', 'L_471_xx0_09', 'L_471_xx0_10', 'L_471_xx0_11', 'L_473_xx0_01', 'L_473_xx0_02', 'L_473_xx0_03', 
+    'L_473_xx0_04', 'L_473_xx0_05', 'L_473_xx0_06', 'L_473_xx0_07', 'L_475_ch1_01', 'L_475_ch1_02', 'L_477_ch1_01', 'L_478_xx0_01', 'L_478_xx0_02', 'L_478_xx0_03', 
+    'L_478_xx0_04', 'L_478_xx0_05', 'L_478_xx0_06', 'L_478_xx0_07', 'L_478_xx0_08', 'L_478_xx0_09', 'L_478_xx0_10', 'L_479_xx0_01', 'L_479_xx0_02', 'L_479_xx0_03', 
+    'L_479_xx0_04', 'L_479_xx0_05', 'L_479_xx0_06', 'L_479_xx0_07', 'L_479_xx0_08', 'L_479_xx0_09', 'L_481_xx0_01', 'L_481_xx0_02', 'L_481_xx0_03', 'L_481_xx0_04', 
+    'L_481_xx0_05', 'L_481_xx0_06', 'L_481_xx0_07', 'L_481_xx0_08', 'L_481_xx0_09', 'L_481_xx0_10', 'L_481_xx0_11', 'L_481_xx0_12', 'L_481_xx0_13', 'L_482_xx0_01', 
+    'L_482_xx0_02', 'L_482_xx0_03', 'L_482_xx0_04', 'L_482_xx0_05', 'L_482_xx0_06', 'L_482_xx0_07', 'L_482_xx0_08', 'L_482_xx0_09', 'L_482_xx0_10', 'L_482_xx0_11', 
+    'L_482_xx0_12', 'L_482_xx0_13', 'L_482_xx0_14', 'L_482_xx0_15', 'L_484_xx0_01', 'L_484_xx0_02', 'L_484_xx0_03', 'L_484_xx0_04', 'L_484_xx0_05', 'L_484_xx0_06', 
+    'L_484_xx0_07', 'L_484_xx0_08', 'L_484_xx0_09', 'L_484_xx0_10', 'L_484_xx0_11', 'L_513_xx0_01', 'L_513_xx0_02', 'L_513_xx0_03', 'L_513_xx0_04', 'L_513_xx0_05', 
+    'L_513_xx0_06', 'L_513_xx0_07', 'L_513_xx0_08', 'L_513_xx0_09', 'L_513_xx0_10', 'L_513_xx0_11', 'L_513_xx0_12', 'L_514_xx0_01', 'L_514_xx0_02', 'L_514_xx0_03', 
+    'L_514_xx0_04', 'L_514_xx0_05', 'L_514_xx0_06', 'L_514_xx0_07', 'L_514_xx0_08', 'L_514_xx0_09', 'L_514_xx0_10', 'L_515_xx0_01', 'L_515_xx0_02', 'L_515_xx0_03', 
+    'L_515_xx0_04', 'L_515_xx0_05', 'L_515_xx0_06', 'L_515_xx0_07', 'L_515_xx0_08', 'L_517_xx0_01', 'L_517_xx0_02', 'L_517_xx0_03', 'L_517_xx0_04', 'L_517_xx0_05', 
+    'L_517_xx0_06', 'L_517_xx0_07', 'L_517_xx0_08', 'L_537_xx0_01', 'L_537_xx0_02', 'L_537_xx0_03', 'L_537_xx0_04', 'L_537_xx0_05', 'L_537_xx0_06', 'L_537_xx0_07', 
+    'L_537_xx0_08', 'L_537_xx0_09', 'L_537_xx0_10', 'L_537_xx0_11', 'L_537_xx0_12', 'L_539_ch1_01', 'L_542_xx0_01', 'L_542_xx0_02', 'L_542_xx0_03', 'L_542_xx0_04', 
+    'L_542_xx0_05', 'L_542_xx0_06', 'L_542_xx0_07', 'L_542_xx0_08', 'L_542_xx0_09', 'L_543_xx0_01', 'L_543_xx0_02', 'L_543_xx0_03', 'L_543_xx0_04', 'L_543_xx0_05', 
+    'L_543_xx0_06', 'L_543_xx0_07', 'L_543_xx0_08', 'L_543_xx0_09', 'L_543_xx0_10', 'L_543_xx0_11', 'L_543_xx0_12', 'L_543_xx0_13', 'L_543_xx0_14', 'L_545_xx0_01', 
+    'L_545_xx0_02', 'L_545_xx0_03', 'L_545_xx0_04', 'L_545_xx0_05', 'L_545_xx0_06', 'L_545_xx0_07', 'L_545_xx0_08', 'L_545_xx0_09', 'L_546_xx0_01', 'L_546_xx0_02', 
+    'L_546_xx0_03', 'L_546_xx0_04', 'L_546_xx0_05', 'L_546_xx0_06', 'L_546_xx0_07', 'L_546_xx0_08', 'L_546_xx0_09', 'L_546_xx0_10', 'L_556_xx0_01', 'L_556_xx0_02', 
+    'L_556_xx0_03', 'L_556_xx0_04', 'L_556_xx0_05', 'L_556_xx0_06', 'L_556_xx0_07', 'L_556_xx0_08', 'L_556_xx0_09', 'L_556_xx0_10', 'L_556_xx0_11', 'L_556_xx0_12', 
+    'L_556_xx0_13', 'L_556_xx0_14', 'L_558_xx0_01', 'L_560_xx0_01', 'L_560_xx0_02', 'L_560_xx0_03', 'L_560_xx0_04', 'L_560_xx0_05', 'L_560_xx0_06', 'L_560_xx0_07', 
+    'L_560_xx0_08', 'L_560_xx0_09', 'L_560_xx0_10', 'L_560_xx0_11', 'L_560_xx0_12', 'L_560_xx0_13', 'L_560_xx0_14', 'L_560_xx0_15', 'L_563_xx0_01', 'L_563_xx0_02', 
+    'L_563_xx0_03', 'L_563_xx0_04', 'L_563_xx0_05', 'L_563_xx0_06', 'L_563_xx0_07', 'L_563_xx0_08', 'L_563_xx0_09', 'L_563_xx0_10', 'L_563_xx0_11', 'L_563_xx0_12', 
+    'L_565_xx0_01', 'L_565_xx0_02', 'L_565_xx0_03', 'L_565_xx0_04', 'L_565_xx0_05', 'L_565_xx0_06', 'L_565_xx0_07', 'L_565_xx0_08', 'L_565_xx0_09', 'L_568_xx0_01', 
+    'L_568_xx0_02', 'L_568_xx0_03', 'L_568_xx0_04', 'L_568_xx0_05', 'L_568_xx0_06', 'L_568_xx0_07', 'L_568_xx0_08', 'L_568_xx0_09', 'L_569_xx0_01', 'L_569_xx0_02', 
+    'L_569_xx0_03', 'L_569_xx0_04', 'L_569_xx0_05', 'L_569_xx0_06', 'L_569_xx0_07', 'L_569_xx0_08', 'L_569_xx0_09', 'L_569_xx0_10', 'L_569_xx0_11', 'L_569_xx0_12', 
+    'L_572_ch1_01', 'L_574_xx0_01', 'L_574_xx0_02', 'L_574_xx0_03', 'L_574_xx0_04', 'L_574_xx0_05', 'L_574_xx0_06', 'L_574_xx0_07', 'L_574_xx0_08', 'L_574_xx0_09', 
+    'L_574_xx0_10', 'L_574_xx0_11', 'L_575_xx0_01', 'L_575_xx0_02', 'L_575_xx0_03', 'L_575_xx0_04', 'L_577_xx0_01', 'L_577_xx0_02', 'L_577_xx0_03', 'L_577_xx0_04', 
+    'L_577_xx0_05', 'L_577_xx0_06', 'L_577_xx0_07', 'L_577_xx0_08', 'L_577_xx0_09', 'L_577_xx0_10', 'L_580_xx0_01', 'L_580_xx0_02', 'L_580_xx0_03', 'L_580_xx0_04', 
+    'L_580_xx0_05', 'L_580_xx0_06', 'L_580_xx0_07', 'L_580_xx0_08', 'L_580_xx0_09', 'L_580_xx0_10', 'L_580_xx0_11', 'L_580_xx0_12', 'L_580_xx0_13', 'L_580_xx0_14', 'L_580_xx0_15']
+
+# 871ea, 100case
+OOB_lapa_list = OOB_lapa_40 + OOB_lapa_60
+
+## OLD NAS POLICY
+# OLB : R000001/ch1_video_01.mp4
+# NEW : R_1_ch1_01.mp4
+# DB : R_1/01_G_01_R_1_ch1_01/01_G_01_R_1_ch1_01-0000000001.jpg
+
+# Parsing => Change to new policy => use video Filtering
+
+'''
+[ONLY FOR ROBOT]
+convert to name for new nas policy from old nas policy
+- old_video_path = ~/R000001/ch1_video_01.mp4
+'''
+def convert_video_name_from_old_nas_policy(old_video_path) : # ONLY FOR ROBOT
+    parents_dir, video = old_video_path.split(os.path.sep)[-2:] # R000001, ch1_video_01.mp4
+    video_name, ext = os.path.splitext(video) # ch1_video_01, .mp4
+
+    OP_method, patient_no = re.findall(r'R|\d+', parents_dir) # R, 000001
+    
+    patient_no = str(int(patient_no)) # 000001 => 1
+
+    video_ch, _, video_no = video_name.split('_') # ch1, video, 01
+
+    new_nas_policy_name = "_".join([OP_method, patient_no, video_ch, video_no]) # R_1_ch1_01
+    # print('CONVERTED : {} \t ===> \t {}'.format(old_video_path, new_nas_policy_name))
+
+    return new_nas_policy_name
+    
+
+# FOR OLD NAS POLICY VIDEO PATH (ROBOT)
+'''
+video_root_path : video_root_path/Rxxxxxx/ch1_video_01.mp4
+video_list = [R_1_ch1_01, ]
+'''
+def get_video_path_for_robot(video_root_path, video_list) :
+    print('\n{}'.format('=====' * 10))
+    print('\t ===== GET VIDEO PATH FOR ROBOT =====')
+    print('{}\n'.format('=====' * 10))
+    
+
+    # DATA_PATH_DICT
+    video_path_dict = {}
+
+    # set for video use list, should copy because of list remove
+    USE_VIDEO_LIST = video_list.copy()
+    
+    # video_root_path/R000001/ch2_video_02.mp4 ==> only parsing this rule | RXXXXXX/\w{3}_video_\d+[.]MP4, mp4
+    base_video_path = glob.glob(os.path.join(video_root_path, '*', '*')) # total path
+    
+    parser_regex = re.compile(r'[R]\d+/\w{3}_video_\d+[.]mp4$|[R]\d+/\w{3}_video_\d+[.]MP4$') # R000001/ch2_video_02.mp4
+    pattern = re.compile(parser_regex)
+    
+    cnt = 0 # PROCESSED CNT
+    
+    # parsering with regex
+    for path in base_video_path : 
+        match = pattern.search(path)
+        if match : # MATCHED
+            # print('Matching \t', match.group())
+            video_name = convert_video_name_from_old_nas_policy(path)
+            
+            if video_name in USE_VIDEO_LIST : # Only Processing in USE VIDEO LIST
+                # print('USE VIDEO : {} \n'.format(video_name))
+                video_path_dict[video_name] = path # add dict | new_nas_video_name : video_path
+                USE_VIDEO_LIST.remove(video_name)
+                cnt+=1
+
+
+        else : # UNMATCHED
+            pass
+            # print('NON Matching \t', path)
+
+
+    print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(USE_VIDEO_LIST)))
+    print('FALIED DATA LIST : {}'.format(USE_VIDEO_LIST))
+
+    ### ADD EXCEPTION FILE
+    EXCEPTION_RULE = {'R_76_ch1_01' : os.path.join(video_root_path, 'R000076', 'ch1_video_01_6915320_RDG.mp4'),
+                       'R_84_ch1_01' : os.path.join(video_root_path, 'R000084', 'ch1_video_01_8459178_robotic\ subtotal.mp4'), 
+                       'R_391_ch2_06' : os.path.join(video_root_path, 'R000391', '01_G_01_R_391_ch2_06.mp4')}
+
+    print('\n--REGISTERD EXCEPTION DATA RULE --\n')
+    for keys, value in EXCEPTION_RULE.items() : 
+        print('{} | {}'.format(keys, value))
+
+    print('\n ==> APPLY EXEPTION RULE')
+    
+    # apply EXCEPTION RULE
+    for video_name in USE_VIDEO_LIST :
+        video_path_dict[video_name] = EXCEPTION_RULE.get(video_name, '') # if Non key, return ''
+        print('{} | {}'.format(video_name, video_path_dict[video_name]))
+
+    print('\n----- RESULTS [VIDEO_PATH_DICT CNT : {} ] ------\n'.format(len(video_path_dict)))
+    for keys, value in video_path_dict.items() : 
+        print('{} | {}'.format(keys, value))
+
+    return video_path_dict
+
+
+# FOR NEW NAS POLICY VIDEO PATH
+def get_video_path(video_root_path, video_list) :
+    print('\n{}'.format('=====' * 10))
+    print('\t ===== GET VIDEO PATH =====')
+    print('{}\n'.format('=====' * 10))
+    
+    # DATA_PATH_DICT
+    video_path_dict = {}
+
+    # set for video use list, should copy because of list remove
+    USE_VIDEO_LIST = video_list.copy()
+    FALID_VIDEO_LIST = video_list.copy() # pop when matched
+
+    # parsing all video path
+    all_video_path = []
+    video_ext_list = ['mp4', 'MP4', 'mpg']
+
+    for ext in video_ext_list :
+        all_video_path.extend(glob.glob(os.path.join(video_root_path, '*.{}'.format(ext))))
+
+    cnt = 0 # PROCESSED CNT
+
+    # check which idx is included parser_str in all_video_path
+    for video_name in USE_VIDEO_LIST :
+        idx = return_idx_is_str_in_list(video_name, all_video_path)
+        
+        if idx == -1 :
+            video_path_dict[video_name] = ''
+        else : 
+            cnt += 1
+            video_path_dict[video_name] = all_video_path[idx]
+            FALID_VIDEO_LIST.remove(video_name)
+
+    print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(FALID_VIDEO_LIST)))
+    print('FALIED DATA LIST : {}'.format(FALID_VIDEO_LIST))
+
+    ### ADD EXCEPTION FILE
+    EXCEPTION_RULE = {}
+
+    print('\n--REGISTERD EXCEPTION DATA RULE --\n')
+    for keys, value in EXCEPTION_RULE.items() : 
+        print('{} | {}'.format(keys, value))
+
+    print('\n ==> APPLY EXEPTION RULE')
+    
+    # apply EXCEPTION RULE
+    for video_name in FALID_VIDEO_LIST :
+        video_path_dict[video_name] = EXCEPTION_RULE.get(video_name, '') # if Non key, return ''
+        print('{} | {}'.format(video_name, video_path_dict[video_name]))
+
+    print('\n----- RESULTS [VIDEO_PATH_DICT CNT : {} ] ------\n'.format(len(video_path_dict)))
+    for keys, value in video_path_dict.items() : 
+        print('{} | {}'.format(keys, value))
+
+    return video_path_dict
+
+def get_anno_path(anno_root_path, video_list) :
+    print('\n{}'.format('=====' * 10))
+    print('\t ===== GET ANNOTATION PATH =====')
+    print('{}\n'.format('=====' * 10))
+
+    # DATA_PATH_DICT
+    anno_path_dict = {}
+
+    # set USE VIDEO LIST
+    USE_VIDEO_LIST = video_list.copy()
+    
+    # parsing all annotation path
+    all_anno_path = []
+    anno_ext_list = ['json']
+
+    for ext in anno_ext_list :
+        all_anno_path.extend(glob.glob(os.path.join(anno_root_path, '*.{}'.format(ext))))
+
+    cnt = 0 # PROCESSED CNT
+
+    # check which idx is included parser_str in all_anno_path
+    for video_name in USE_VIDEO_LIST :
+        idx = return_idx_is_str_in_list(video_name, all_anno_path)
+        
+        if idx == -1 :
+            anno_path_dict[video_name] = ''
+        else : 
+            cnt += 1
+            anno_path_dict[video_name] = all_anno_path[idx]
+
+    print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(USE_VIDEO_LIST)-cnt))
+    # print('FALIED DATA LIST : {}'.format(USE_VIDEO_LIST))
+    
+    print('\n----- RESULTS [ANNO_PATH_DICT CNT : {} ] ------\n'.format(len(anno_path_dict)))
+    for keys, value in anno_path_dict.items() : 
+        print('{} | {}'.format(keys, value))
+
+    return anno_path_dict
+
+
+# return index of target_list which has parser_str, if not return -1
+def return_idx_is_str_in_list(parser_str, target_list) :
+    find_idx = -1 # EXCEPTION NUM
+    
+    for idx, target in enumerate(target_list) :
+        if parser_str in target :
+            find_idx = idx
+            break
+
+    return find_idx
+
+# return elements of target_list which has parser_str, if not return []
+def return_elements_is_str_in_list(parser_str, target_list) :
+    find_elements = [] # Non
+    
+    for idx, target in enumerate(target_list) :
+        if parser_str in target :
+            find_elements.append(target)
+
+    return find_elements
+
+
+def get_DB_path(DB_root_path, video_list) :
+    print('\n{}'.format('=====' * 10))
+    print('\t ===== GET DB PATH =====')
+    print('{}\n'.format('=====' * 10))
+
+    # DATA_PATH_DICT
+    DB_path_dict = {}
+
+    # set USE VIDEO LIST
+    USE_VIDEO_LIST = video_list.copy()
+
+    # parsing only DIRECTORY in DB root path
+    all_DB_path = [path for path in glob.glob(os.path.join(DB_root_path, '*', '*'), recursive=False) if os.path.isdir(path)] # DB_root_path / Patient / Video_name / Video_name-000000001.jpg
+
+    cnt = 0 # PROCESSED CNT
+
+    # check which idx is included parser_str in all_anno_path
+    for video_name in USE_VIDEO_LIST :
+        idx = return_idx_is_str_in_list(video_name, all_DB_path)
+        
+        if idx == -1 :
+            DB_path_dict[video_name] = ''
+        else : 
+            cnt += 1
+            DB_path_dict[video_name] = all_DB_path[idx]
+
+    print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(USE_VIDEO_LIST)-cnt))
+    
+    print('\n----- RESULTS [ANNO_PATH_DICT CNT : {} ] ------\n'.format(len(DB_path_dict)))
+    for keys, value in DB_path_dict.items() : 
+        print('{} | {}'.format(keys, value))
+
+    return DB_path_dict
+
+
+# parsing patient video from video_list 
+def parsing_patient_video(patient_list, video_list) : 
+    print('\n{}'.format('=====' * 10))
+    print('\t ===== GET PATIENT VIDEO ===== \t')
+    print('{}\n'.format('=====' * 10))
+
+    # set USE VIDEO LIST
+    USE_VIDEO_LIST = video_list.copy()
+
+    patient_video_dict = {}
+
+    # make patients video dict
+    for patient in patient_list :
+        pateint_parser = patient + '_' # R_1 => R_1_ | R_10 => R_10_
+        patient_video = return_elements_is_str_in_list(pateint_parser, USE_VIDEO_LIST)
+
+        patient_video_dict[patient] = patient_video
+    
+    print('\n----- RESULTS [PATIENT CNT : {} ] ------\n'.format(len(patient_video_dict)))
+    print('----- PATIENT : {} ------\n'.format(patient_list))
+    for keys, value in patient_video_dict.items() : 
+        print('{} | {}'.format(keys, value))
+
+    return patient_video_dict
+
+def print_patients_info_yaml(patients_info_yaml_path): 
+    print('\n\n\n\t\t\t ### [PATINET INFO] ### \n')
+    
+    with open(patients_info_yaml_path, 'r') as f :
+        load_patients = yaml.load(f, Loader=yaml.FullLoader)
+
+    patients = load_patients['patients']
+    patient_count = len(patients)
+
+    print('PATIENT COUNT : {}'.format(patient_count))
+    print('PATIENT LIST')
+    for idx in range(patient_count) : 
+        print('-', patients[idx]['patient_no'])
+    print('\n\n\t\t\t ### ### ### ### ### ### \n\n')
+    
+    for idx in range(patient_count) : 
+        patient = patients[idx]
+
+        print('PATIENT_NO : \t\t{}'.format(patient['patient_no']))
+        print('PATIENT_VIDEO : \t{}\n'.format(patient['patient_video']))
+        
+        for video_path_info in patient['path_info'] :
+            print('VIDEO_NAME : \t\t{}'.format(video_path_info['video_name']))
+            print('VIDEO_PATH : \t\t{}'.format(video_path_info['video_path']))
+            print('ANNOTATION_PATH : \t{}'.format(video_path_info['annotation_path']))
+            print('DB_PATH : \t\t{}'.format(video_path_info['DB_path']))
+            print('\n', '-----'*10, '\n')
+
+        print('\n', '=== === === === ==='*5, '\n')
+
+    '''
+    @ EXAMPLE
+    with open('./patinets_info.yaml', 'r') as f :
+        load_patient = yaml.load(f, Loader=yaml.FullLoader)
+    
+    patients = load_patient
+
+    print(len(patients))
+    print(len(patients['patients']))
+    print(patients['patients'][0]['patient_no'])
+    print(patients['patients'][0]['patient_video'])
+    print(patients['patients'][0]['path_info'][0]['video_name'])
+    print(patients['patients'][0]['path_info'][0]['video_path'])
+    print(patients['patients'][0]['path_info'][0]['annotation_path'])
+    print(patients['patients'][0]['path_info'][0]['DB_path'])
+
+    print('')
+    print(patients['patients'][0]['path_info'][1]['video_name'])
+    print(patients['patients'][0]['path_info'][1]['video_path'])
+    print(patients['patients'][0]['path_info'][1]['annotation_path'])
+    print(patients['patients'][0]['path_info'][1]['DB_path'])
+    '''
+
+
+
+
+# Pateint
+    '''
+    patients: 
+        - patient_no: 'R_210'
+          patient_video: ['R_210_ch1_03', 'R_210_ch2_04']
+          path_info:
+              - video_name : 'R_210_ch1_03'
+                video_path : '/VIDEO_PATH'
+                annotation_path : '/ANNOTATION_PATH'
+                DB_path : '/DB_PATH'
+              - video_name : 'R_210_ch2_04'
+                video_path : 'VIDEO_PATH'
+                annotation_path : '/ANNOTATION_PATH'
+                DB_path : '/DB_PATH'
+    '''
+def make_patients_aggregate_info(patient_list, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, save_path): 
+
+
+    # 1. SET patient video
+    patient_video_dict = parsing_patient_video(patient_list, OOB_robot_list + OOB_lapa_list) # parsing pateint video
+
+    # 2. patient video sorting
+    for patient, video_name_list in patient_video_dict.items() : 
+        patient_video_dict[patient] = pateint_video_sort(video_name_list)
+    
+    # print patinet video
+    print('\n----- SORTED ------\n')
+    for patient, video_name_list in patient_video_dict.items() : 
+        print(patient, video_name_list)
+    
+    # 3. aggregtation to yaml
+    patients = {'patients': []}
+
+    # add 'patinet' obj
+    for patient, video_name_list in patient_video_dict.items() : 
+
+        path_info = []
+
+        # add 'info' obj
+        for video_name in video_name_list: 
+            path_info.append({
+                'video_name': video_name,
+                'video_path': VIDEO_PATH_SHEET[video_name],
+                'annotation_path': ANNOTATION_PATH_SHEET[video_name],
+                'DB_path': DB_PATH_SHEET[video_name]
+            })
+
+        patients['patients'].append({
+            'patient_no': patient,
+            'patient_video': video_name_list,
+            'path_info': path_info
+        })
+        
+
+    # 4. serialization from python object to YAML stream and save
+    with open(save_path, 'w') as f :
+        yaml.dump(patients, f)
+    
+
+
+# sort [R_999_ch1_03, R_999_ch2_01, R_999_ch2_02] => [R_999_ch2_01, R_999_ch2_02, R_999_ch1_03]
+# sort [01_G_01_R_999_ch1_03.mp4, 01_G_01_R_999_ch2_01.mp4, 01_G_01_R_999_ch2_02.mp4] => [01_G_01_R_999_ch2_01.mp4, 01_G_01_R_999_ch2_02.mp4, 01_G_01_R_999_ch1_03.mp4]
+def pateint_video_sort(patient_video_list) :
+    
+    sorted_list = natsort.natsorted(patient_video_list, key=lambda x : os.path.splitext(x)[0].split('_')[-1], alg=natsort.ns.INT)
+    
+    return sorted_list
+
+
+
+def annotation_parser(annotation_path, convert_fps=30): # default fps = 30 (because, only robot has csv annotation) 
+    _, ext = os.path.splitext(annotation_path)
+
+    assert ext in ['.csv', '.json'], 'CANT PARSING, SUPPOERT ANNOTATION FORMAT [.csv, .json] | TARGET FORMAT : {}'.format(ext)
+
+    annotation_info = []
+
+    if ext == '.csv' : # csv
+        anno_df = pd.read_csv(annotation_path)
+        anno_df = anno_df.dropna(axis=0) # 결측행 제거
+
+        # time -> frame idx
+        for i in range(len(anno_df)) :
+            t_start = anno_df.iloc[i]['start'] # time
+            t_end = anno_df.iloc[i]['end'] # time
+            
+            annotation_info.append([time_to_idx(t_start, convert_fps), time_to_idx(t_end, convert_fps)]) # annotation_info = [[start, end], [start, end]..]
+                    
+    elif ext == '.json' : # json
+        with open(annotation_path) as json_file :
+                json_data = json.load(json_file)
+
+        # annotation frame
+        for anno_data in json_data['annotations'] :
+            t_start = anno_data['start'] # frame
+            t_end = anno_data['end'] # frame
+
+            annotation_info.append([t_start, t_end]) # annotation_info = [[start, end], [start, end]..]
+
+    # when annotation contents nothing, return []
+    return annotation_info
+
+
+
+def patients_yaml_to_test_info_dict(patients_yaml_path) : # paring video from annotation info
+    """
+    Generate 'info_dict' (Incomplete form of 'info_dict') 
+
+    Args:
+        patients_yaml_path : patinets_yaml file (use def make_patients_aggregate_info())
+
+    Returns:
+        info_dict: 
+            info_dict = {
+                'video': [],
+                'anno': [],
+                'DB': [],
+                'inference_assets' : []
+            }
+    """
+
+    print('\n\n\n\t\t\t ### STARTING DEF [patients_yaml_to_test_info_dict] ### \n\n')
+
+    with open(patients_yaml_path, 'r') as f : # in yaml, list sequence is preserved, key:value sequence is not preserved
+        load_patients = yaml.load(f, Loader=yaml.FullLoader)
+    
+    patients = load_patients['patients']
+    patients_count = len(patients)
+
+    info_dict = {
+        'video': [],
+        'anno': [],
+        'DB': [],
+        'inference_assets' : []
+    }
+
+    for idx in range(patients_count): 
+        patient = patients[idx]
+        patient_no = patient['patient_no']
+        patient_video = patient['patient_video']
+
+        # it will be append to info_dict
+        target_video_list = []
+        target_anno_list = []
+        target_inference_assets_list = []
+        target_DB_list = []
+
+        
+        for video_path_info in patient['path_info']:
+            video_name = video_path_info['video_name']
+            video_path = video_path_info['video_path']
+            annotation_path = video_path_info['annotation_path']
+            DB_path = video_path_info['DB_path']
+
+            print(video_name)
+
+            # init
+            temp_inference_assets_list = []
+            # it will be append to temp_anno_list
+            target_idx_list = []
+            
+            if annotation_path != '': # EVENT
+                target_idx_list = annotation_parser(annotation_path)
+            
+            # save gettering info
+            target_video_list.append(video_path) # [video1_1, video_1_2, ...]
+            target_anno_list.append(target_idx_list) # [temp_idx_list_1_1, temp_idx_list_1_2, ... ]
+            target_inference_assets_list.append(temp_inference_assets_list) # [video1_1_0, video_1_1_1, video_1_1_2, ..]
+            target_DB_list.append(DB_path) # [DB1_1, DB1_2, ...]
+
+        # info_dict['video'], info_dict['anno'] info_dict['DB'] length is same as valset
+        info_dict['video'].append(target_video_list) # [[video1_1, video1_2], [video2_1, video_2_2], ...]
+        info_dict['anno'].append(target_anno_list) # [[temp_idx_list_1_1, temp_idx_list_1_2], [temp_idx_list_2_1, temp_idx_list_2_2,], ...]
+        info_dict['inference_assets'].append(target_inference_assets_list) # [[[video1_1_0, video1_1_1, video1_1_2,..], [video1_2_0, ...]], ... ]
+        info_dict['DB'].append(target_DB_list) # [[DB1_1, DB1_2], [DB2_1,DB2_2], ...] # if no DB info, just append[['', ''], ['', ''], ...]
+
+        print('\n\n')
+    
+    return info_dict
+
+
+def save_dict_to_yaml(save_dict, save_path): # dictonary, ~.yaml
+    save_dir, _ = os.path.split(save_path)
+    try :
+        if not os.path.exists(save_dir) :
+            os.makedirs(save_dir)
+    except OSError :
+        print('ERROR : Creating Directory, ' + save_dir)
+    
+    with open(save_path, 'w') as f :
+        yaml.dump(save_dict, f)
+    
+def load_yaml_to_dict(yaml_file_path): # ~.yaml
+    load_dict = {}
+
+    with open(yaml_file_path, 'r') as f :
+        load_dict = yaml.load(f, Loader=yaml.FullLoader)
+    
+    return load_dict
+
+    
+
+# OOB_robot_40과 같은 GLOBAL 변수는 Main에서만 사용 (각 함수에서 내에서 사용지양, local 변수로 사용지향)
+def make_data_sheet(save_dir):
+
+    # DATA PATH SHEET
+    ROBOT_VIDEO_PATH_SHEET = {}
+    LAPA_VIDEO_PATH_SHEET = {}
+
+    ROBOT_ANNOTATION_PATH_SHEET = {}
+    LAPA_ANNOTATION_PATH_SHEET = {}
+
+    ROBOT_DB_PATH_SHEET = {}
+    LAPA_DB_PATH_SHEET = {}
+    
+    
+    # 1. SET VIDEO PATH
+    ROBOT_DATASET_1_VIDEO_ROOT_PATH = '/data1/HuToM/Video_Robot_cordname' # Dataset 1 - ROBOT
+    ROBOT_DATASET_2_VIDEO_ROOT_PATH = '/data2/Video/Robot/Dataset2_60case' # Dataset 2 - ROBOT
+    ROBOT_VIDEO_PATH_SHEET = {**get_video_path_for_robot(ROBOT_DATASET_1_VIDEO_ROOT_PATH, OOB_robot_40), **get_video_path_for_robot(ROBOT_DATASET_2_VIDEO_ROOT_PATH, OOB_robot_60)}
+    
+
+    LAPA_DATASET_1_VIDEO_ROOT_PATH = '/data2/Public/IDC_21.06.25/Dataset1' # Dataset 1 - LAPA
+    LAPA_DATASET_2_VIDEO_ROOT_PATH = '/data2/Public/IDC_21.06.25/Dataset2' # Dataset 2 - LAPA
+    LAPA_VIDEO_PATH_SHEET = {**get_video_path(LAPA_DATASET_1_VIDEO_ROOT_PATH, OOB_lapa_40), **get_video_path(LAPA_DATASET_2_VIDEO_ROOT_PATH, OOB_lapa_60)}
+
+    # 2. SET ANNOTATION PATH
+    ANNOTATION_V1_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2'
+    ANNOTATION_V2_ROOT_PATH = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2'
+    
+    ROBOT_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_robot_list) # V2 - ROBOT
+    LAPA_ANNOTATION_PATH_SHEET = get_anno_path(ANNOTATION_V2_ROOT_PATH, OOB_lapa_list) # V2 - LAPA
+    
+    # 3. SET DB PATH
+    ROBOT_DB_ROOT_PATH = '/data3/img_db/ROBOT'
+    LAPA_DB_ROOT_PATH = '/data2/Public/OOB_Recog/img_db_new/LAPA'
+    
+    ROBOT_DB_PATH_SHEET = get_DB_path(ROBOT_DB_ROOT_PATH, OOB_robot_list) # ROBOT
+    LAPA_DB_PATH_SHEET = get_DB_path(LAPA_DB_ROOT_PATH, OOB_lapa_list) # LAPA
+
+    # 4. AGGREGATE
+    VIDEO_PATH_SHEET = {**ROBOT_VIDEO_PATH_SHEET, **LAPA_VIDEO_PATH_SHEET}
+    ANNOTATION_PATH_SHEET = {**ROBOT_ANNOTATION_PATH_SHEET, **LAPA_ANNOTATION_PATH_SHEET} # V1
+    DB_PATH_SHEET = {**ROBOT_DB_PATH_SHEET, **LAPA_DB_PATH_SHEET}
+
+    # 5. SAVE SHEET
+    VIDEO_PATH_SHEET_SAVE_PATH = os.path.join(save_dir, 'VIDEO_PATH_SHEET.yaml')
+    ANNOTATION_SHHET_SAVE_PATH = os.path.join(save_dir, 'ANNOTATION_PATH_SHEET.yaml')
+    DB_SHEET_SAVE_PATH = os.path.join(save_dir, 'DB_PATH_SHEET.yaml')
+
+    save_dict_to_yaml(VIDEO_PATH_SHEET, VIDEO_PATH_SHEET_SAVE_PATH)
+    save_dict_to_yaml(ANNOTATION_PATH_SHEET, ANNOTATION_SHHET_SAVE_PATH)
+    save_dict_to_yaml(DB_PATH_SHEET, DB_SHEET_SAVE_PATH)
+
+def load_data_sheet(data_sheet_dir):
+    # 1. set load path from data_sheet_dir
+    VIDEO_PATH_SHEET_yaml_path = os.path.join(data_sheet_dir, 'VIDEO_PATH_SHEET.yaml')
+    ANNOTATION_PATH_SHEET_yaml_path = os.path.join(data_sheet_dir, 'ANNOTATION_PATH_SHEET.yaml')
+    DB_PATH_SHEET_yaml_path = os.path.join(data_sheet_dir, 'DB_PATH_SHEET.yaml')
+    
+    # 2. load from yaml to dict
+    VIDEO_PATH_SHEET = load_yaml_to_dict(VIDEO_PATH_SHEET_yaml_path)
+    ANNOTATION_PATH_SHEET = load_yaml_to_dict(ANNOTATION_PATH_SHEET_yaml_path)
+    DB_PATH_SHEET = load_yaml_to_dict(DB_PATH_SHEET_yaml_path)
+
+    return VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET
+
+
+
+from subprocess import Popen, PIPE
+EXCEPTION_NUM = -100
+
+# save log 
+def save_log(log_txt, save_dir) :
+    print('=========> SAVING LOG ... | {}'.format(save_dir))
+    with open(save_dir, 'a') as f :
+        f.write(log_txt)
+
+
+def get_totalFrame_from_anno(annotation_path):
+    _, ext = os.path.splitext(annotation_path)
+
+    assert ext in ['.json'], 'CANT PARSING, SUPPOERT ANNOTATION FORMAT [.json] | TARGET FORMAT : {}'.format(ext)
+
+    totalFrame = EXCEPTION_NUM
+                    
+    if ext == '.json' : # json
+        with open(annotation_path) as json_file :
+                json_data = json.load(json_file)
+
+        # annotation totalframe
+        totalFrame = json_data['totalFrame']
+
+    # when annotation contents nothing, return -1
+    return totalFrame
+
+
+def get_video_length(video_path):
+    cmds_list = []
+
+    out = EXCEPTION_NUM
+
+    cmd = ['ffprobe', '-v', 'error', '-select_streams v:0', '-count_packets', '-show_entries stream=nb_read_packets', '-of', 'csv=p=0', video_path]
+    cmd = ' '.join(cmd)
+    cmds_list.append([cmd])
+    
+    print('GET VIDEO LENGTH USIGN FFPROBE : {}'.format(cmd), end= ' ')
+    
+    # procs_list = [subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE  , shell=True) for cmd in cmds_list]
+    procs_list = [Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True) for cmd in cmds_list]
+
+    for proc in procs_list:
+        print('ing ...')
+        # proc.wait() # communicate() # 자식 프로세스들이 I/O를 마치고 종료하기를 기다림
+        out = proc.communicate()
+        print("Processes are done")
+
+    return out
+
+
+
+
+
+def check_correspondence_db_with_anno(patients_yaml_path) : # paring from db, annotation info from patinets_yaml file
+
+    print('\n\n\n\t\t\t ### STARTING DEF [check_correspondence_db_with_anno] ### \n\n')
+
+    with open(patients_yaml_path, 'r') as f : # in yaml, list sequence is preserved, key:value sequence is not preserved
+        load_patients = yaml.load(f, Loader=yaml.FullLoader)
+    
+    patients = load_patients['patients']
+    patients_count = len(patients)
+
+    log_txt = '\n\n ===== ===== \t CHECK CORRESPONDENCE DB LENGTH WITH ANNOTATION TOTAL FRAME \t ===== ===== \n\n'
+    log_txt += '\n\nCHEKED PATINET COUNT : {}\n\n'.format(patients_count)
+    log_txt += 'PATIENT \t VIDEO \t DB_PATH \t ANNOTATION_PATH\n'
+    
+    save_log(log_txt, os.path.join('.', 'check_correspondence_db_with_anno_lapa.txt')) # save log
+
+
+    for idx in range(patients_count): 
+        patient = patients[idx]
+        patient_no = patient['patient_no']
+        patient_video = patient['patient_video']
+
+        # it will be append to info_dict
+        target_video_list = []
+        target_anno_list = []
+        target_inference_assets_list = []
+        target_DB_list = []
+
+        # enter to video info
+        for video_path_info in patient['path_info']:
+            video_name = video_path_info['video_name']
+            video_path = video_path_info['video_path']
+            annotation_path = video_path_info['annotation_path']
+            DB_path = video_path_info['DB_path']
+
+            db_length = -1
+
+            if DB_path != '': # exist DB path
+                all_db_img_path = glob.glob(DB_path + '/*.jpg') # all img file list
+                db_length = len(all_db_img_path)
+
+            totalFrame = EXCEPTION_NUM
+            
+            if annotation_path != '': # EVENT
+                totalFrame = get_totalFrame_from_anno(annotation_path)
+
+            # logging
+            log_txt = '{} \t {} \t {} \t {} \t {} \t {} \t {}'.format(patient_no, video_name, video_path, DB_path, annotation_path, db_length, totalFrame)
+            
+            # check correspondence length db len with totalFrame 
+            if db_length != totalFrame :
+                log_txt += '\t ===> UNMATCHED'
+                # get video length
+                video_len = get_video_length(video_path)
+
+                log_txt += '\t ({})'.format(video_len)
+
+            log_txt += '\n'
+
+            print(log_txt)
+            save_log(log_txt, os.path.join('.', 'check_correspondence_db_with_anno_lapa.txt')) # save log
+
+
+def main():
+
+    # make DATA SHEET
+    make_data_sheet('./DATA_SHEET/NEW_LAPA')
+
+    
+    ROBOT_CASE = ['R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 'R_15', 'R_17', 'R_18', 'R_19', 'R_22', 'R_48', 'R_56', 'R_74',
+                'R_76', 'R_84', 'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 'R_204', 'R_205', 'R_206', 'R_207', 'R_208', 'R_209', 'R_210', 'R_301',
+                'R_302', 'R_303', 'R_304', 'R_305', 'R_310', 'R_311', 'R_312', 'R_313', 'R_320', 'R_321', 'R_324', 'R_329', 'R_334', 'R_336', 'R_338', 'R_339', 'R_340',
+                'R_342', 'R_345', 'R_346', 'R_347', 'R_348', 'R_349', 'R_355', 'R_357', 'R_358', 'R_362', 'R_363', 'R_369', 'R_372', 'R_376', 'R_378', 'R_379', 'R_386',
+                'R_391', 'R_393', 'R_399', 'R_400', 'R_402', 'R_403', 'R_405', 'R_406', 'R_409', 'R_412', 'R_413', 'R_415', 'R_418', 'R_419', 'R_420', 'R_423', 'R_424',
+                'R_427', 'R_436', 'R_445', 'R_449', 'R_455', 'R_480', 'R_493', 'R_501', 'R_510', 'R_522', 'R_523', 'R_526', 'R_532', 'R_533']
+
+    LAPA_CASE = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442', 'L_443',
+                'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550', 'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625',
+                'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676', 'L_310', 'L_311', 'L_330', 'L_333', 'L_367', 'L_370', 'L_377', 'L_379', 'L_385',
+                'L_387', 'L_389', 'L_391', 'L_393', 'L_400', 'L_402', 'L_406', 'L_408', 'L_413', 'L_414', 'L_415', 'L_418', 'L_419', 'L_427', 'L_428', 'L_430', 'L_433',
+                'L_434', 'L_436', 'L_439', 'L_471', 'L_473', 'L_475', 'L_477', 'L_478', 'L_479', 'L_481', 'L_482', 'L_484', 'L_513', 'L_514', 'L_515', 'L_517', 'L_537',
+                'L_539', 'L_542', 'L_543', 'L_545', 'L_546', 'L_556', 'L_558', 'L_560', 'L_563', 'L_565', 'L_568', 'L_569', 'L_572', 'L_574', 'L_575', 'L_577', 'L_580']
+
+    LAPA_CASE_40 = ['L_301', 'L_303', 'L_305', 'L_309', 'L_317', 'L_325', 'L_326', 'L_340', 'L_346', 'L_349', 'L_412', 'L_421', 'L_423', 'L_442', 'L_443', 'L_450', 'L_458', 'L_465', 'L_491', 'L_493', 'L_496', 'L_507', 'L_522', 'L_534', 'L_535', 'L_550', 'L_553', 'L_586', 'L_595', 'L_605', 'L_607', 'L_625', 'L_631', 'L_647', 'L_654', 'L_659', 'L_660', 'L_661', 'L_669', 'L_676']
+    
+    # load DATA SHEET
+    VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET = load_data_sheet('./DATA_SHEET/NEW_LAPA')
+
+    patient_list = LAPA_CASE_40
+
+    # make patinets aggregation file
+    # make_patients_aggregate_info(patient_list, VIDEO_PATH_SHEET, ANNOTATION_PATH_SHEET, DB_PATH_SHEET, './patients_info_robot.yaml')
+
+    # print patinets aggregation file
+    # print_patients_info_yaml('./patients_info_robot.yaml')
+    
+    # convert patients aggregation file to info_dict
+    # info_dict = patients_yaml_to_test_info_dict('./patients_info_robot.yaml')
+
+    # check db length with annotation info 
+    check_correspondence_db_with_anno('./patients_info_robot.yaml')
+
+    # print(info_dict)
+
+
+
+
+if __name__ == "__main__":
+	main()
