@@ -8,7 +8,6 @@ from core.api.trainer import CAMIO
 def main():
     parser = parse_opts()
     args = parser.parse_args()
-    print(args.save_log_path, args.dataset, args.task, args.fold)
     args.save_ckpt_path = os.path.join(args.save_log_path, args.dataset, args.task, args.fold)
 
     os.makedirs(args.save_ckpt_path, exist_ok=True)
