@@ -4,12 +4,13 @@
 def main():
     parser = parse_opts()
     args = parser.parse_args()
-    
-    robot_dataset = RobotDataset(args)
-    lapa_dataset = LapaDataset(args)
+
+    robot_dataset = RobotDataset(args=args, state='train') 
 
     print(robot_dataset)
-    print(lapa_dataset)
+    print(len(robot_dataset))
+
+    # lapa_dataset = LapaDataset(args)
 
 
 if __name__ == '__main__':

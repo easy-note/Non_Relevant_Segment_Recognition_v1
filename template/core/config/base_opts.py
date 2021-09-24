@@ -128,37 +128,70 @@ def parse_opts():
             help='Use for Step LR Scheduler')
 
     parser.add_argument('--lr_scheduler_factor',
-                default=0.9,
-                type=float,
-                help='Multiplicative factor for decreasing learning rate')
+            default=0.9,
+            type=float,
+            help='Multiplicative factor for decreasing learning rate')
 
     # -------------- Dataset --------------------
-    parser.add_argument('--dataset', type=str, default='ROBOT', choices=['ROBOT', 'LAPA'], help='[robot, lapa] choice on dataset')
+    parser.add_argument('--dataset', 
+            default='ROBOT', 
+            type=str, 
+            choices=['ROBOT', 'LAPA'], 
+            help='[robot, lapa] choice on dataset')
 
-    parser.add_argument('--task', type=str,
-                        default='OOB', choices=['OOB', 'NIR'], help='[OOB, NIR] choice on task')
+    parser.add_argument('--task', 
+            default='OOB', 
+            type=str,
+            choices=['OOB', 'NIR'], 
+            help='[OOB, NIR] choice on task')
 
-    parser.add_argument('--data_path',
-            default=None,
+    parser.add_argument('--data_base_path',
+            default='/raid/img_db',
             type=str,
             help='Data location')
 
     parser.add_argument('--fold',
-            default='1',
+            default='free',
             type=str,
             choices=['1', '2', '3', 'free'],
             help='valset 1, 2, 3, free=for setting train_videos, val_vidoes')
+
+    parser.add_argument('--data_version',
+            default='v2',
+            type=str,
+            choices=['v1', 'v2'],
+            help='Annotation dataset version')
+
+    parser.add_argument('--IB_ratio',
+            default=3,
+            type=int,
+            help='')
+
+    parser.add_argument('--train_videos', type=str, nargs='*',
+            choices= [
+                'R_1', 'R_2', 'R_3', 'R_4', 'R_5', 'R_6', 'R_7', 'R_10', 'R_13', 'R_14', 
+                'R_15', 'R_17', 'R_18', 'R_19', 'R_22', 'R_48', 'R_56', 'R_74', 'R_76', 'R_84', 
+                'R_94', 'R_100', 'R_116', 'R_117', 'R_201', 'R_202', 'R_203', 'R_204', 'R_205', 'R_206', 
+                'R_207', 'R_208', 'R_209', 'R_210', 'R_301', 'R_302', 'R_303', 'R_304', 'R_305', 'R_310', 
+                'R_311', 'R_312', 'R_313', 'R_320', 'R_321', 'R_324', 'R_329', 'R_334', 'R_336', 'R_338', 
+                'R_339', 'R_340', 'R_342', 'R_345', 'R_346', 'R_347', 'R_348', 'R_349', 'R_355', 'R_357', 
+                'R_358', 'R_362', 'R_363', 'R_369', 'R_372', 'R_376', 'R_378', 'R_379', 'R_386', 'R_391', 
+                'R_393', 'R_399', 'R_400', 'R_402', 'R_403', 'R_405', 'R_406', 'R_409', 'R_412', 'R_413', 
+                'R_415', 'R_418', 'R_419', 'R_420', 'R_423', 'R_424', 'R_427', 'R_436', 'R_445', 'R_449', 
+                'R_455', 'R_480', 'R_493', 'R_501', 'R_510', 'R_522', 'R_523', 'R_526', 'R_532', 'R_533'],
+            help='train video')
 
     parser.add_argument('--num_workers',
             default=6,
             type=int,
             help='How many CPUs to use for data loading')
+    
 
     # -------------- Train Methods --------------------
     parser.add_argument('--train_method', type=str,
-                        default='normal', 
-                        choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
-                        help='Select train method, normal or hem method')
+            default='normal', 
+            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
+            help='Select train method, normal or hem method')
 
 
     # -------------- etc --------------------
@@ -170,4 +203,3 @@ def parse_opts():
 
 
     return parser
-    
