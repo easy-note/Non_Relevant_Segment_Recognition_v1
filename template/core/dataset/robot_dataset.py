@@ -7,12 +7,11 @@ from glob import glob
 from PIL import Image
 import pandas as pd
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from torch.utils.data import Dataset
 from core.config.data_info import data_transforms
 
-from core.config.patients_info import train_videos
+from core.config.patients_info import train_videos, val_videos
 
 
 class RobotDataset(Dataset):
@@ -31,10 +30,13 @@ class RobotDataset(Dataset):
 
         if state == 'train':
             self.aug = data_transforms['train']
+            self.patients_info_key = train_videos
         elif state == 'val':
             self.aug = data_transforms['val']
+            self.patients_info_key = val_videos
         elif state == 'test':
             self.aug = data_transforms['test']
+            self.patients_info_key = val_videos
 
         # patients load
         self.load_patients()
@@ -58,17 +60,12 @@ class RobotDataset(Dataset):
             self.change_mode() # self.mode_hem = True
 
     def load_patients(self):
-        if self.args.fold == '1':
-            self.patients_name = train_videos['1']
-        elif self.args.fold == '2':
-            self.patients_name = train_videos['2']
-        elif self.args.fold == '3':
-            self.patients_name = train_videos['3']
-        elif self.args.fold == 'free':
-            self.patients_name = self.args.train_videos
+        if self.args.fold is not 'free':
+            self.patients_name = self.patients_info_key[self.args.fold] # train_videos['1']
         else:
-            print("\n\n#####\tCANNOT LOAD PATIENT LIST\t#####")
-
+            # self.patients_name = self.args.train_videos
+            ## 임의의 data list 에 대해 학습 및 테스트를 할 경우, 별도의 룰에 의거해서 지정. e.g. random으로 100개 중 80개 선택, 2 step 씩 넘어가며 선택.
+            pass
 
     def load_v1(self):
         # TODO load dataset ver. 1
@@ -158,6 +155,7 @@ class RobotDataset(Dataset):
         return img, label
 
 if __name__ == '__main__':
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from core.config.base_opts import parse_opts
 
     parser = parse_opts()

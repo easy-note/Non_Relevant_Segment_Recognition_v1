@@ -5,10 +5,14 @@ def main():
     parser = parse_opts()
     args = parser.parse_args()
 
-    robot_dataset = RobotDataset(args=args, state='train') 
+    train_dataset = RobotDataset(args=args, state='train') 
+    val_dataset = RobotDataset(args=args, state='val')
 
-    print(robot_dataset)
-    print(len(robot_dataset))
+    print(train_dataset)
+    print(len(train_dataset))
+
+    print(val_dataset)  
+    print(len(val_dataset))
 
     # lapa_dataset = LapaDataset(args)
 
