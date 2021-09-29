@@ -1,4 +1,5 @@
 import time
+import os
 
 class LogHelper():
     """
@@ -7,14 +8,17 @@ class LogHelper():
     """
 
     def __init__(self, save_dir):
-        self.save_dir = save_dir
+        f_dir, target_file = os.path.split(save_dir)
+        f_name, ext = os.path.splitext(target_file)
 
-        print('=========> SAVING LOG ... | {}'.format(self.save_dir)) # init print
-        self.writeln(': start logging')
+        self.save_dir = save_dir
+        self.save_path = os.path.join(f_dir, '{}_{}{}'.format(f_name, self.get_current_time()[0], ext))
+
+        print('=========> SAVING LOG ... | {}'.format(self.save_path)) # init print
     
     def writeln(self, log_txt=""):
         if log_txt != "" :
-            logging = '{}\t\t{}'.format(self.get_current_time(), log_txt)
+            logging = '{}\t\t{}'.format(self.get_current_time()[1], log_txt)
         else :
             logging = log_txt
         
@@ -26,9 +30,9 @@ class LogHelper():
         startTime = time.time()
         s_tm = time.localtime(startTime)
         
-        return time.strftime('%Y-%m-%d %I:%M:%S %p', s_tm)
+        return time.strftime('%Y-%m-%d-%H:%M:%S', s_tm), time.strftime('%Y-%m-%d %I:%M:%S %p', s_tm)
 
     # save log txt
     def save(self, logging):
-        with open(self.save_dir, 'a') as f :
+        with open(self.save_path, 'a') as f :
             f.write(logging)
