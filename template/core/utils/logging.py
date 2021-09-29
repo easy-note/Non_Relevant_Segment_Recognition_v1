@@ -8,30 +8,26 @@ class LogHelper():
 
     def __init__(self, save_dir):
         self.save_dir = save_dir
-        self.log_txt = ""
 
         print('=========> SAVING LOG ... | {}'.format(self.save_dir)) # init print
     
     def writeln(self, log_txt=""):
         if log_txt != "" :
-            self.log_txt = self.get_current_time()
+            logging = '{}\t\t{}'.format(self.get_current_time(), log_txt)
+        else :
+            logging = log_txt
         
-        self.log_txt += log_txt + '\n'
-        self.save()
-        self.flush()
-
-    def flush(self):
-        self.log_txt = ""
+        logging += '\n'
+        
+        self.save(logging)
 
     def get_current_time(self):
         startTime = time.time()
         s_tm = time.localtime(startTime)
         
-        return time.strftime('%Y-%m-%d %I:%M:%S %p \t\t', s_tm)
+        return time.strftime('%Y-%m-%d %I:%M:%S %p', s_tm)
 
     # save log txt
-    def save(self):
-        
+    def save(self, logging):
         with open(self.save_dir, 'a') as f :
-            f.write(self.log_txt)
-        
+            f.write(logging)
