@@ -9,6 +9,8 @@ class LogHelper():
     def __init__(self, save_dir):
         self.save_dir = save_dir
         self.log_txt = ""
+
+        print('=========> SAVING LOG ... | {}'.format(self.save_dir)) # init print
     
     def writeln(self, log_txt=""):
         if log_txt != "" :
@@ -29,7 +31,7 @@ class LogHelper():
 
     # save log txt
     def save(self):
-        print('=========> SAVING LOG ... | {}'.format(self.save_dir))
+        
         with open(self.save_dir, 'a') as f :
             f.write(self.log_txt)
         
