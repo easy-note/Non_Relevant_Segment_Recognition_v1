@@ -10,6 +10,7 @@ class LogHelper():
         self.save_dir = save_dir
 
         print('=========> SAVING LOG ... | {}'.format(self.save_dir)) # init print
+        self.writeln(': start logging')
     
     def writeln(self, log_txt=""):
         if log_txt != "" :
