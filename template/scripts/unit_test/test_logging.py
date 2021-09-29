@@ -15,9 +15,9 @@ def main():
                         help='root directory for infernce saving')
         
 
-    parser.add_argument('--step_of_inference', type=int, 
+    parser.add_argument('--inference_interval', type=int, 
                         default=30,
-                        help='Inference frame step of Evaluation')
+                        help='Interval of inference frame')
 
     parser.add_argument('--inference_fold',
                     default='3',
@@ -35,14 +35,14 @@ def main():
     os.makedirs(inference_save_path, exist_ok=True)
 
     log_helper = LogHelper(os.path.join(inference_save_path, 'log.txt')) # logging
-    log_helper.writeln('\t === START INFERENCE === \t\n')
+    log_helper.writeln('\t === START INFERENCE === \t')
     log_helper.writeln()
 
 
     # INFERENCEING ... 
 
 
-    log_helper.writeln('\t === END INFERENCE === \t\n')
+    log_helper.writeln('\t === END INFERENCE === \t')
     log_helper.writeln()
 
 if __name__ == '__main__':
