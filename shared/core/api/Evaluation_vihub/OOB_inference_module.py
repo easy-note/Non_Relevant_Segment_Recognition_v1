@@ -6,7 +6,7 @@ import numpy as np
 import json
 import argparse
 
-from utils.evalHelper import evalHelper # eval Helper
+from core.utils.evalHelper import evalHelper # eval Helper
 
 parser = argparse.ArgumentParser()
 
@@ -15,7 +15,9 @@ parser.add_argument('--model_output_csv_path', type=str,
 parser.add_argument('--gt_json_path', type=str, 
                     default='/OOB_RECOG/shared_OOB_Inference_Module/assets/Annotation(V2)/01_G_01_R_100_ch1_01_OOB_27.json', help='ground-truth (annotation) file path')
 
-parser.add_argument('--inference_step', type=int, default=5, help='inference frame step')
+parser.add_argument('--inference_step', type=int, default=30, help='inference interval')
+
+parser.add_argument('--save_path', help='inference frame step')
 
 args, _ = parser.parse_known_args()
 
@@ -238,5 +240,5 @@ class Inference_eval:
         return [self.mOR, self.mCR]
 
 if __name__ == '__main__':
-    test = Inference_eval(model_output_csv_path=args.model_output_csv_path, gt_json_path=args.gt_json_path, inference_step=args.inference_step)
+    test = Inference_eval(model_output_csv_path=args.model_output_csv_path, gt_json_path=args.gt_json_path, save_file_path=args.save_path, inference_step=args.inference_step)
     test.calc_OR_CR()
