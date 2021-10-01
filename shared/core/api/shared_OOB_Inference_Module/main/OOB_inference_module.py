@@ -6,6 +6,8 @@ import numpy as np
 import json
 import argparse
 
+from utils.evalHelper import evalHelper # eval Helper
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_output_csv_path', type=str, 
@@ -18,10 +20,11 @@ parser.add_argument('--inference_step', type=int, default=5, help='inference fra
 args, _ = parser.parse_known_args()
 
 class Inference_eval:
-    def __init__(self, model_output_csv_path:str, gt_json_path:str, inference_step:int):
+    def __init__(self, model_output_csv_path:str, gt_json_path:str, save_file_path:str, inference_step:int):
         self.model_output_csv_path = model_output_csv_path
         self.gt_json_path = gt_json_path
         self.inference_step = inference_step
+        self.save_file_path = save_file_path
 
         self.video_name = '_'.join(self.gt_json_path.split('/')[-1].split('.')[0].split('_')[:7])
         
@@ -136,6 +139,16 @@ class Inference_eval:
 
         # read gt_list from annotation json file.
         self.gt_list=self.convert_gt_json()
+
+        ### 21.09.28 HG 추가. for matchihng length of predict list and gt list 
+        print('ORIGIN : len(gt_list) {}'.format(len(self.gt_list)))
+
+        ##### evaluation Helper [strat] #####
+        eval_helper = evalHelper(self.model_output_csv_path, self.gt_json_path, self.inference_step)
+        self.gt_list, self.model_output_list = eval_helper.load_gt_list_predict_list()
+        ##### evaluation Helper [end] #####
+
+        print('MODIFIED : len(gt_list) {}'.format(len(self.gt_list)))
         
         ## 2. parity check - list length 
         ## if len(model_output_list) != len(gt_list) -> raise ERROR, exit(1)
@@ -167,10 +180,10 @@ class Inference_eval:
             self.confidence_ratio=-1
     
         # save result file.
-        self.save_dir_path = './results'
-        self.create_directory(self.save_dir_path)
         
-        self.save_file_path = os.path.join(self.save_dir_path, 'results_OR_CR.json')
+        # self.create_directory(self.save_dir_path)
+        # self.save_file_path = os.path.join(self.save_dir_path, 'eval.json')
+
         # if the file exists.
         if os.path.isfile(self.save_file_path): 
             # read old file.
@@ -178,6 +191,8 @@ class Inference_eval:
                 self.json_data=json.load(self.json_file)
             
             self.json_data[self.video_name] = {'over_estimation_ratio':self.over_estimation_ratio, 'confidence_ratio':self.confidence_ratio}
+            
+            self.json_data[self.video_name]['details'] = {'FP':self.FP, 'FN':self.FN, 'TP':self.TP, 'TN':self.TN, 'TOTAL':self.TP + self.TN + self.FP + self.FN} # HG.21.09.28 추가, FP, FN, TP, TN, TOTAL count 기록
 
             # overwrite new file. 
             with open(self.save_file_path, 'w') as self.json_file:
@@ -187,6 +202,8 @@ class Inference_eval:
         else:
             self.calc_OR_CR_dict = {}
             self.calc_OR_CR_dict[self.video_name] = {'over_estimation_ratio':self.over_estimation_ratio, 'confidence_ratio':self.confidence_ratio}
+            
+            self.calc_OR_CR_dict[self.video_name]['details'] = {'FP':self.FP, 'FN':self.FN, 'TP':self.TP, 'TN':self.TN, 'TOTAL':self.TP + self.TN + self.FP + self.FN} # HG.21.09.28 추가, FP, FN, TP, TN, TOTAL count 기록
             
             with open(self.save_file_path, 'w') as fh:
                 json.dump(self.calc_OR_CR_dict, fh, indent=2)
