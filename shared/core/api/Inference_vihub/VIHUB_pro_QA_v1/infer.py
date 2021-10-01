@@ -18,11 +18,14 @@ from infer_train_model import CAMIO
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--model_path', type=str, help='inference model path (.ckpt)')
-parser.add_argument('--input_path', type=str, help='input path (only support jpg, png, mp4, mpeg, avi). Recommand to use ch1 video.')  
-
+# parser.add_argument('--model_path', default='/OOB_RECOG/logs/ROBOT/OOB/hard_example_mining_mobilenet_v3_large-FOLD1/ckpoint_hard_example_mining_mobilenet_v3_large-FOLD1-model=mobilenet_v3_large-batch=32-lr=0.001-fold=1-ratio=3-epoch=24-last.ckpt', type=str, help='inference model path (.ckpt)')
+parser.add_argument('--model_path', default='/OOB_RECOG/shared_inference_folder/MODELS/ckpoint_0816-test-mobilenet_v3_large-model=mobilenet_v3_large-batch=32-lr=0.001-fold=1-ratio=3-epoch=24-last.ckpt', type=str, help='inference model path (.ckpt)')
+parser.add_argument('--input_path', default='/OOB_RECOG/shared_inference_folder/ASSETS/test1/frame1.jpg', type=str, help='input path (only support jpg, png, mp4, mpeg, avi). Recommand to use ch1 video.')  
+# /home/jihyun/work/OOB_Recog-1/shared_inference_folder/MODELS/ckpoint_0816-test-mobilenet_v3_large-model=mobilenet_v3_large-batch=32-lr=0.001-fold=1-ratio=3-epoch=24-last.ckpt
 args, _ = parser.parse_known_args()
 
+# /home/jihyun/work/OOB_Recog-1/logs/ROBOT/OOB/hard_example_mining_mobilenet_v3_large-FOLD1/ckpoint_hard_example_mining_mobilenet_v3_large-FOLD1-model=mobilenet_v3_large-batch=32-lr=0.001-fold=1-ratio=3-epoch=24-last.ckpt
+# /home/jihyun/work/OOB_Recog-1/shared_inference_folder/ASSETS/test3/frame1.jpg
 
 # data transforms (output: tensor)
 data_transforms = {

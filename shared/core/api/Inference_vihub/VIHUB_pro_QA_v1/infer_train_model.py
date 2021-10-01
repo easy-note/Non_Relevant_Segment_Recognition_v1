@@ -20,6 +20,10 @@ class CAMIO(pl.LightningModule):
         self.init_lr = self.hparams.optimizer_lr # config['optimizer_lr']
         self.backbone = self.hparams.backbone_model # config['backborn_model']
 
+        print(config)
+        print(self.init_lr)
+        print(self.backbone) 
+
         # model setting
         if self.backbone.find('mobilenet') != -1 : 
             if self.backbone == 'mobilenet_v3_large' :

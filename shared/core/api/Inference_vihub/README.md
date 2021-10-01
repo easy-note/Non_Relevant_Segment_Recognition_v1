@@ -16,15 +16,14 @@ VI Hub를 통해 녹화되는 영상에 대해 환자의 몸속 영상인지, �
     - 개뱔 Dataset에 Fitting된 모델학습 후 다른 Device영상 Inference 하여 성능비교
 
 ### Dataset
-- Robot 40개 [35 / 5] [train / validation]
-- Lapa 40개 [35 / 5] [train / validation]
-- Robot + Lapa [70 / 10] [train / validation]
-- V2 실험부터 100개 dataset으로 작업 예정
+- Robot 100개 [80 / 20] [train / validation]
 
 --- 
 ## Development Log
 - 2021/06/24 | @jihyun98hutom
-    1. Create init code
+    1. Create init code (VIHUB pro QA test v.1)
+- 2021/09/13 | @jihyun98hutom
+    1. Update VIHUB pro QA test v.2 
 ---
 
 ## 초기 환경 설정
@@ -78,13 +77,17 @@ Video type
 - 'ch1' 비디오에 비디오에 대해서 정상 작동.
 - 'xx0' 비디오는 codec issue로 아직 inference 결과가 정확하지 않음. 
 
-Inference Step
-- 5 (defualt)
+~~Inference Step~~
+- ~~5 (defualt)~~
 
 ---
 ## 사용법
-- input : frame single image or video file -> str:
-- output : inference result (format : list) -> List[int]:
+### VIHUB_pro_QA_v1
+- input
+    - moel_path (only support .ckpt format) -> str:
+    - frame single image or video file (only support .jpg, .png, .mp4, .mpeg, .avi extension file. recommand 'ch1' video)-> str:
+- output
+    - inference result (format : list) -> List[int]:
 
 ```shell
 python infer.py --model_path <model_path> --input_path <input_path>
@@ -92,5 +95,11 @@ python infer.py --model_path <model_path> --input_path <input_path>
 ex) python infer.py --model_path /home/jihyun/OOB/mobilenet_v3_large-fold1/ckpoint_mobilenet_v3_large-fold1-model=mobilenet_v3_large-batch=32-lr=0.001-fold=1-ratio=3-epoch=24-last.ckpt --input_path /data/ROBOT/Video/01_G_01_R_00_ch0_00.mp4
 ```
 
-- model_path : only support .ckpt file
-- input_path : only support .jpg, .png, .mp4, .mpeg, .avi extension file (recommand 'ch1' video)
+
+### VIHUB_pro_QA_v2 (update 21.09.14)
+#### refactor: VIHUB pro production
+- input
+    - model_path (only support .ckpt format) -> str:
+    - target folder path
+- output
+    - inference result -> List[int]:
