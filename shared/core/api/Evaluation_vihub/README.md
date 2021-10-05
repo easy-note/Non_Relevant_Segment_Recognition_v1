@@ -37,6 +37,8 @@ Estimation Metrics
 ## Development Log
 - 2021/08/10 | @jihyun98hutom
     1. Create init code
+- 2021/10/05 | @hyeongyuc96hutom
+    1. gt length와 predict length가 서로 맞지 않을 경우 동일하게 맞추어 metric 계산할 수 있도록 도와주는 evaluation_Helper 추가
 ---
 
 ## Init Environment Setting
@@ -162,18 +164,19 @@ Required arguments:
 --model_output_csv_path               model predict output file path
 --gt_json_path                        ground-truth (annotation) file path
 --inference_step                      inference frame step
+--save_path                           save metric json path for evaluation
 ```
 Example
 ```shell
-python OOB_inference_module.py --model_output_csv_path <model_output_csv_path> --gt_json_path <gt_json_path> --inference_step <inference_step>
+python OOB_inference_module.py --model_output_csv_path <model_output_csv_path> --gt_json_path <gt_json_path> --inference_step <inference_step> --save_path <save_path>
 
 # original verison
->>> python OOB_inference_module.py --model_output_csv_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Inference/Inference-ROBOT-01_G_01_R_100_ch1_01.csv' --gt_json_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Annotation(V2)/01_G_01_R_100_ch1_01_OOB_27.json' --inference_step 5
+>>> python OOB_inference_module.py --model_output_csv_path '/OOB_RECOG/assets/Inference/Inference-ROBOT-01_G_01_R_100_ch1_01.csv' --gt_json_path '/OOB_RECOG/assets/Annotation(V2)/01_G_01_R_100_ch1_01_OOB_27.json' --inference_step 30 --save_path '/OOB_RECOG/assets/results/results_OR_CR.json'
 # p.p version
->>> python OOB_inference_module_pp.py --model_output_csv_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Inference/Inference-ROBOT-01_G_01_R_100_ch1_01.csv' --gt_json_path '/OOB_RECOG/shared_OOB_Inference_Module/assets/Annotation(V2)/01_G_01_R_100_ch1_01_OOB_27.json' --inference_step 5
+>>> python OOB_inference_module_pp.py --model_output_csv_path '/OOB_RECOG/assets/Inference/Inference-ROBOT-01_G_01_R_100_ch1_01.csv' --gt_json_path '/OOB_RECOG/assets/Annotation(V2)/01_G_01_R_100_ch1_01_OOB_27.json' --inference_step 30 --save_path '/OOB_RECOG/assets/results_pp/results_OR_CR.json'
 ```
 Output file
-- `results/results_OR_CR.json`
+- `assets/results/results_OR_CR.json`
 ```
 {
   "01_G_01_R_100_ch1_01": {
@@ -182,7 +185,7 @@ Output file
   }
 }
 ``` 
-- `results_pp/results_OR_CR.json`
+- `assets/results_pp/results_OR_CR.json`
 ```
 {
   "01_G_01_R_100_ch1_01": {

@@ -78,7 +78,7 @@ Video type
 - 'xx0' 비디오는 codec issue로 아직 inference 결과가 정확하지 않음. 
 
 ~~Inference Step~~
-- ~~5 (defualt)~~
+- 30fps video 기준 1fps로 Infereence 되도록 30으로 설정 (default) 
 
 ---
 ## 사용법
