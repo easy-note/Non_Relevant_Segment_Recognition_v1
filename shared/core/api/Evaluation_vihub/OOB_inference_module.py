@@ -17,7 +17,7 @@ parser.add_argument('--gt_json_path', type=str,
 
 parser.add_argument('--inference_step', type=int, default=30, help='inference interval')
 
-parser.add_argument('--save_path', help='inference frame step')
+parser.add_argument('--save_path', help='save metric json path for evaluation')
 
 args, _ = parser.parse_known_args()
 
