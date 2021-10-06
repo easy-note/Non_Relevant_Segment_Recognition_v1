@@ -1,65 +1,62 @@
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, BatchSampler
 import torch
 from tqdm import tqdm
 
-from core.dataset.test_dataset import DBDataset, IDXSampler
+from core.dataset.test_dataset import DBDataset, IntervalSampler
 
 class InferenceDB(): # InferenceDB
     """
         Inference per DB from model
     """ 
 
-    def __init__(self, model, DB_path): # DB_path -> db_path
+    def __init__(self, model, db_path, inference_interval=30):
         self.model = model
-        self.DB_path = DB_path
-
         self.model = self.model.eval()
 
-        self.test_dataset = DBDataset(DB_path)
+        self.db_path = db_path
 
-        self.batch_size = 256 # default
-        self.step_of_inference = 30 # default
+        self.test_dataset = DBDataset(db_path)
 
-    def set_batch_size(self, batch_size):
-        self.batch_size = batch_size
+        self.batch_sampler = self.get_batch_sampler(inference_interval) # default interval = 30
 
-    def set_step_of_inference(self, step_size):
-        self.step_of_inference = step_size
+    def set_inference_interval(self, inference_interval):
+        self.batch_sampler = self.get_batch_sampler(inference_interval)
 
-    def start(self):
+    def get_batch_sampler(self, inference_interval):
+        return BatchSampler(sampler=IntervalSampler(self.test_dataset, interval=inference_interval),
+                            batch_size=128, drop_last=False) # default batch_size=128
+
+    def start(self): 
         print('\n\t########## INFERENCEING (DB) #########\n')
 
         # DB dataset
-        print('DB PATH : ', self.DB_path)
+        print('DB PATH : ', self.db_path)
 
-        # target idx
-        target_idx_list = list(range(0, len(self.test_dataset), self.step_of_inference))
-
-        # Set index for batch
-        s = IDXSampler(target_idx_list, batch_size=self.batch_size)
-
-        # set dataloader with custom batch sampler
-        dl = DataLoader(self.test_dataset, batch_sampler=list(s))
+        # data loder
+        dl = DataLoader(dataset=self.test_dataset,
+                        batch_sampler=self.batch_sampler)
         
         # inference log
+        predict_list = []
         target_img_list = []
         target_frame_idx_list = []
-        predict_list = []
 
+        cnt = 0
         # inferencing model
         with torch.no_grad() :
-            for sample in tqdm(dl, desc='Inferencing... \t ==> {}'.format(self.DB_path)) :
-                BATCH_INPUT = sample['img'].cuda()
-                BATCH_OUTPUT = self.model(BATCH_INPUT)
+            for sample in tqdm(dl, desc='Inferencing... \t ==> {}'.format(self.db_path)) :
+                batch_input = sample['img'].cuda()
+                batch_output = self.model(batch_input)
 
                 # predict
-                BATCH_PREDICT = torch.argmax(BATCH_OUTPUT.cpu(), 1)
-                BATCH_PREDICT = BATCH_PREDICT.tolist()
+                batch_predict = torch.argmax(batch_output.cpu(), 1)
+                batch_predict = batch_predict.tolist()
 
                 # save results
-                predict_list += list(BATCH_PREDICT)
+                predict_list += list(batch_predict)
                 target_img_list += sample['img_path'] # target img path
-                target_frame_idx_list += sample['DB_idx'] # target DB index
+                target_frame_idx_list += sample['db_idx'] # target DB index
 
-        return predict_list
-    
+        target_frame_idx_list = list(map(int, target_frame_idx_list)) # '0000000001' -> 1
+
+        return predict_list, target_img_list, target_frame_idx_list
