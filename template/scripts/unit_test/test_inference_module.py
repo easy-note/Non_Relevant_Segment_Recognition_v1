@@ -14,9 +14,9 @@ def main():
                         help='root directory for infernce saving')
         
 
-    parser.add_argument('--step_of_inference', type=int, 
+    parser.add_argument('--inference_interval', type=int, 
                         default=30,
-                        help='Inference frame step of Evaluation')
+                        help='Inference Interval of frame')
 
     parser.add_argument('--inference_fold',
                     default='3',
@@ -36,21 +36,24 @@ def main():
     model = CAMIO.load_from_checkpoint(model_path, args=args)
     '''
 
-    DB_path = '/data2/Public/OOB_Recog/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
+    db_path = '/data3/OOB_Recog/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
+    
 
-    Inference = InferenceDB(model, DB_path) # Inference object
-    Inference.set_step_of_inference(args.step_of_inference) # set inference step
-    Inference.set_batch_size(args.batch_size) # set batch
-    predict_list = Inference.start() # call start
+    Inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+    # Inference.set_inference_interval(args.inference_interval) # you can also set inference interval
+    predict_list, target_img_list, target_frame_idx_list = Inference.start() # call start
 
     # Inference module results
     print(len(predict_list))
     print(predict_list)
 
+    print(target_img_list)
+    print(target_frame_idx_list)
+
 if __name__ == '__main__':
     
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
     
     if __package__ is None:
         import sys
