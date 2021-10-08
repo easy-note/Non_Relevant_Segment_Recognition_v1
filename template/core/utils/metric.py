@@ -10,11 +10,12 @@ class MetricHelper():
     """
     def __init__(self):
         # TODO 필요한거 더 넣기
+        self.EXCEPTION_NUM = -100
         self.OOB_CLASS = 1
         self.pred_list = []
         self.gt_list = []
 
-    def write_preds(self, pred_list, gt_list):
+    def write_preds(self, pred_list, gt_list): # pred_list, gt_list: torch list
         for pred, gt in zip(pred_list, gt_list):
             self.pred_list.append(pred.item())
             self.gt_list.append(gt.item())
@@ -32,6 +33,12 @@ class MetricHelper():
             'Recall': cm.TPR[self.OOB_CLASS],
             'F1-Score': cm.F1[self.OOB_CLASS],
         }
+
+        # np casting for zero divide to inf
+        TP = np.float16(metrics['TP'])
+        FP = np.float16(metrics['FP'])
+        TN = np.float16(metrics['TN'])
+        FN = np.float16(metrics['FN'])
         
         metrics['OOB_metric'] = (TP-FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB
         metrics['Over_estimation'] = FP / (FN + TP + FP)
@@ -41,8 +48,10 @@ class MetricHelper():
 
         # exception
         for k, v in metrics.items():
-            if np.isnan(v) or np.isinf(v):
-                metrics[k] = -1
+            if v == 'None': # ConfusionMetrix return
+                metrics[k] = self.EXCEPTION_NUM
+            elif np.isinf(v): # numpy return
+                metrics[k] = self.EXCEPTION_NUM
 
         self.pred_list = []
         self.gt_list = []
