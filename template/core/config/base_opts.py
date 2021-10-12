@@ -128,37 +128,56 @@ def parse_opts():
             help='Use for Step LR Scheduler')
 
     parser.add_argument('--lr_scheduler_factor',
-                default=0.9,
-                type=float,
-                help='Multiplicative factor for decreasing learning rate')
+            default=0.9,
+            type=float,
+            help='Multiplicative factor for decreasing learning rate')
 
     # -------------- Dataset --------------------
-    parser.add_argument('--dataset', type=str, default='ROBOT', choices=['ROBOT', 'LAPA'], help='[robot, lapa] choice on dataset')
+    parser.add_argument('--dataset', 
+            default='ROBOT', 
+            type=str, 
+            choices=['ROBOT', 'LAPA'], 
+            help='[robot, lapa] choice on dataset')
 
-    parser.add_argument('--task', type=str,
-                        default='OOB', choices=['OOB', 'NIR'], help='[OOB, NIR] choice on task')
+    parser.add_argument('--task', 
+            default='OOB', 
+            type=str,
+            choices=['OOB', 'NIR'], 
+            help='[OOB, NIR] choice on task')
 
-    parser.add_argument('--data_path',
-            default=None,
+    parser.add_argument('--data_base_path',
+            default='/raid/img_db',
             type=str,
             help='Data location')
 
     parser.add_argument('--fold',
-            default='1',
+            default='5',
             type=str,
-            choices=['1', '2', '3', 'free'],
-            help='valset 1, 2, 3, free=for setting train_videos, val_vidoes')
+            choices=['1', '2', '3', '4', '5', 'free'],
+            help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
+
+    parser.add_argument('--data_version',
+            default='v2',
+            type=str,
+            choices=['v1', 'v2'],
+            help='Annotation dataset version')
+
+    parser.add_argument('--IB_ratio',
+            default=3,
+            type=int,
+            help='')
 
     parser.add_argument('--num_workers',
             default=6,
             type=int,
             help='How many CPUs to use for data loading')
+    
 
     # -------------- Train Methods --------------------
     parser.add_argument('--train_method', type=str,
-                        default='normal', 
-                        choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
-                        help='Select train method, normal or hem method')
+            default='normal', 
+            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
+            help='Select train method, normal or hem method')
 
 
     # -------------- etc --------------------
@@ -170,4 +189,3 @@ def parse_opts():
 
 
     return parser
-    
