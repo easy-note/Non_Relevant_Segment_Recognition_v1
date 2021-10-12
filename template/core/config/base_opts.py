@@ -19,7 +19,7 @@ def parse_opts():
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
-            action='store_true',
+            action='store_true', # false
             help='If true, load pretrained backbone')
 
     parser.add_argument('--loss_fn',
@@ -29,7 +29,7 @@ def parse_opts():
             help='Select loss_fn to train/test')
 
     parser.add_argument('--batch_size',
-            default=2,
+            default=128,
             type=int,
             help='Training/Testing batch size')
 
@@ -54,7 +54,7 @@ def parse_opts():
             help='What device to use for training or validation model')
 
     parser.add_argument('--cuda_list',
-            default='0',
+            default='1',
             type=str,
             help='Name list of gpus that are used to train')
 
@@ -62,7 +62,7 @@ def parse_opts():
             action='store_true',
             help='If true, Ealry stopping function on')
 
-    parser.add_argument('--ealry_stop_monitor',
+    parser.add_argument('--early_stop_monitor',
             default='val_loss',
             type=str,
             help='select monitor value')
@@ -77,13 +77,9 @@ def parse_opts():
             type=int,
             help='If monitor value is not updated until this value, stop training')
 
-    parser.add_argument('--save_log_path',
-            default='./logs',
-            type=str,
-            help='Save training logs on this directory')
-
-    parser.add_argument('--save_ckpt_path', type=str, 
-                        default=None, help='')
+    # /OOB_RECOG/logs/project-1/TB_log/version_0
+    parser.add_argument('--save_path', type=str, 
+                        default='/OOB_RECOG/logs/project-1', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',
@@ -151,7 +147,7 @@ def parse_opts():
             help='Data location')
 
     parser.add_argument('--fold',
-            default='5',
+            default='1',
             type=str,
             choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
@@ -181,11 +177,11 @@ def parse_opts():
 
 
     # -------------- etc --------------------
-    parser.add_argument('--random_seed', type=int, help='dataset ranbom seed')
+    parser.add_argument('--random_seed', type=int, default=10, help='dataset ranbom seed')
 
-    parser.add_argument('--use_lightinig_style_save', action='store_true', help='If true, use lightning save module')
+    parser.add_argument('--use_lightning_style_save', action='store_true', help='If true, use lightning save module')
 
-    parser.add_argument('--save_top_n', type=int, default=3, help='dataset ranbom seed')
+    parser.add_argument('--save_top_n', type=int, default=2, help='dataset ranbom seed')
 
 
     return parser

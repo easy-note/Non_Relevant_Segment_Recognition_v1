@@ -2,7 +2,9 @@ import torch
 import math
 import numpy as np
 from pycm import *
+from core.utils.misc import *
 
+import matplotlib.pyplot as plt
 
 class MetricHelper():
     """
@@ -14,10 +16,25 @@ class MetricHelper():
         self.pred_list = []
         self.gt_list = []
 
+        self.train_loss = []
+        self.valid_loss = []
+        self.test_loss = []
+
+        self.epoch = 0
+
     def write_preds(self, pred_list, gt_list):
         for pred, gt in zip(pred_list, gt_list):
             self.pred_list.append(pred.item())
             self.gt_list.append(gt.item())
+
+    def write_loss(self, loss_val, task='train'):
+        if task == 'train':
+            self.train_loss.append(loss_val)
+        elif task == 'val':
+            self.valid_loss.append(loss_val)
+            self.epoch += 1
+        elif task == 'test':
+            self.test_loss.append(loss_val)
 
     def calc_metric(self):
         cm = ConfusionMatrix(self.gt_list, self.pred_list)
@@ -33,11 +50,11 @@ class MetricHelper():
             'F1-Score': cm.F1[self.OOB_CLASS],
         }
         
-        metrics['OOB_metric'] = (TP-FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB
-        metrics['Over_estimation'] = FP / (FN + TP + FP)
-        metrics['Under_estimation'] = FN / (FN + TP + FP)
-        metrics['Correspondence_estimation'] = TP / (FN + TP + FP)
-        metrics['UNCorrespondence_estimation'] = (FP + FN) / (FN + TP + FP)
+        metrics['OOB_metric'] = (metrics['TP']-metrics['FP']) / (metrics['FN'] + metrics['TP'] + metrics['FP']) # 잘못예측한 OOB / predict OOB + 실제 OOB
+        metrics['Over_estimation'] = metrics['FP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # OR
+        metrics['Under_estimation'] = metrics['FN'] / (metrics['FN'] + metrics['TP'] + metrics['FP'])
+        metrics['Correspondence_estimation'] = metrics['TP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # CR
+        metrics['UNCorrespondence_estimation'] = (metrics['FP'] + metrics['FN']) / (metrics['FN'] + metrics['TP'] + metrics['FP'])
 
         # exception
         for k, v in metrics.items():
@@ -49,14 +66,18 @@ class MetricHelper():
 
         return metrics
 
-    # ------ 아래는 필요하면 채워서 사용, 아니면 지워도 됨 -------
-    def calc_CR(self, data):        
-        pass
-    
-    def calc_OR(self, data):
-        pass
+    def save_metric(self, metric, epoch, args, save_path, task='OOB'):
+        if task=='OOB':
+            save_OOB_result_csv(metric=metric, epoch=epoch, args=args, save_path=save_path)
 
-    def calc_meanCROR(self, data):
-        pass
+    def save_loss_pic(self, save_path):
+        fig = plt.figure(figsize=(32, 16))
 
-    
+        plt.ylabel('Loss', fontsize=20)
+        plt.xlabel('Epoch', fontsize=20)
+
+        plt.plot(range(self.epoch), self.train_loss)
+        plt.plot(range(self.epoch), self.valid_loss)
+        
+        plt.legend(['Train', 'Val'], fontsize=20)
+        plt.savefig(save_path + '/loss.png')
