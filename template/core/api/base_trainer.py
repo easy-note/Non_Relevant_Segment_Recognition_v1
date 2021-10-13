@@ -53,7 +53,7 @@ class BaseTrainer(pl.LightningModule):
     @abc.abstractmethod
     def test_epoch_end(self):
         pass
-    
+
     # @classmethod
     def configure_optimizers(self):
         """
@@ -104,7 +104,7 @@ class BaseTrainer(pl.LightningModule):
         
         if self.args.use_early_stop:
             early_stop = EarlyStopping(
-                monitor=self.args.ealry_stop_monitor, 
+                monitor=self.args.early_stop_monitor, 
                 mode=self.args.ealry_stop_mode,
                 patience=self.args.ealry_stop_patience,
                 )
@@ -116,15 +116,17 @@ class BaseTrainer(pl.LightningModule):
 
         callbacks.append(lrMonitor)
         
-        if self.args.use_lightinig_style_save:
+        if self.args.use_lightning_style_save:
             checkpoint = ModelCheckpoint(
-                dirpath=self.args.save_ckpt_path,
+                # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
                 filename='{epoch}-{val_loss:.4f}',
                 save_top_k=self.args.save_top_n,
                 save_last=True,
                 verbose=True,
                 monitor='val_loss',
                 mode='min')
+
+            checkpoint.CHECKPOINT_NAME_LAST = '{epoch}-{val_loss:.4f}-last'
         
             callbacks.append(checkpoint)
 
@@ -134,7 +136,17 @@ class BaseTrainer(pl.LightningModule):
 
     # torch style save checkpoint
     def save_checkpoint(self):
-        saved_pt_list = glob(self.args.save_ckpt_path + '/*pt')
+        
+        try :
+            if not os.path.exists(os.path.join(self.args.save_path)):
+                os.makedirs(os.path.join(self.args.save_path))
+        except OSError :
+            print('ERROR : Creating Directory, ' + os.path.join(self.args.save_path))
+
+
+        saved_pt_list = glob(self.args.save_path + '/*pt')
+
+        print('saved_pt_list ====> ', saved_pt_list)
 
         if len(saved_pt_list) > self.args.save_top_n:
             saved_pt_list = natsort.natsorted(saved_pt_list)
@@ -143,9 +155,9 @@ class BaseTrainer(pl.LightningModule):
                 os.remove(li)
 
         save_path = '{}/epoch:{}-loss_val:{:.4f}.pt'.format(
-                    self.args.save_ckpt_path,
+                    os.path.join(self.args.save_path, self.logger.log_dir, 'checkpoints'),
                     self.current_epoch,
-                    self.cur_val_loss.item()
+                    self.best_val_loss.item()
                 )
 
         if self.args.num_gpus > 1:
@@ -154,3 +166,4 @@ class BaseTrainer(pl.LightningModule):
             torch.save(self.model.state_dict(), save_path)
 
         print('[+] save checkpoint(torch ver.) : ', save_path)
+
