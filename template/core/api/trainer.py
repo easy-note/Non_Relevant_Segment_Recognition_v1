@@ -147,41 +147,41 @@ class CAMIO(BaseTrainer):
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
-        metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
-        
-        val_loss, cnt = 0, 0
-        for output in outputs:
-            val_loss += output['val_loss'].cpu().data.numpy()
-            cnt += 1
-
-        val_loss_mean = val_loss/cnt
-        metrics['Loss'] = val_loss_mean
-
-        '''
-            metrics = {
-                'TP': cm.TP[self.OOB_CLASS],
-                'TN': cm.TN[self.OOB_CLASS],
-                'FP': cm.FP[self.OOB_CLASS],
-                'FN': cm.FN[self.OOB_CLASS],
-                'Accuracy': cm.ACC[self.OOB_CLASS],
-                'Precision': cm.PPV[self.OOB_CLASS],
-                'Recall': cm.TPR[self.OOB_CLASS],
-                'F1-Score': cm.F1[self.OOB_CLASS],
-                'OOB_metric':
-                'Over_estimation':
-                'Under_estimation':
-                'Correspondence_estimation':
-                'UNCorrespondence_estimation':
-                'Loss':
-        }
-        '''
-
-        self.log_dict(metrics, on_epoch=True, prog_bar=True)
-        
         if self.sanity_check:
             self.sanity_check = False
 
         else:
+            metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
+        
+            val_loss, cnt = 0, 0
+            for output in outputs:
+                val_loss += output['val_loss'].cpu().data.numpy()
+                cnt += 1
+
+            val_loss_mean = val_loss/cnt
+            metrics['Loss'] = val_loss_mean
+
+            '''
+                metrics = {
+                    'TP': cm.TP[self.OOB_CLASS],
+                    'TN': cm.TN[self.OOB_CLASS],
+                    'FP': cm.FP[self.OOB_CLASS],
+                    'FN': cm.FN[self.OOB_CLASS],
+                    'Accuracy': cm.ACC[self.OOB_CLASS],
+                    'Precision': cm.PPV[self.OOB_CLASS],
+                    'Recall': cm.TPR[self.OOB_CLASS],
+                    'F1-Score': cm.F1[self.OOB_CLASS],
+                    'OOB_metric':
+                    'Over_estimation':
+                    'Under_estimation':
+                    'Correspondence_estimation':
+                    'UNCorrespondence_estimation':
+                    'Loss':
+            }
+            '''
+
+            self.log_dict(metrics, on_epoch=True, prog_bar=True)
+
             # save result.csv 
             self.metric_helper.save_metric(metric=metrics, epoch=self.current_epoch, args=self.args, save_path=os.path.join(self.args.save_path, self.logger.log_dir))
 
@@ -210,7 +210,6 @@ class CAMIO(BaseTrainer):
                 self.trainset.set_sample_ids(hem_train_ids)
                 self.valset.set_sample_ids(hem_val_ids)
     
-
 
     def test_step(self, batch, batch_idx):
         x, y = batch
