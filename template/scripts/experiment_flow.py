@@ -1,4 +1,4 @@
-def get_init_args():
+def get_experiment_args():
     from core.config.base_opts import parse_opts
 
     parser = parse_opts()
@@ -31,12 +31,11 @@ def get_init_args():
     ### train args
     args.save_path = '/OOB_RECOG/logs/project-1'
     args.num_gpus = 1
-    args.max_epoch = 20
-    args.min_epoch = 10
-
+    args.max_epoch = 2
+    args.min_epoch = 1
 
     ### etc opts
-    args.use_lightning_style_save = True
+    args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
 
     return args
 
@@ -52,6 +51,11 @@ def get_inference_model_path(restore_path):
             return f_name
 
 
+def save_experiments(args):
+    # TO DO : inference_main return으로 experiments 결과 저장, 저장하기 위해 experiemnts results sheet(csv) path가 args에 포함되어 있어야 하지 않을까?
+    return 0
+
+
 def train_main(args):
     print('train_main')
     
@@ -62,8 +66,6 @@ def train_main(args):
     from core.model import get_model, get_loss
     from core.api.trainer import CAMIO
 
-
-    '''
     tb_logger = pl_loggers.TensorBoardLogger(
         save_dir=args.save_path,
         name='TB_log',
@@ -85,9 +87,8 @@ def train_main(args):
                             logger=tb_logger,)
 
     trainer.fit(x)
-    '''
 
-    args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_4')
+    args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_4') # TO DO: we should define restore path
     
     return args
 
@@ -113,9 +114,11 @@ def inference_main(args):
 
     # from finetuning model
     model_path = get_inference_model_path(args.restore_path)
-    print(model_path)
     model = CAMIO.load_from_checkpoint(model_path, args=args)
     model = model.cuda()
+
+    # load inference dataset
+    # TO DO : inference fold 에 따라 환자별 db. gt_json 잡을 수 있도록 set up (Inference, Evaluation module 사용시 for-loop로 set arguments)
     
     # use case 1 - init Inference
     db_path = '/raid/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
@@ -143,17 +146,28 @@ def inference_main(args):
     
     print(CR, OR)
     print(TP, FP, TN, FN)
+
+    # return mCR, mOR
+    # TO DO : Inference 완료시 Pateints mCR, mOR, CR, OR 기록을 위해 return 필요
+    mCR, mOR, CR, OR = 0,0,0,0
+    return args, mCR, mOR, CR, OR
+    
     
 def main():    
 
+    # 0. set each experiment args 
+    args_list = [get_experiment_args(), get_experiment_args()] # 상황에 따라 다르게 args 구성
+    
     # 1. hyper prameter opts setup for experiments flow
-    args = get_init_args()
+    for args in args_list:
+        # 2. train
+        args = train_main(args)
 
-    # 2. train
-    args = train_main(args)
+        # 3. inference
+        args, mCR, mOR, CR, OR = inference_main(args)
 
-    # 3. inference
-    inference_main(args)
+        # 4. save experiments results [model, train_fold, inference_fold, ... , mCR, mOR, CR, OR]
+        # save_experiments(args)
 
 if __name__ == '__main__':
     
