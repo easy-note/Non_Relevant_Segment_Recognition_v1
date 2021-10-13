@@ -136,15 +136,9 @@ class BaseTrainer(pl.LightningModule):
 
     # torch style save checkpoint
     def save_checkpoint(self):
-        
-        try :
-            if not os.path.exists(os.path.join(self.args.save_path)):
-                os.makedirs(os.path.join(self.args.save_path))
-        except OSError :
-            print('ERROR : Creating Directory, ' + os.path.join(self.args.save_path))
+        os.makedirs(os.path.join(self.args.save_path), exist_ok=True)
 
-
-        saved_pt_list = glob(self.args.save_path + '/*pt')
+        saved_pt_list = glob(os.path.join(self.args.save_path, self.logger.log_dir, 'checkpoints', '*pt'))
 
         print('saved_pt_list ====> ', saved_pt_list)
 

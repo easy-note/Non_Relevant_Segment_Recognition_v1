@@ -29,9 +29,8 @@ class CAMIO(BaseTrainer):
 
         self.best_val_loss = math.inf
 
-        self.cur_train_loss = []
-
-        self.epoch_save_flag = False
+        self.sanity_check = True
+        # self.early_stop_counter = 0
 
         # only use for HEM
         self.train_method = self.args.train_method
@@ -118,9 +117,22 @@ class CAMIO(BaseTrainer):
         loss = self.loss_fn(y_hat, y)
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
 
-        self.cur_train_loss.append(loss.item())
+        return  {
+            'loss': loss,
+        }
 
-        return loss
+    def training_epoch_end(self, outputs):
+        train_loss, cnt = 0, 0
+
+        for output in outputs:
+            train_loss += output['loss'].cpu().data.numpy()
+            cnt += 1
+
+        train_loss_mean = train_loss/cnt
+
+        # write train loss
+        self.metric_helper.write_loss(train_loss_mean, task='train')
+
 
     def validation_step(self, batch, batch_idx): # val - every batch
         x, y = batch
@@ -166,15 +178,13 @@ class CAMIO(BaseTrainer):
         '''
 
         self.log_dict(metrics, on_epoch=True, prog_bar=True)
+        
+        if self.sanity_check:
+            self.sanity_check = False
 
-        if self.epoch_save_flag:
+        else:
             # save result.csv 
             self.metric_helper.save_metric(metric=metrics, epoch=self.current_epoch, args=self.args, save_path=os.path.join(self.args.save_path, self.logger.log_dir))
-            
-            # write train loss
-            train_loss_mean = np.mean(self.cur_train_loss)
-            self.metric_helper.write_loss(train_loss_mean, task='train')
-            self.cur_train_loss=[]
 
             # write val loss
             self.metric_helper.write_loss(val_loss_mean, task='val')
@@ -186,7 +196,7 @@ class CAMIO(BaseTrainer):
                     self.best_val_loss = val_loss_mean # self.best_val_loss 업데이트. 
                     self.save_checkpoint()
 
-                if self.current_epoch+1 == self.args.max_epoch: 
+                if self.current_epoch+1 == self.args.max_epoch: # max_epoch 모델 저장
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
@@ -200,9 +210,7 @@ class CAMIO(BaseTrainer):
                 hem_val_ids = self.hem_helper(self.model, self.train_loader)
                 self.trainset.set_sample_ids(hem_train_ids)
                 self.valset.set_sample_ids(hem_val_ids)
-        
-        else:
-            self.epoch_save_flag = True
+    
 
 
     def test_step(self, batch, batch_idx):
