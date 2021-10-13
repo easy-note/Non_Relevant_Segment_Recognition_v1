@@ -63,7 +63,7 @@ def main():
     from core.api.trainer import CAMIO
     from core.config.base_opts import parse_opts
     from core.api.inference import InferenceDB # inference module
-    from core.api.evaluation import Evaluation # evaluation module
+    from core.api.evaluation import Evaluator # evaluation module
 
     import os
     import pandas as pd
@@ -107,7 +107,7 @@ def main():
     metric_path = os.path.join(args.inference_save_dir, 'R_100_ch1_01-metric.json')
     
     # Inference module
-    Inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+    inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
     predict_list, target_img_list, target_frame_idx_list = Inference.start() # call start
 
     # save predict list to csv
@@ -117,16 +117,16 @@ def main():
     predict_df.to_csv(predict_csv_path)
 
     # Evaluation module
-    evaluation = Evaluation(predict_csv_path, gt_json_path, args.inference_interval)
-    metrics = evaluation.calc() # same return with metricHelper
+    evaluator = Evaluator(predict_csv_path, gt_json_path, args.inference_interval)
+    metrics = evaluator.calc() # same return with metricHelper
     CR, OR = metrics['OOB_metric'], metrics['Over_estimation']
     TP, FP, TN, FN = metrics['TP'], metrics['FP'], metrics['TN'], metrics['FN']
     
     print(CR, OR)
     print(TP, FP, TN, FN)
 
-    evaluation.set_gt_json_path('/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_R_100_ch1_03_OOB_27.json') # you can also set member path
-    metrics = evaluation.calc()
+    evaluator.set_gt_json_path('/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_R_100_ch1_03_OOB_27.json') # you can also set member path
+    metrics = evaluator.calc()
     CR, OR = metrics['OOB_metric'], metrics['Over_estimation']
     TP, FP, TN, FN = metrics['TP'], metrics['FP'], metrics['TN'], metrics['FN']
     
