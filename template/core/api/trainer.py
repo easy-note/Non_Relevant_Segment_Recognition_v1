@@ -30,7 +30,6 @@ class CAMIO(BaseTrainer):
         self.best_val_loss = math.inf
 
         self.sanity_check = True
-        # self.early_stop_counter = 0
 
         # only use for HEM
         self.train_method = self.args.train_method
