@@ -1,6 +1,8 @@
+import os
+import math
+import numpy as np
+import random
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from core.api import BaseTrainer
@@ -8,10 +10,6 @@ from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
 
-import os
-import math
-import numpy as np
-import random
 
 class CAMIO(BaseTrainer):
     def __init__(self, args):
@@ -30,17 +28,14 @@ class CAMIO(BaseTrainer):
         self.best_val_loss = math.inf
 
         self.sanity_check = True
+        self.train_method = 'normal'
 
         # only use for HEM
-        self.train_method = self.args.train_method
-        self.hem_helper.set_method(self.train_method)
-
-        if self.train_method in ['hem-softmax', 'hem-vi']:
-            self.reset_epoch = self.args.max_epoch // 2 - 1
-        else:
-            self.reset_epoch = -1
-
-
+        if 'hem-bs' in self.args.train_method:
+            self.hem_helper.set_method(self.args.train_method)
+            self.hem_helper.set_batch_size(self.args.batch_size)
+            self.hem_helper.set_n_batch(4)
+            self.train_method = self.args.train_method
 
     def setup(self, stage):
         '''
@@ -91,29 +86,31 @@ class CAMIO(BaseTrainer):
             num_workers=self.args.num_workers,
         )
 
-        
     def forward(self, x):
         """
             forward data
         """
-        if self.train_method == 'hem-bs':
-            # TODO future works
-            pass
-            # if self.training:
-            #     ids = self.hem_helper(self.model, self.train_loader)
-            #     self.trainset.set_sample_ids(ids)
-
-        else:
-            return self.model(x)
+        return self.model(x)
 
     def training_step(self, batch, batch_idx):
         """
             forward for mini-batch
         """
-        x, y = batch
+        if self.train_method == 'hem-bs' and self.training:
+            # Online HEM method
+            # B samples are picked by outputs of N batches 
+            y_hat, y = self.hem_helper.compute_hem(self.model, self.trainset)
+            loss = self.loss_fn(y_hat, y)
 
-        y_hat = self.forward(x)
-        loss = self.loss_fn(y_hat, y)
+            # x, y = self.hem_helper.compute_hem(self.model, self.trainset)
+            # y_hat = self.forward(x)
+            # loss = self.loss_fn(y_hat, y)
+        else:
+            x, y = batch
+
+            y_hat = self.forward(x)
+            loss = self.loss_fn(y_hat, y)
+
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
 
         return  {
@@ -131,7 +128,6 @@ class CAMIO(BaseTrainer):
 
         # write train loss
         self.metric_helper.write_loss(train_loss_mean, task='train')
-
 
     def validation_step(self, batch, batch_idx): # val - every batch
         x, y = batch
@@ -200,17 +196,6 @@ class CAMIO(BaseTrainer):
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
 
-            # Hard Example Mining (Offline)
-            if self.current_epoch == self.reset_epoch and self.train_method in ['hem-softmax', 'hem-vi']:
-                self.trainset.change_mode(True)
-                self.valset.change_mode(True)
-                
-                hem_train_ids = self.hem_helper(self.model, self.train_loader)
-                hem_val_ids = self.hem_helper(self.model, self.train_loader)
-                self.trainset.set_sample_ids(hem_train_ids)
-                self.valset.set_sample_ids(hem_val_ids)
-    
-
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self.forward(x)
@@ -230,6 +215,3 @@ class CAMIO(BaseTrainer):
         for k, v in metrics.items():
             if k in ['Accuracy', 'Precision', 'Recall', 'F1-Score']:
                 self.log('test_'+k, v, on_epoch=True, prog_bar=True)
-
-    def online_hem(self):
-        pass
