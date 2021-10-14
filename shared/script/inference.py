@@ -20,6 +20,7 @@ import os
 import sys
 import argparse
 import pandas as pd
+import json
 
 from core.api.Inference_vihub.VIHUB_pro_QA_v2.test import inference_by_frame_list # inference module
 from core.api.Evaluation_vihub.OOB_inference_module import Inference_eval # evaluation module
@@ -69,6 +70,7 @@ def inference_using_module(model_path, video_path, results_path, gt_path, pp):
     efficientnet_model_path = os.path.join(model_path, 'efficientnet_b3.ckpt')
 
     ## set cutted frame path
+
     cutted_frame_path = os.path.join(results_path, 'frame')
     os.makedirs(cutted_frame_path, exist_ok=True)
 
@@ -89,21 +91,17 @@ def inference_using_module(model_path, video_path, results_path, gt_path, pp):
     efficientnet_eval_path = os.path.join(efficientnet_results_dir, 'efficientnet.json')
 
     # 2. frame cutting module
-    '''
     ffmpeg = ffmpegHelper(video_path, cutted_frame_path)
     ffmpeg.cut_frame_1fps()
-    '''
 
     # 3.module test
     ## [1] inference module
-    '''
     mobilenet_predict_list = inference_by_frame_list(cutted_frame_path, mobilenet_model_path) # mobilenet
     efficient_predict_list = inference_by_frame_list(cutted_frame_path, efficientnet_model_path) # efficient
 
     ## (save predict ector to csv)
     pd.DataFrame({'predict': mobilenet_predict_list}).to_csv(mobilenet_predict_path)
     pd.DataFrame({'predict': efficient_predict_list}).to_csv(efficientnet_predict_path)
-    '''
 
     print('----')
     mobilenet_predict_list = list(pd.read_csv(mobilenet_predict_path)['predict'])
@@ -128,8 +126,15 @@ def inference_using_module(model_path, video_path, results_path, gt_path, pp):
         print('== PP DONE ==')
 
     ## [2] evaluation module
-    print('mobile : ', Inference_eval(mobilenet_predict_path, gt_path, mobilenet_eval_path, inference_step=30).calc_OR_CR()) # mobilenet
-    print('efficient : ', Inference_eval(efficientnet_predict_path, gt_path, efficientnet_eval_path, inference_step=30).calc_OR_CR()) # efficient
+    mobilenet_metric_json = Inference_eval(mobilenet_predict_path, gt_path, inference_step=30).calc_OR_CR() # mobilenet
+    efficientnet_metric_json = Inference_eval(efficientnet_predict_path, gt_path, inference_step=30).calc_OR_CR() # efficient
+
+    ## (save metric to json)
+    with open(mobilenet_eval_path, "w") as json_file:
+        json.dump(mobilenet_metric_json, json_file)
+    
+    with open(efficientnet_eval_path, "w") as json_file:
+        json.dump(efficientnet_metric_json, json_file)
 
     ## [3] visual module
     visual_helper = visualHelper(gt_list, mobilenet_predict_list, efficient_predict_list, visual_dir, frame_path=cutted_frame_path) # visual (mobile, efficient)
