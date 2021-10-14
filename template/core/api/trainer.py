@@ -30,6 +30,7 @@ class CAMIO(BaseTrainer):
         self.best_val_loss = math.inf
 
         self.sanity_check = True
+        self.restore_path = None
 
         # only use for HEM
         self.train_method = self.args.train_method
@@ -151,6 +152,7 @@ class CAMIO(BaseTrainer):
             self.sanity_check = False
 
         else:
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir)
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
         
             val_loss, cnt = 0, 0
