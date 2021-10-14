@@ -17,16 +17,13 @@ parser.add_argument('--gt_json_path', type=str,
 
 parser.add_argument('--inference_step', type=int, default=30, help='inference interval')
 
-parser.add_argument('--save_path', help='save metric json path for evaluation')
-
 args, _ = parser.parse_known_args()
 
 class Inference_eval:
-    def __init__(self, model_output_csv_path:str, gt_json_path:str, save_file_path:str, inference_step:int):
+    def __init__(self, model_output_csv_path:str, gt_json_path:str, inference_step:int):
         self.model_output_csv_path = model_output_csv_path
         self.gt_json_path = gt_json_path
         self.inference_step = inference_step
-        self.save_file_path = save_file_path
 
         self.video_name = '_'.join(self.gt_json_path.split('/')[-1].split('.')[0].split('_')[:7])
         
@@ -104,30 +101,26 @@ class Inference_eval:
         """
         Calculate Over_Estimation_Ratio(OR) and Confidence_Ratio(CR).
         
-        Save results (OR, CR) to json file `results-OR_CR.json`. It overwrite duplicate videos. 
-        output json file : results-OR_CR.json
+        Save results (OR, CR) to json object.
+        output json format(str) : results-OR_CR
         {
             "01_G_01_R_100_ch1_03": {
                 "over_estimation_ratio": 0.01046610685164902,
                 "confidence_ratio": 0.9785809906291834
-            },
-            "01_G_01_R_100_ch1_01": {
-                "over_estimation_ratio": 0.18985270049099837,
-                "confidence_ratio": 0.6202945990180033
-            },
-            "01_G_01_R_100_ch1_05": {
-                "over_estimation_ratio": 0.0,
-                "confidence_ratio": 0.9303075063784074
+                "FP": 20,
+                "FN": 1,
+                "TP": 150,
+                "TN": 4630,
+                "TOTAL": 4881
             }
         }
 
         Returns:
-            `list`, of Over_Estimation_Ratio and Confidence_Ratio.
-            [self.over_estimation_ratio, self.confidence_ratio]
+            str(json format)
 
         Example:
             >>> calc_OR_CR()
-            [0.15, 0.8466666]
+            str(json format)
         """
 
         ## 1. parity check - file format 
@@ -180,65 +173,22 @@ class Inference_eval:
         except: 
             self.over_estimation_ratio=-1
             self.confidence_ratio=-1
-    
-        # save result file.
-        
-        # self.create_directory(self.save_dir_path)
-        # self.save_file_path = os.path.join(self.save_dir_path, 'eval.json')
 
-        # if the file exists.
-        if os.path.isfile(self.save_file_path): 
-            # read old file.
-            with open(self.save_file_path, 'r') as self.json_file:
-                self.json_data=json.load(self.json_file)
-            
-            self.json_data[self.video_name] = {'over_estimation_ratio':self.over_estimation_ratio, 'confidence_ratio':self.confidence_ratio}
-            
-            self.json_data[self.video_name]['details'] = {'FP':self.FP, 'FN':self.FN, 'TP':self.TP, 'TN':self.TN, 'TOTAL':self.TP + self.TN + self.FP + self.FN} # HG.21.09.28 추가, FP, FN, TP, TN, TOTAL count 기록
+        # HG.21.10.14 HG. json file write 대신 json object return
+        calc_OR_CR_dict = {}
+        calc_OR_CR_dict[self.video_name] = {'over_estimation_ratio':self.over_estimation_ratio,
+                                            'confidence_ratio':self.confidence_ratio,
+                                            'FP':self.FP,
+                                            'FN':self.FN,
+                                            'TP':self.TP,
+                                            'TN':self.TN,
+                                            'TOTAL':self.TP + self.TN + self.FP + self.FN}
 
-            # overwrite new file. 
-            with open(self.save_file_path, 'w') as self.json_file:
-                json.dump(self.json_data, self.json_file, indent=2)
-        
-        # if the file not exits. 
-        else:
-            self.calc_OR_CR_dict = {}
-            self.calc_OR_CR_dict[self.video_name] = {'over_estimation_ratio':self.over_estimation_ratio, 'confidence_ratio':self.confidence_ratio}
-            
-            self.calc_OR_CR_dict[self.video_name]['details'] = {'FP':self.FP, 'FN':self.FN, 'TP':self.TP, 'TN':self.TN, 'TOTAL':self.TP + self.TN + self.FP + self.FN} # HG.21.09.28 추가, FP, FN, TP, TN, TOTAL count 기록
-            
-            with open(self.save_file_path, 'w') as fh:
-                json.dump(self.calc_OR_CR_dict, fh, indent=2)
+        metric_json = json.dumps(calc_OR_CR_dict, indent=2)
+        print(metric_json)
 
-        return [self.over_estimation_ratio, self.confidence_ratio]
-
-    def calc_mOR_mCR(self, OR_CR_list:list) : # OR_CR_list = [[OR, CR], [OR, CR], [OR, CR]]
-        """
-        Calculate mean_Over_Estimation_Ratio(mOR) and mean_Confidence_Ratio(mCR).
-
-        Args:
-            CR_OR_list: `list`, pair of the [[OR_1, CR_1], [OR_2, CR_2], [OR_3, CR_3], ... , [OR_9, CR_9]]
-
-        Returns:
-            `list`, of mean_Over_Estimation_Ratio and mean_Confidence_Ratio. 
-
-        Example:
-            >>> calc_mOR_mCR([[0.1, 0.9], [0.2, 0.8], [0.15, 0.84]])
-            [0.15, 0.8466666]
-        """
-
-        self.OR_CR_list = OR_CR_list
-
-        self.OR_sum, self.CR_sum = 0, 0
-        for self.OR_CR in self.OR_CR_list :
-            self.OR_sum += self.OR_CR[0]
-            self.CR_sum += self.OR_CR[1]
-            
-        self.mOR = self.OR_sum/len(self.OR_CR_list)
-        self.mCR = self.CR_sum/len(self.OR_CR_list)
-
-        return [self.mOR, self.mCR]
+        return metric_json # str(json format)
 
 if __name__ == '__main__':
-    test = Inference_eval(model_output_csv_path=args.model_output_csv_path, gt_json_path=args.gt_json_path, save_file_path=args.save_path, inference_step=args.inference_step)
+    test = Inference_eval(model_output_csv_path=args.model_output_csv_path, gt_json_path=args.gt_json_path, inference_step=args.inference_step)
     test.calc_OR_CR()
