@@ -39,7 +39,7 @@ def main():
     # use case 1 - init Inference
     db_path = '/data3/OOB_Recog/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
     
-    Inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+    inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
     predict_list, target_img_list, target_frame_idx_list = Inference.start() # call start
 
     # Inference module results
@@ -48,8 +48,8 @@ def main():
     print(target_frame_idx_list)
 
     # use case 2 - set db path
-    Inference.set_db_path('/data3/OOB_Recog/img_db/ROBOT/R_100/01_G_01_R_100_ch1_03') # you can also change db_path
-    predict_list, target_img_list, target_frame_idx_list = Inference.start() # call start
+    inference.set_db_path('/data3/OOB_Recog/img_db/ROBOT/R_100/01_G_01_R_100_ch1_03') # you can also change db_path
+    predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
 
     # Inference module results
     print(predict_list)
@@ -57,8 +57,8 @@ def main():
     print(target_frame_idx_list)
 
     # use case 3 - set inference_interval
-    Inference.set_inference_interval(30) # you can also set inference interval
-    predict_list, target_img_list, target_frame_idx_list = Inference.start() # call start
+    inference.set_inference_interval(30) # you can also set inference interval
+    predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
 
     # Inference module results
     print(predict_list)

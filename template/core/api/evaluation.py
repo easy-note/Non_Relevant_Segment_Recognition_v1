@@ -16,7 +16,7 @@ from core.utils.metric import MetricHelper # metric util
 from core.utils.parser import AnnotationParser, FileLoader # json util, file util
 from core.utils.parser import FileLoader 
 
-class Evaluation():
+class Evaluator():
     def __init__(self, model_output_csv_path:str, gt_json_path:str, inference_interval:int):
         self.model_output_csv_path = model_output_csv_path
         self.gt_json_path = gt_json_path

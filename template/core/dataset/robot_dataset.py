@@ -11,7 +11,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 from core.config.data_info import data_transforms
 
-from core.config.patients_info import train_videos, val_videos
+from core.config.patients_info import train_videos, val_videos, hem_train_videos, hem_val_videos, hem_test_videos
 
 
 class RobotDataset(Dataset):
