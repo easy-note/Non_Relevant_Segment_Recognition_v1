@@ -40,7 +40,7 @@ class HEMHelper():
         CORRECT, INCORRECT = (0,1)
         IB_CLASS, OOB_CLASS = (0,1)
 
-        for i, data in enumerate(data_loader):
+        for i, data in enumerate(dataset):
             img_path_list = list(data['img_path'])
             gt_list = list(data['y'].cpu().data.numpy())
             predict_list = list(data['y_hat'].cpu().data.numpy())
