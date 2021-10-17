@@ -32,7 +32,7 @@ class HEMHelper():
         else: # exception
             return None
 
-    def hem_softmax_diff(self, model, data_loader):
+    def hem_softmax_diff(self, model, dataset):
         # pd.options.display.max_columns = None
         pd.options.display.max_rows = None
 
