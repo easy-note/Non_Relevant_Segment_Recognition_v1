@@ -5,7 +5,7 @@ def get_experiment_args():
 
     ### inference args
     parser.add_argument('--inference_save_dir', type=str, 
-                        default='../restuls',
+                        default='./resutls',
                         help='root directory for infernce saving')
         
 
@@ -31,10 +31,10 @@ def get_experiment_args():
     args.batch_size = 128
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/project-1'
+    args.save_path = '/OOB_RECOG/logs/project-200'
     args.num_gpus = 1
-    args.max_epoch = 2
-    args.min_epoch = 1
+    args.max_epoch = 1
+    args.min_epoch = 0
 
     ### etc opts
     args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
@@ -93,7 +93,8 @@ def train_main(args):
 
     trainer.fit(x)
 
-    args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_0') # TO DO: we should define restore path
+    # args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_4') # TO DO: we should define restore path
+    args.restore_path = os.path.join(x.restore_path)
     
     return args
 
@@ -129,7 +130,9 @@ def inference_main(args):
     # use case 1 - init Inference
     # db_path = '/raid/OOB_Recog/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
     db_path = '/raid/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
-    gt_json_path = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_R_100_ch1_01_OOB_27.json'
+    gt_json_path = '/nas2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2/01_G_01_R_100_ch1_01_OOB_27.json'
+
+    os.makedirs(args.inference_save_dir, exist_ok=True)
     predict_csv_path = os.path.join(args.inference_save_dir, 'R_100_ch1_01.csv')
     metric_path = os.path.join(args.inference_save_dir, 'R_100_ch1_01-metric.json')
     

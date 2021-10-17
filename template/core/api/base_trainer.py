@@ -119,7 +119,7 @@ class BaseTrainer(pl.LightningModule):
         if self.args.use_lightning_style_save:
             checkpoint = ModelCheckpoint(
                 # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
-                filename='{epoch}-{val_loss:.4f}',
+                filename='{epoch}-{val_loss:.4f}-best',
                 save_top_k=self.args.save_top_n,
                 save_last=True,
                 verbose=True,

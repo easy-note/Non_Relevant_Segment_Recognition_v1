@@ -14,8 +14,17 @@ from core.utils.metric import MetricHelper
 class CAMIO(BaseTrainer):
     def __init__(self, args):
         super(BaseTrainer, self).__init__()
+ 
         # TODO 필요한거 더 추가하기
         self.args = args
+
+        random.seed(self.args.random_seed)
+        np.random.seed(self.args.random_seed)
+        os.environ["PYTHONHASHSEED"]=str(self.args.random_seed)
+        torch.manual_seed(self.args.random_seed)
+        torch.cuda.manual_seed(self.args.random_seed)
+        torch.backends.cudnn.deterministic=True
+        torch.backends.cudnn.benchmark=True
         
         self.save_hyperparameters() # save with hparams
 
@@ -28,7 +37,18 @@ class CAMIO(BaseTrainer):
         self.best_val_loss = math.inf
 
         self.sanity_check = True
-        self.train_method = 'normal'
+        self.restore_path = None
+
+        # only use for HEM
+        self.train_method = self.args.train_method
+        self.hem_helper.set_method(self.train_method)
+
+        if self.train_method in ['hem-softmax', 'hem-vi']:
+            self.reset_epoch = self.args.max_epoch-1
+        else:
+            self.reset_epoch = -1
+
+        # self.train_method = 'normal'
 
         # only use for HEM
         if 'hem-bs' in self.args.train_method:
@@ -106,7 +126,7 @@ class CAMIO(BaseTrainer):
             # y_hat = self.forward(x)
             # loss = self.loss_fn(y_hat, y)
         else:
-            x, y = batch
+            img_path, x, y = batch
 
             y_hat = self.forward(x)
             loss = self.loss_fn(y_hat, y)
@@ -130,9 +150,10 @@ class CAMIO(BaseTrainer):
         self.metric_helper.write_loss(train_loss_mean, task='train')
 
     def validation_step(self, batch, batch_idx): # val - every batch
-        x, y = batch
+        img_path, x, y = batch
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
+
 
         self.metric_helper.write_preds(y_hat.argmax(dim=1).detach().cpu(), y.cpu()) # MetricHelper 에 저장
 
@@ -140,6 +161,10 @@ class CAMIO(BaseTrainer):
 
         return {
             'val_loss': loss,
+            'img_path': img_path,
+            'y': y,
+            'y_hat': y_hat.argmax(dim=1).detach().cpu(),
+            'logit': y_hat
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
@@ -147,10 +172,11 @@ class CAMIO(BaseTrainer):
             self.sanity_check = False
 
         else:
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir)
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
         
             val_loss, cnt = 0, 0
-            for output in outputs:
+            for output in outputs: 
                 val_loss += output['val_loss'].cpu().data.numpy()
                 cnt += 1
 
@@ -195,6 +221,26 @@ class CAMIO(BaseTrainer):
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
+
+            # Hard Example Mining (Offline)
+            if self.current_epoch == self.reset_epoch:
+                '''
+                self.trainset.change_mode(True)
+                self.valset.change_mode(True)
+                
+                hem_train_ids = self.hem_helper(self.model, self.train_loader)
+                hem_val_ids = self.hem_helper(self.model, self.train_loader)
+                self.trainset.set_sample_ids(hem_train_ids)
+                self.valset.set_sample_ids(hem_val_ids)
+                '''
+
+                if self.train_method == 'hem-softmax':
+                    hem_df = self.hem_helper.compute_hem(None, outputs)
+                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+                
+                elif self.train_method == 'hem-vi':
+                    pass
+    
 
     def test_step(self, batch, batch_idx):
         x, y = batch
