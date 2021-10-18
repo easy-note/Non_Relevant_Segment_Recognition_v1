@@ -42,6 +42,7 @@ class HEMHelper():
                             shuffle=True,
                             drop_last=True)
         n_pick = self.bsz // (self.n_bs * 2)
+        # n_pick = self.bsz // (self.n_bs * 4)
 
         y_hat = None
         y_true = None

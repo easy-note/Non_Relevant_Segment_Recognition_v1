@@ -28,6 +28,7 @@ def get_experiment_args():
     ### dataset opts
     args.data_base_path = '/raid/img_db'
     args.train_method = 'hem-bs'
+    # args.train_method = 'normal'
     args.batch_size = 128
 
     ### train args
@@ -84,8 +85,8 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=0.01,
-                            # limit_val_batches=0.01,
+                            #limit_train_batches=0.01,
+                            #limit_val_batches=0.01,
                             max_epochs=10, 
                             # max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
@@ -170,7 +171,7 @@ def main():
     args = train_main(args)
 
     # 3. inference
-    args, mCR, mOR, CR, OR = inference_main(args)
+    #args, mCR, mOR, CR, OR = inference_main(args)
 
     # 4. save experiments results [model, train_fold, inference_fold, ... , mCR, mOR, CR, OR]
     # save_experiments(args)

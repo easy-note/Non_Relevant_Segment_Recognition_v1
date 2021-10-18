@@ -147,7 +147,7 @@ def parse_opts():
             help='Data location')
 
     parser.add_argument('--fold',
-            default='5',
+            default='3',
             type=str,
             choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')

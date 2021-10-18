@@ -28,7 +28,8 @@ class CAMIO(BaseTrainer):
         self.best_val_loss = math.inf
 
         self.sanity_check = True
-        self.train_method = 'normal'
+        self.train_method = 'norma4'
+        
 
         # only use for HEM
         if 'hem-bs' in self.args.train_method:
@@ -177,7 +178,7 @@ class CAMIO(BaseTrainer):
             '''
 
             self.log_dict(metrics, on_epoch=True, prog_bar=True)
-
+            print(self.args.save_path, self.logger.log_dir)
             # save result.csv 
             self.metric_helper.save_metric(metric=metrics, epoch=self.current_epoch, args=self.args, save_path=os.path.join(self.args.save_path, self.logger.log_dir))
 
