@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+
+import pandas as pd
 from torch.utils.data import DataLoader
 
 
@@ -31,7 +33,61 @@ class HEMHelper():
             return None
 
     def hem_softmax_diff(self, model, dataset):
-        pass
+        # pd.options.display.max_columns = None
+        pd.options.display.max_rows = None
+
+        cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
+        CORRECT, INCORRECT = (0,1)
+        IB_CLASS, OOB_CLASS = (0,1)
+
+        for i, data in enumerate(dataset):
+            img_path_list = list(data['img_path'])
+            gt_list = list(data['y'].cpu().data.numpy())
+            predict_list = list(data['y_hat'].cpu().data.numpy())
+            logit_list = list(data['logit'].cpu().data.numpy())
+
+            diff_list = [abs(logit[0]-logit[1]) for logit in logit_list]
+            consensus_list = [CORRECT if y==y_hat else INCORRECT for y, y_hat in zip(gt_list, predict_list)]
+
+            '''
+                df = {
+                    img_path | gt | predict | logit | diff | consensus 
+                }
+            '''
+            
+            if i == 0: # init df
+                df = pd.DataFrame([x for x in zip(img_path_list, gt_list, predict_list, logit_list, diff_list, consensus_list)],
+                                    columns=cols)
+            else:
+                df = df.append([pd.Series(x, index=df.columns) for x in zip(img_path_list, gt_list, predict_list, logit_list, diff_list, consensus_list)], 
+                                ignore_index=True)
+
+        ### 1. 정답 맞춘 여부와 상관없이, diff 가 작은 경우
+        df = df.sort_values(by=['Diff'], axis=0) # 올림차순 정렬
+
+        hem_df_with_small_diff = df.iloc[:50,:]
+        df = df.iloc[50:,:]
+
+        ### 2. 정답을 틀렸고, diff 값 차이가 큰 경우
+        correct_df = df[df['Consensus']==CORRECT]
+        incorrect_df = df[df['Consensus']==INCORRECT]
+        
+        incorrect_df = incorrect_df.sort_values(by=['Diff'], axis=0, ascending=False) # 내림차순 정렬
+        hem_df_with_big_diff = incorrect_df.iloc[:50, :]
+
+        ### 3. hem_assets_df = hem_df_with_small_diff + hem_df_with_big_diff
+        hem_assets_df = pd.concat([hem_df_with_small_diff, hem_df_with_big_diff])[['Img_path', 'GT']]
+        hem_assets_df = hem_assets_df.sort_values(by='Img_path', axis=0, ignore_index=True)
+        hem_assets_df.columns = ['img_path', 'class_idx']
+
+        ### TODO 4. IB, OOB 비율 맞추기
+        correct_df = correct_df.sort_values(by=['Img_path'], axis=0)
+        incorrect_df = incorrect_df.iloc[50:, :].sort_values(by='Img_path', axis=0)
+
+        df = pd.concat([correct_df, incorrect_df])
+        df = df.sort_values(by='Img_path', axis=0, ignore_index=True)
+        
+        return hem_assets_df
 
     def hem_vi(self, model, dataset):
         pass
