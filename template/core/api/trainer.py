@@ -32,7 +32,7 @@ class CAMIO(BaseTrainer):
         self.loss_fn = get_loss(self.args)
 
         self.metric_helper = MetricHelper()
-        self.hem_helper = HEMHelper()
+        self.hem_helper = HEMHelper(self.args)
 
         self.best_val_loss = math.inf
 
@@ -166,7 +166,6 @@ class CAMIO(BaseTrainer):
     def validation_epoch_end(self, outputs): # val - every epoch
         if self.sanity_check:
             self.sanity_check = False
-
         else:
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir)
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
