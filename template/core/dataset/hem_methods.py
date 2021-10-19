@@ -82,14 +82,15 @@ class HEMHelper():
         else: # exception
             return None
 
-    def hem_softmax_diff(self, model, data_loader):
+    def hem_softmax_diff(self, model, dataset):
+        # pd.options.display.max_columns = None
         pd.options.display.max_rows = None
 
         cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
         CORRECT, INCORRECT = (0,1)
         IB_CLASS, OOB_CLASS = (0,1)
 
-        for i, data in enumerate(data_loader):
+        for i, data in enumerate(dataset):
             img_path_list = list(data['img_path'])
             gt_list = list(data['y'].cpu().data.numpy())
             predict_list = list(data['y_hat'].cpu().data.numpy())
