@@ -170,11 +170,6 @@ class CAMIO(BaseTrainer):
     def validation_epoch_end(self, outputs): # val - every epoch
         if self.sanity_check:
             self.sanity_check = False
-
-            # # for hem-test
-            # hem_df = self.hem_helper.compute_hem(None, outputs)
-            # hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-
         else:
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir)
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
