@@ -141,6 +141,11 @@ def parse_opts():
             choices=['OOB', 'NIR'], 
             help='[OOB, NIR] choice on task')
 
+    parser.add_argument('--experiment_type', 
+            default='ours', 
+            type=str,
+            choices=['ours', 'theator'], )
+
     parser.add_argument('--data_base_path',
             default='/raid/img_db',
             type=str,

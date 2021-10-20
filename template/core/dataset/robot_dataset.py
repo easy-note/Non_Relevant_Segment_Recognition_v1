@@ -9,7 +9,7 @@ import pandas as pd
 
 
 from torch.utils.data import Dataset
-from core.config.data_info import data_transforms
+from core.config.data_info import data_transforms, theator_data_transforms
 
 from core.config.patients_info import train_videos, val_videos, hem_train_videos, hem_val_videos, hem_test_videos
 
@@ -28,14 +28,19 @@ class RobotDataset(Dataset):
         self.img_list = [] # img
         self.label_list = [] # label
 
+        if self.args.experiment_type == 'ours':
+            d_transforms = data_transforms
+        elif self.args.experiment_type == 'theator':
+            d_transforms = theator_data_transforms
+
         if state == 'train':
-            self.aug = data_transforms['train']
+            self.aug = d_transforms['train']
             self.patients_info_key = train_videos
         elif state == 'val':
-            self.aug = data_transforms['val']
+            self.aug = d_transforms['val']
             self.patients_info_key = val_videos
         elif state == 'test':
-            self.aug = data_transforms['test']
+            self.aug = d_transforms['test']
             self.patients_info_key = val_videos
 
         # patients load
@@ -57,7 +62,7 @@ class RobotDataset(Dataset):
         elif self.args.data_version == 'v2':
             self.load_v2()
         elif self.args.data_version == 'HEM':
-            self.change_mode() # self.mode_hem = True
+            self.change_mode()
 
     def load_patients(self):
         if self.args.fold is not 'free':
@@ -111,7 +116,7 @@ class RobotDataset(Dataset):
         print('\n\n')
 
         # random_sampling and setting IB:OOB data ratio
-        self.ib_assets_df = self.ib_assets_df.sample(n=len(self.oob_assets_df)*self.IB_ratio, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+        self.ib_assets_df = self.ib_assets_df.sample(n=int(len(self.oob_assets_df)*self.IB_ratio), replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
         self.oob_assets_df = self.oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
 
         print('\n\n')
@@ -137,6 +142,9 @@ class RobotDataset(Dataset):
         # last processing
         self.img_list = self.assets_df.img_path.tolist()
         self.label_list = self.assets_df.class_idx.tolist()
+
+    def change_labels(self, labels):
+        self.label_list = labels
 
 
     def __len__(self):

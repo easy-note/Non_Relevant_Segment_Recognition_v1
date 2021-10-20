@@ -1,5 +1,6 @@
 from core.model.mobilenet import generate_mobilenet
 from core.model.efficientnet import generate_efficientnet
+from core.model.resnet import generate_resnet
 
 
 name_to_model = {
@@ -10,6 +11,7 @@ name_to_model = {
     'efficientnet_b2': generate_efficientnet,
     'efficientnet_b3': generate_efficientnet,
     'efficientnet_b4': generate_efficientnet,
+    'resnet18': generate_resnet,
 }
 
 
