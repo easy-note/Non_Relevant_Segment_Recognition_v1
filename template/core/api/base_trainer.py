@@ -90,10 +90,15 @@ class BaseTrainer(pl.LightningModule):
                 optimizer,
                 lr_lambda=lambda epoch: self.args.lr_scheduler_factor,
             )
+        else:
+            scheduler = None
 
         print('[+] Optimizer and Scheduler are set ', optimizer, scheduler)
-
-        return [optimizer], [scheduler]
+        
+        if scheduler is not None:
+            return [optimizer], [scheduler]
+        else:
+            return [optimizer]
     
     # @classmethod
     def configure_callbacks(self):

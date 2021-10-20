@@ -10,8 +10,9 @@ class HEMHelper():
         Help computation ids for Hard Example Mining.
         
     """
-    def __init__(self):
+    def __init__(self, args):
         super().__init__()
+        self.args = args
         
     def set_method(self, method):
         self.method = method
@@ -98,15 +99,12 @@ class HEMHelper():
                             shuffle=True,
                             drop_last=True)
         n_pick = self.bsz // (self.n_bs * 2)
-        # n_pick = self.bsz // (self.n_bs * 4)
-
+        
         y_hat = None
         y_true = None
 
-        # model.eval()
-
         for _ in range(self.n_bs):
-            x, y = next(iter(d_loader))
+            _, x, y = next(iter(d_loader))
             x, y = x.cuda(), y.cuda()
 
             output = nn.functional.softmax(model(x), -1)
@@ -114,14 +112,38 @@ class HEMHelper():
             pos_chk = pred_ids == y
             neg_chk = pred_ids != y
 
-            # pos_output = x[pos_chk][:n_pick, ]
-            # neg_output = x[neg_chk][:n_pick, ]
+            p_out = output[pos_chk]
+            n_out = output[neg_chk]
 
-            pos_output = output[pos_chk][:n_pick, ]
-            neg_output = output[neg_chk][:n_pick, ]
+            if self.args.sampling_type == 1:
+                p_diff = torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[:n_pick]
+                n_diff = torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[:n_pick]
 
-            pos_y = y[pos_chk][:n_pick, ]
-            neg_y = y[neg_chk][:n_pick, ]
+                pos_output = p_out[p_diff]
+                neg_output = n_out[n_diff]
+                pos_y = y[pos_chk][p_diff]
+                neg_y = y[neg_chk][n_diff]
+                
+            elif self.args.sampling_type == 2:
+                n_pick = self.bsz // (self.n_bs * 4)
+
+                p_diff = torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[:n_pick]
+                n_diff = torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[:n_pick]
+    
+                p_diff = torch.cat((p_diff, torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[-n_pick:]), -1)
+                n_diff = torch.cat((n_diff, torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[-n_pick:]), -1)
+
+                pos_output = p_out[p_diff]
+                neg_output = n_out[n_diff]
+                pos_y = y[pos_chk][p_diff]
+                neg_y = y[neg_chk][n_diff]
+
+            elif self.args.sampling_type == 3: 
+                pos_output = output[pos_chk][:n_pick, ]
+                neg_output = output[neg_chk][:n_pick, ]
+
+                pos_y = y[pos_chk][:n_pick, ]
+                neg_y = y[neg_chk][:n_pick, ]
             
             if y_hat is not None:
                 y_hat = torch.cat((y_hat, pos_output), 0)
@@ -136,7 +158,5 @@ class HEMHelper():
             else:
                 y_true = pos_y
                 y_true = torch.cat((y_true, neg_y), 0)
-        
-        # model.train()
 
         return y_hat, y_true
