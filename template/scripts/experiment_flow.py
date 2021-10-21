@@ -24,15 +24,21 @@ def get_experiment_args():
 
     ### model basic info opts
     args.model = 'mobilenet_v3_large'
+    # args.model = 'efficientnet_b3'
+
+    args.pretrained = True
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
     
     ### train args
-    args.save_path = '/OOB_RECOG/logs/project-1'
+    args.save_path = '/OOB_RECOG/logs/hem-vi'
     args.num_gpus = 1
-    args.max_epoch = 2
-    args.min_epoch = 1
+    args.max_epoch = 30
+    args.min_epoch = 20
+    
+    ### train methods
+    args.train_method = 'hem-vi'
 
     ### etc opts
     args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
@@ -66,12 +72,15 @@ def train_main(args):
     from core.model import get_model, get_loss
     from core.api.trainer import CAMIO
 
+    from torchsummary import summary
+
     tb_logger = pl_loggers.TensorBoardLogger(
         save_dir=args.save_path,
         name='TB_log',
         default_hp_metric=False)
 
     x = CAMIO(args)
+    print(summary(x.model, (3,224,224))) # check model arch
 
     if args.num_gpus > 1:
         trainer = pl.Trainer(gpus=args.num_gpus, 
@@ -156,18 +165,18 @@ def inference_main(args):
 def main():    
 
     # 0. set each experiment args 
-    args_list = [get_experiment_args(), get_experiment_args()] # 상황에 따라 다르게 args 구성
+    args = get_experiment_args() # 상황에 따라 다르게 args 구성
     
     # 1. hyper prameter opts setup for experiments flow
-    for args in args_list:
-        # 2. train
-        args = train_main(args)
 
-        # 3. inference
-        args, mCR, mOR, CR, OR = inference_main(args)
+    # 2. train
+    args = train_main(args)
 
-        # 4. save experiments results [model, train_fold, inference_fold, ... , mCR, mOR, CR, OR]
-        # save_experiments(args)
+    # 3. inference
+    args, mCR, mOR, CR, OR = inference_main(args)
+
+    # 4. save experiments results [model, train_fold, inference_fold, ... , mCR, mOR, CR, OR]
+    # save_experiments(args)
 
 if __name__ == '__main__':
     
