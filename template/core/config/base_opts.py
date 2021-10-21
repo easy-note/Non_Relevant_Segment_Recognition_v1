@@ -39,7 +39,7 @@ def parse_opts():
             help='Minimum training epoch')
 
     parser.add_argument('--max_epoch',
-            default=100,
+            default=1,
             type=int,
             help='Maximum training epoch')
 
@@ -79,7 +79,7 @@ def parse_opts():
 
     # /OOB_RECOG/logs/project-1/TB_log/version_0
     parser.add_argument('--save_path', type=str, 
-                        default='/OOB_RECOG/logs/project-1', help='')
+                        default='/OOB_RECOG/logs/project-hem', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',
@@ -141,13 +141,18 @@ def parse_opts():
             choices=['OOB', 'NIR'], 
             help='[OOB, NIR] choice on task')
 
+    parser.add_argument('--experiment_type', 
+            default='ours', 
+            type=str,
+            choices=['ours', 'theator'], )
+
     parser.add_argument('--data_base_path',
             default='/raid/img_db',
             type=str,
             help='Data location')
 
     parser.add_argument('--fold',
-            default='5',
+            default='3',
             type=str,
             choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
@@ -171,10 +176,21 @@ def parse_opts():
 
     # -------------- Train Methods --------------------
     parser.add_argument('--train_method', type=str,
-            default='normal', 
+            default='hem-softmax', 
             choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
             help='Select train method, normal or hem method')
 
+    parser.add_argument('--hem_softmax_min_threshold', type=float,
+            default=0.1, 
+            choices=range(0, 1),
+            help='Set hem-softmax min threshold')
+
+    parser.add_argument('--hem_softmax_max_threshold', type=float,
+            default=0.7, 
+            choices=range(0, 1),
+            help='Set hem-softmax max threshold')
+
+    
 
     # -------------- etc --------------------
     parser.add_argument('--random_seed', type=int, default=10, help='dataset ranbom seed')

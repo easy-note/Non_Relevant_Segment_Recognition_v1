@@ -19,28 +19,29 @@ def get_experiment_args():
                     choices=['1', '2', '3', '4', '5', 'free'],
                     help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
 
-    parser.add_argument('--sampling_type',
+    parser.add_argument('--experiment_setup',
                     default=1,
                     type=int,
-                    choices=[1,2,3],)
+                    choices=[1, 2, 3],
+                    )
 
 
     args = parser.parse_args()
 
     ### model basic info opts
-    args.model = 'mobilenet_v3_large'
-
-    args.pretrained = True
-    args.sampling_type = 2
+    args.model = 'resnet18'
+    args.optimizer = 'sgd'
+    args.lr_scheduler = ''
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
-    args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
-    # args.train_method = 'normal'
-    args.batch_size = 128
+    args.experiment_setup = 1
+    args.batch_size = 64
+    args.IB_ratio = 7.7
+    args.experiment_type = 'theator'
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/project-200'
+    args.save_path = '/OOB_RECOG/logs/project-201'
     args.num_gpus = 1
     args.max_epoch = 1
     args.min_epoch = 0
@@ -75,19 +76,14 @@ def train_main(args):
     from pytorch_lightning.plugins import DDPPlugin
 
     from core.model import get_model, get_loss
-    from core.api.trainer import CAMIO
     from core.api.theator_trainer import TheatorTrainer
-
-    from torchsummary import summary
 
     tb_logger = pl_loggers.TensorBoardLogger(
         save_dir=args.save_path,
         name='TB_log',
         default_hp_metric=False)
 
-    x = CAMIO(args)
-    print(summary(x.model, (3,224,224))) # check model arch
-    # x = TheatorTrainer(args)
+    x = TheatorTrainer(args)
 
     if args.num_gpus > 1:
         trainer = pl.Trainer(gpus=args.num_gpus, 
@@ -98,17 +94,17 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            #limit_train_batches=0.01,
-                            #limit_val_batches=0.01,
-                            max_epochs=20, 
-                            # max_epochs=args.max_epoch, 
+                            # limit_train_batches=0.01,
+                            # limit_val_batches=0.01,
+                            max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
 
     trainer.fit(x)
-
-    # args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_4') # TO DO: we should define restore path
-    args.restore_path = os.path.join(x.restore_path)
+    
+    _path = os.path.join(args.save_path, 'TB_log')
+    args.restore_path = os.path.join(_path, os.listdir(_path)[-1]) # TO DO: we should define restore path
+    # args.restore_path = os.path.join(x.restore_path)
     
     return args
 
