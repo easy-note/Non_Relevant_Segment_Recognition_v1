@@ -152,7 +152,7 @@ class RobotDataset(Dataset):
             img = Image.open(img_path)
             img = self.aug(img)
 
-        return img, label
+        return img, label, img_path
 
 if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
