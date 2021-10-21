@@ -30,6 +30,7 @@ class CAMIO(BaseTrainer):
         self.best_val_loss = math.inf
 
         self.sanity_check = True
+        self.restore_path = None # inference module args / save path of hem df 
 
         # only use for HEM
         self.train_method = self.args.train_method
@@ -110,7 +111,7 @@ class CAMIO(BaseTrainer):
         """
             forward for mini-batch
         """
-        x, y = batch
+        x, y, img_path = batch
 
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
@@ -134,7 +135,7 @@ class CAMIO(BaseTrainer):
 
 
     def validation_step(self, batch, batch_idx): # val - every batch
-        x, y = batch
+        x, y, img_path = batch
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
@@ -144,13 +145,20 @@ class CAMIO(BaseTrainer):
 
         return {
             'val_loss': loss,
+            'x': x,
+            'y': y,
+            'img_path': img_path
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
         if self.sanity_check:
+            print('sanity check')
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+
             self.sanity_check = False
 
         else:
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
         
             val_loss, cnt = 0, 0
@@ -202,6 +210,7 @@ class CAMIO(BaseTrainer):
 
             # Hard Example Mining (Offline)
             if self.current_epoch == self.reset_epoch and self.train_method in ['hem-softmax', 'hem-vi']:
+                '''
                 self.trainset.change_mode(True)
                 self.valset.change_mode(True)
                 
@@ -209,7 +218,17 @@ class CAMIO(BaseTrainer):
                 hem_val_ids = self.hem_helper(self.model, self.train_loader)
                 self.trainset.set_sample_ids(hem_train_ids)
                 self.valset.set_sample_ids(hem_val_ids)
-    
+                '''
+                
+                ''' hem_df 구조
+                img_path | class
+                ~.jpg | 0
+                ~.jpg | 1
+                '''
+                hem_df = self.hem_helper.compute_hem(self.model, outputs)
+
+                print(hem_df)
+                hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold)))  # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
