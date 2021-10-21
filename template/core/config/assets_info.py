@@ -21,6 +21,8 @@ oob_assets_save_path = {
     'oob_assets_v2_robot_save_path':'/raid/img_db/oob_assets/V2/ROBOT',
     'oob_assets_v2_lapa_save_path': '/raid/img_db/oob_assets/V2/LAPA',
 
-    'oob_assets_v3_robot_save_path': '/raid/img_db/oob_assets/V3/ROBOT'
+    'oob_assets_v3_robot_save_path': '/raid/img_db/oob_assets/V3/ROBOT',
+
+    'theator-oob_assets_v3_robot_save_path': '/raid/img_db/oob_assets/V3/theator-ROBOT'
 }
 
