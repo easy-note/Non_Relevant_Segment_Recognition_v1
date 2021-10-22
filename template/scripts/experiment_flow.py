@@ -14,7 +14,7 @@ def get_experiment_args():
                         help='Inference Interval of frame')
 
     parser.add_argument('--inference_fold',
-                    default='3',
+                    default='2',
                     type=str,
                     choices=['1', '2', '3', '4', '5', 'free'],
                     help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
@@ -35,14 +35,14 @@ def get_experiment_args():
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
-    args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
+    args.train_method = 'hem-vi' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
     # args.train_method = 'normal'
     args.batch_size = 128
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/project-200'
+    args.save_path = '/OOB_RECOG/logs/211023_HEM-softmax-FOLD2'
     args.num_gpus = 1
-    args.max_epoch = 1
+    args.max_epoch = 20
     args.min_epoch = 0
 
     ### etc opts
@@ -88,7 +88,7 @@ def train_main(args):
     x = CAMIO(args)
     print(summary(x.model, (3,224,224))) # check model arch
     # x = TheatorTrainer(args)
-
+    
     if args.num_gpus > 1:
         trainer = pl.Trainer(gpus=args.num_gpus, 
                             max_epochs=args.max_epoch, 
@@ -98,10 +98,10 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            #limit_train_batches=0.01,
-                            #limit_val_batches=0.01,
-                            max_epochs=20, 
-                            # max_epochs=args.max_epoch, 
+                            # limit_train_batches=2,
+                            # limit_val_batches=2,
+                            # max_epochs=1, 
+                            max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
 
@@ -195,7 +195,7 @@ def main():
 if __name__ == '__main__':
     
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     
     if __package__ is None:
         import sys
