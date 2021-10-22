@@ -48,7 +48,7 @@ class CAMIO(BaseTrainer):
         if 'hem-bs' in self.args.train_method:
             self.hem_helper.set_method(self.args.train_method)
             self.hem_helper.set_batch_size(self.args.batch_size)
-            self.hem_helper.set_n_batch(4)
+            self.hem_helper.set_n_batch(self.args.hem_bs_n_batch)
             self.train_method = self.args.train_method
 
         elif self.args.train_method in ['hem-softmax', 'hem-vi']:
@@ -168,6 +168,7 @@ class CAMIO(BaseTrainer):
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
 
             self.sanity_check = False
+
         else:
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)

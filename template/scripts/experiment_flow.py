@@ -29,7 +29,6 @@ def get_experiment_args():
 
     ### model basic info opts
     args.model = 'mobilenet_v3_large'
-
     args.pretrained = True
     args.sampling_type = 2
 
@@ -195,7 +194,7 @@ def main():
 if __name__ == '__main__':
     
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '6'
     
     if __package__ is None:
         import sys
