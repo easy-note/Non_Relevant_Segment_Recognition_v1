@@ -37,6 +37,7 @@ class CAMIO(BaseTrainer):
         self.best_val_loss = math.inf
 
         self.sanity_check = True
+        self.restore_path = None # inference module args / save path of hem df 
 
         self.restore_path = None
         self.train_method = 'normal'
@@ -163,9 +164,12 @@ class CAMIO(BaseTrainer):
 
     def validation_epoch_end(self, outputs): # val - every epoch
         if self.sanity_check:
+            print('sanity check')
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+
             self.sanity_check = False
         else:
-            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir)
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
         
             val_loss, cnt = 0, 0
@@ -232,7 +236,8 @@ class CAMIO(BaseTrainer):
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
                 
                 elif self.train_method == 'hem-vi':
-                    pass
+                    hem_df = self.hem_helper.compute_hem(self.model, outputs)
+                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
     
 
     def test_step(self, batch, batch_idx):

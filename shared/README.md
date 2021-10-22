@@ -48,6 +48,8 @@ Estimation Metrics
     2. 기존 분리된 shared_inference/evaluation module Dockerfile 및 requirements file 통합 (/shared/env)
     3. vihub-pro module flow와 동일하게 linux 환경에서 Inference/Evaluation 할 수 있도록 도와주는 utils module 및 sciprt 작성 (/shared/core/utils, /shared/script)
     4. OOB test model upload (/shared/model/mobilenet_v3_large.ckpt)
+- 2021/10/14 | @hyeongyuc96hutom
+    1. evaluation module return 형식 변경, json file을 저장하지 않고 json format string return으로 변경
 ---
 
 ## Mobule/File Path 
@@ -101,7 +103,6 @@ Estimation Metrics
     - model_output_csv_path -> str(.csv)
     - gt_json_path: ground-truth -> str(.json)
     - inference_step: inference interval -> int
-    - save_path: save metric json path for evaluation -> str(.json)
 - output
     -  Evaluation result -> file(.json):
 4. check resuts / predict list or metric (CR, OR)

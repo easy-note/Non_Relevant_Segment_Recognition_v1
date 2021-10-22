@@ -29,11 +29,13 @@ def get_experiment_args():
 
     ### model basic info opts
     args.model = 'mobilenet_v3_large'
+
+    args.pretrained = True
     args.sampling_type = 2
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
-    args.train_method = 'hem-bs'
+    args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
     # args.train_method = 'normal'
     args.batch_size = 128
 
@@ -76,12 +78,15 @@ def train_main(args):
     from core.api.trainer import CAMIO
     from core.api.theator_trainer import TheatorTrainer
 
+    from torchsummary import summary
+
     tb_logger = pl_loggers.TensorBoardLogger(
         save_dir=args.save_path,
         name='TB_log',
         default_hp_metric=False)
 
     x = CAMIO(args)
+    print(summary(x.model, (3,224,224))) # check model arch
     # x = TheatorTrainer(args)
 
     if args.num_gpus > 1:

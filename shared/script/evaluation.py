@@ -19,6 +19,7 @@ import os
 import sys
 import argparse
 import pandas as pd
+import json
 
 from core.api.Inference_vihub.VIHUB_pro_QA_v2.test import inference_by_frame_list # inference module
 from core.api.Evaluation_vihub.OOB_inference_module import Inference_eval # evaluation module
@@ -83,8 +84,15 @@ def evaluation_vihub_results(results_path, gt_path, frame_dir, save_path):
     ##### evaluation Helper [end] #####
 
     ## [2] evaluation module
-    print('mobile : ', Inference_eval(mobilenet_predict_path, gt_path, mobilenet_eval_path, inference_step=INFERENCE_STEP).calc_OR_CR()) # mobilenet
-    print('efficient : ', Inference_eval(efficientnet_predict_path, gt_path, efficientnet_eval_path, inference_step=INFERENCE_STEP).calc_OR_CR()) # efficient
+    mobilenet_metric_json = Inference_eval(mobilenet_predict_path, gt_path, inference_step=30).calc_OR_CR() # mobilenet
+    efficientnet_metric_json = Inference_eval(efficientnet_predict_path, gt_path, inference_step=30).calc_OR_CR() # efficient
+
+    ## (save metric to json)
+    with open(mobilenet_eval_path, "w") as json_file:
+        json.dump(json.loads(mobilenet_metric_json), json_file, indent=2)
+    
+    with open(efficientnet_eval_path, "w") as json_file:
+        json.dump(json.loads(efficientnet_metric_json), json_file, indent=2)
 
     ## [3] visual module
     visual_helper = visualHelper(gt_list, mobilenet_predict_list, efficient_predict_list, visual_dir, frame_path=frame_dir) # visual (mobile, efficient)
