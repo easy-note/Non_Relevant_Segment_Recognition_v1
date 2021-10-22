@@ -90,6 +90,12 @@ class BaseTrainer(pl.LightningModule):
                 optimizer,
                 lr_lambda=lambda epoch: self.args.lr_scheduler_factor,
             )
+        elif schdlr_name == 'mul_step_lr':
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer,
+                milestones=self.args.lr_milestones,
+                gamma=self.args.lr_scheduler_factor,
+            )
         else:
             scheduler = None
 

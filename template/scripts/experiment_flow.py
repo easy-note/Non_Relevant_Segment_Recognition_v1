@@ -29,7 +29,6 @@ def get_experiment_args():
 
     ### model basic info opts
     args.model = 'mobilenet_v3_large'
-
     args.pretrained = True
     args.sampling_type = 2
 

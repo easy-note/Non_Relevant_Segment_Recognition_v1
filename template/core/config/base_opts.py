@@ -128,6 +128,11 @@ def parse_opts():
             type=float,
             help='Multiplicative factor for decreasing learning rate')
 
+    parser.add_argument('--lr_milestones',
+            default=[9, 14],
+            type=list,
+            help='Multi-step milestones for decreasing learning rate')
+
     # -------------- Dataset --------------------
     parser.add_argument('--dataset', 
             default='ROBOT', 
@@ -179,6 +184,10 @@ def parse_opts():
             default='hem-vi', 
             choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
             help='Select train method, normal or hem method')
+
+    parser.add_argument('--hem_bs_n_batch', type=int,
+            default=4, 
+            help='Set the number of batches')
     
     parser.add_argument('--top_ratio', type=float,
             default=30/100,

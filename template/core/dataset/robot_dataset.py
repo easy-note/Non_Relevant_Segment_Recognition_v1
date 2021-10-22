@@ -71,6 +71,18 @@ class RobotDataset(Dataset):
     def set_sample_ids(self, ids):
         self.ids = ids
 
+    def load_data(self):
+        if self.args.data_version == 'v1':
+            self.load_v1()
+        elif self.args.data_version == 'v2':
+            csv_path = os.path.join(self.args.data_base_path, 'oob_assets/V2/ROBOT')
+            self.load_data_from_ver(csv_path)
+        elif self.args.data_version == 'v3':
+            csv_path = os.path.join(self.args.data_base_path, 'oob_assets/V3/ROBOT')
+            self.load_data_from_ver(csv_path)
+        elif self.args.data_version == 'HEM':
+            self.change_mode()
+
     def load_patients(self):
         if self.args.fold is not 'free':
             self.patients_name = self.patients_info_key[self.args.fold] # train_videos['1']
@@ -92,13 +104,13 @@ class RobotDataset(Dataset):
         # TODO load dataset ver. 1 나중에 민국님과 회의 때, 논문에 사용하는지 여쭤보고 -> 필요하면 작업. 
         pass
 
-    def load_v2(self):
+    def load_data_from_ver(self, csv_path):
         # TODO load dataset ver. 2
-        csv_path_v2 = os.path.join(self.args.data_base_path, 'oob_assets/V2/ROBOT')
+        # csv_path_v2 = os.path.join(self.args.data_base_path, 'oob_assets/V2/ROBOT')
 
         # read oob_assets_inbody.csv, oob_assets_outofbody.csv
-        read_ib_assets_df = pd.read_csv(os.path.join(csv_path_v2, 'oob_assets_inbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
-        read_oob_assets_df = pd.read_csv(os.path.join(csv_path_v2, 'oob_assets_outofbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
+        read_ib_assets_df = pd.read_csv(os.path.join(csv_path, 'oob_assets_inbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
+        read_oob_assets_df = pd.read_csv(os.path.join(csv_path, 'oob_assets_outofbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
         
         print('==> \tInbody_READ_CSV')
         print(read_ib_assets_df)
@@ -158,72 +170,6 @@ class RobotDataset(Dataset):
         self.img_list = self.assets_df.img_path.tolist()
         self.label_list = self.assets_df.class_idx.tolist()
 
-
-    def load_v3(self):
-        # TODO load dataset ver. 3
-        csv_path_v3 = os.path.join(self.args.data_base_path, 'oob_assets/V3/ROBOT')
-
-        # read oob_assets_inbody.csv, oob_assets_outofbody.csv
-        read_ib_assets_df = pd.read_csv(os.path.join(csv_path_v3, 'oob_assets_inbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
-        read_oob_assets_df = pd.read_csv(os.path.join(csv_path_v3, 'oob_assets_outofbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
-        
-        print('==> \tInbody_READ_CSV')
-        print(read_ib_assets_df)
-        print('\n\n')
-
-        print('==> \tOutofbody_READ_CSV')
-        print(read_oob_assets_df)
-        print('\n\n')
-
-        # select patient frame 
-        print('==> \tPATIENT')
-        print('|'.join(self.patients_name))
-        patients_name_for_parser = [patient + '_' for patient in self.patients_name]
-        print('|'.join(patients_name_for_parser))
-
-        # select patient video
-        self.ib_assets_df = read_ib_assets_df[read_ib_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
-        self.oob_assets_df = read_oob_assets_df[read_oob_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
-
-        # sort
-        self.ib_assets_df = self.ib_assets_df.sort_values(by=['img_path'])
-        self.oob_assets_df = self.oob_assets_df.sort_values(by=['img_path'])
-
-        print('\n\n')
-        print('==> \tSORT INBODY_CSV')
-        print(self.ib_assets_df)
-        print('\t'* 4)
-        print('==> \tSORT OUTBODY_CSV')
-        print(self.oob_assets_df)
-        print('\n\n')
-
-        # random_sampling and setting IB:OOB data ratio
-        self.ib_assets_df = self.ib_assets_df.sample(n=int(len(self.oob_assets_df)*self.IB_ratio), replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-        self.oob_assets_df = self.oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
-
-        print('\n\n')
-        print('==> \tRANDOM SAMPLING INBODY_CSV')
-        print(self.ib_assets_df)
-        print('\t'* 4)
-        print('==> \tRANDOM SAMPLING OUTBODY_CSV')
-        print(self.oob_assets_df)
-        print('\n\n')
-
-        # suffle 0,1
-        self.assets_df = pd.concat([self.ib_assets_df, self.oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
-        print('\n\n')
-        print('==> \tFINAL ASSETS')
-        print(self.assets_df)
-        print('\n\n')
-
-        print('\n\n')
-        print('==> \tFINAL HEAD')
-        print(self.assets_df.head(20))
-        print('\n\n')
-
-        # last processing
-        self.img_list = self.assets_df.img_path.tolist()
-        self.label_list = self.assets_df.class_idx.tolist()
 
     def change_labels(self, labels):
         self.label_list = labels
