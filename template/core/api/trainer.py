@@ -157,6 +157,7 @@ class CAMIO(BaseTrainer):
         return {
             'val_loss': loss,
             'img_path': img_path,
+            'x': x,
             'y': y,
             'y_hat': y_hat.argmax(dim=1).detach().cpu(),
             'logit': y_hat
