@@ -16,6 +16,8 @@ class HEMHelper():
     def __init__(self, args):
         super().__init__()
         self.args = args
+        self.NON_HEM, self.HEM = (0, 1)
+        self.IB_CLASS, self.OOB_CLASS = (0, 1)
         
     def set_method(self, method):
         self.method = method
@@ -146,6 +148,7 @@ class HEMHelper():
         
         ib_df = df[df['GT']==IB_CLASS]
         oob_df = df[df['GT']==OOB_CLASS]
+
         
         final_assets = self.set_ratio(hem_ib_assets_df, hem_oob_assets_df, ib_df, oob_df)
 
@@ -165,20 +168,37 @@ class HEMHelper():
                     m.train()
         
         # extract hem idx method
-        def extract_hem_idx_from_voting(dropout_predictions):
+        def extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
             
+            # 1. extract hem index
             predict_table = np.argmax(dropout_predictions, axis=2) # (forward_passes, n_samples)
             predict_ratio = np.mean(predict_table, axis=0) # (n_samples)
 
-            predict_list = np.around(predict_ratio) # threshold == 0.5, if predict_ratio >= 0.5, predict_class == OOB(1)
+            predict_np = np.around(predict_ratio) # threshold == 0.5, if predict_ratio >= 0.5, predict_class == OOB(1)
+            predict_np = np.int8(predict_np) # casting float to int
+            predict_list = predict_np.tolist() # to list
 
-            answer = predict_list == np.array(gt_list) # compare with gt list
+            answer = predict_np == np.array(gt_list) # compare with gt list
 
             hem_idx = np.where(answer == False) # hard example
             hem_idx = hem_idx[0].tolist() # remove return turple
 
-            return hem_idx
+            # 2. split hem/vanila 
+            total_df_dict = {
+                'Img_path': img_path_list,
+                'predict': predict_list,
+                'GT': gt_list,
+                'voting': predict_ratio.tolist(),
+                'hem': [self.NON_HEM] * len(img_path_list) # init hem
+            }
+
+            total_df = pd.DataFrame(total_df_dict)
+            total_df.loc[hem_idx, ['hem']] = self.HEM # hem index
+
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = split_to_hem_vanila_df(total_df)
+
+            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
         
         def extract_hem_idx_from_softmax_diff(dropout_predictions):
             hem_idx = []
@@ -187,11 +207,12 @@ class HEMHelper():
 
             return hem_idx
 
-        def extract_hem_idx_from_mutual_info(dropout_predictions):
+        def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
 
-            ## 2. Calculate maen and variance
-            print(dropout_predictions)
+            # 1. extract hem index
+
+            ## Calculate maen and variance
             mean = np.mean(dropout_predictions, axis=0) # shape (n_samples, n_classes) 
             variance = np.var(dropout_predictions, axis=0) # shape (n_samples, n_classes)
             
@@ -204,40 +225,67 @@ class HEMHelper():
             mutual_info = entropy - np.mean(np.sum(-dropout_predictions*np.log(dropout_predictions + epsilon),
                                                                                         axis=-1), axis=0) # shape (n_samples,)
             # if mutual info is high = relavence // low = non-relavence
-            # so in (hard example data selection?), if i'th data is high(relavence), non-indepandence, i'th data has similar so it's hard?
-            print(mutual_info)
+            # so in (hard example data selection?), if i'th data is high(relavence), non-indepandence, i'th data has similar so it's hard
 
-            # top(high) 30 % dataset
-            # if mutual_info 
+            # sort mi index & extract top/btm sample index 
             top_ratio = 30/100
             top_k = int(len(mutual_info) * top_ratio)
 
-            hem_idx = (-mutual_info).argsort()[:top_k].tolist() # descending
+            btm_ratio = 30/100
+            btm_k = int(len(mutual_info) * btm_ratio)
 
-            return hem_idx, mutual_info
+            sorted_mi_index = (-mutual_info).argsort() # desecnding index
+            top_mi_index = sorted_mi_index[:top_k] # highest 
+            btm_mi_index = sorted_mi_index[len(mutual_info) - btm_k:] # lowest
 
-        def split_hard_example_class(hem_idx, gt_list):
-            hard_neg_idx, hard_pos_idx = [], []
-            IB_CLASS, OOB_CLASS = 0, 1
+            # extract wrong anwer from mean softmax 
+            predict_np = np.argmax(mean, axis=1)
+            predict_list = predict_np.tolist() # to list
 
-            for idx in hem_idx: 
-                hem_example_class = gt_list[idx] # hard example's gt class
-                if hem_example_class == IB_CLASS: # hard negative sample
-                    hard_neg_idx.append(idx)
-                elif hem_example_class == OOB_CLASS: # hard positive sample
-                    hard_pos_idx.append(idx)
+            answer = predict_np == np.array(gt_list) # compare with gt list
 
-            return hard_neg_idx, hard_pos_idx
+            wrong_idx = np.where(answer == False) # wrong example
+            wrong_idx = wrong_idx[0].tolist() # remove return turple
 
-        hem_df = None
+            # append hem idx - high mi & wrong answer
+            hem_idx += np.intersect1d(wrong_idx, top_mi_index).tolist()
+            # append hem idx - low mi
+            hem_idx += btm_mi_index.tolist()
+            print('hem_idx')
+            
+            # 2. split hem/vanila 
+            total_df_dict = {
+                'Img_path': img_path_list,
+                'predict': predict_list,
+                'GT': gt_list,
+                'mi': mutual_info.tolist(),
+                'hem': [self.NON_HEM] * len(img_path_list) # init hem
+            }
 
+            total_df = pd.DataFrame(total_df_dict)
+            total_df.loc[hem_idx, ['hem']] = self.HEM # hem index
 
-        col_name = ['img_path', 'class_idx']
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = split_to_hem_vanila_df(total_df)
+
+            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+
+        def split_to_hem_vanila_df(total_df): # total_df should have ['hem', 'GT'] columne
+            hem_df = total_df[total_df['hem'] == self.HEM]
+            vanila_df = total_df[total_df['hem'] == self.NON_HEM]
+
+            hard_neg_df = hem_df[hem_df['GT'] == self.IB_CLASS]
+            hard_pos_df = hem_df[hem_df['GT'] == self.OOB_CLASS]
+            
+            vanila_neg_df = vanila_df[vanila_df['GT'] == self.IB_CLASS]
+            vanila_pos_df = vanila_df[vanila_df['GT'] == self.OOB_CLASS]
+
+            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+        
+        # init for parameter for hem methods
         img_path_list = []
         gt_list = []
-        
-        # init for return df(hem df)
-        for data in outputs:
+
+        for data in dataset:
             img_path_list += list(data['img_path'])
             gt_list += data['y'].tolist()
         
@@ -245,7 +293,6 @@ class HEMHelper():
         n_classes = 2
         forward_passes = 5
         n_samples = len(img_path_list)
-
         
         dropout_predictions = np.empty((0, n_samples, n_classes)) 
         softmax = nn.Softmax(dim=1)
@@ -255,7 +302,7 @@ class HEMHelper():
             predictions = np.empty((0, n_classes))
             model.eval()
             enable_dropout(model)
-            for data in outputs:
+            for data in dataset:
                 with torch.no_grad():
                     y_hat = model(data['x'])
                     y_hat = softmax(y_hat)
@@ -267,31 +314,13 @@ class HEMHelper():
                                         predictions[np.newaxis, :, :]))
         
         
-        # extracting he // apply method
-        hem_idx, mutual_info = extract_hem_idx_from_mutual_info(dropout_predictions)
+        # extracting he // apply method (dropout_predictions, gt_list, img_path_list)
+        hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list)
 
-        # split hard example class from he 
-        hard_neg_idx, hard_pos_idx = split_hard_example_class(hem_idx, gt_list)
+        # final hem df
+        final_hem_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
-        print(hard_neg_idx)
-        print(hard_pos_idx)
-
-        hem_df = pd.DataFrame(
-                {
-                    'img_path': img_path_list,
-                    'gt_list': gt_list,
-                    'mutual_info': mutual_info.tolist()
-                }
-            )
-
-        '''
-        img_path | class
-        ~.jpg | 0
-        ~.jpg | 1
-        # return df of final Hard Example
-        '''
-
-        return hem_df
+        return final_hem_df
 
     def hem_batch_sampling(self, model, dataset):
         d_loader = DataLoader(dataset, 
