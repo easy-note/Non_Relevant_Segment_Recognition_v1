@@ -40,6 +40,17 @@ class Evaluator():
         self.model_output_csv_path = model_output_csv_path
         self.gt_json_path = gt_json_path
 
+    def get_assets(self): # return gt_list(from .json), predict_list(from .csv)
+        file_loader= FileLoader(self.model_output_csv_path) # csv
+        predict_df = file_loader.load() # DataFrame
+        predict_list = list(predict_df['predict'].tolist())
+
+        anno_parser = AnnotationParser(self.gt_json_path)
+        gt_list = anno_parser.get_event_sequence(self.inference_interval)
+        gt_list, predict_list = self._fit_to_min_length(predict_list, gt_list)
+
+        return gt_list, predict_list
+
     def calc(self):
         """
         Calculate Over_Estimation_Ratio(OR) and Confidence_Ratio(CR).
@@ -73,16 +84,8 @@ class Evaluator():
                 }
         """
 
-        # 1. prepare data
-        file_loader= FileLoader(self.model_output_csv_path) # csv
-        predict_df = file_loader.load() # DataFrame
-
-        predict_list = list(predict_df['predict'].tolist())
-
-        anno_parser = AnnotationParser(self.gt_json_path)
-        gt_list = anno_parser.get_event_sequence(self.inference_interval)
-
-        gt_list, predict_list = self._fit_to_min_length(predict_list, gt_list)
+        # 1. prepare data(assets)
+        gt_list, predict_list = self.get_assets()
 
         # 2. calc metric
         metric_helper = MetricHelper()
