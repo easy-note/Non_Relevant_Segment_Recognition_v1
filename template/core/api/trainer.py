@@ -56,6 +56,8 @@ class CAMIO(BaseTrainer):
             self.hem_helper.set_method(self.train_method)
             self.last_epoch = self.args.max_epoch-1
 
+        print('self.last_epoch ====> ', self.last_epoch)
+
     def setup(self, stage):
         '''
             Called one each GPU separetely - stage defines if we are at fit or test step.
@@ -157,6 +159,7 @@ class CAMIO(BaseTrainer):
         return {
             'val_loss': loss,
             'img_path': img_path,
+            'x': x,
             'y': y,
             'y_hat': y_hat.argmax(dim=1).detach().cpu(),
             'logit': y_hat
@@ -171,6 +174,7 @@ class CAMIO(BaseTrainer):
 
         else:
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+            
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
         
             val_loss, cnt = 0, 0
@@ -231,12 +235,8 @@ class CAMIO(BaseTrainer):
                 self.trainset.set_sample_ids(hem_train_ids)
                 self.valset.set_sample_ids(hem_val_ids)
                 '''
-
-                if self.train_method == 'hem-softmax':
-                    hem_df = self.hem_helper.compute_hem(None, outputs)
-                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
                 
-                elif self.train_method == 'hem-vi':
+                if self.train_method == 'hem-vi':
                     hem_df = self.hem_helper.compute_hem(self.model, outputs)
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
     
