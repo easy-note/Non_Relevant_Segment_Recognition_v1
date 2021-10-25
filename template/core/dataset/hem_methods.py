@@ -292,6 +292,62 @@ class HEMHelper():
         '''
 
         return hem_df
+    
+    def hem_cos_sim(self, model, x, y):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        pos_len, neg_len = len(pos_y_hat), len(neg_y_hat)
+    
+        if pos_len > neg_len:
+            sim_y_hat = torch.cat((pos_y_hat[:neg_len], neg_y_hat), 0)
+            sim_y = torch.cat((pos_y[:neg_len], neg_y), -1)
+        else:
+            sim_y_hat = torch.cat((pos_y_hat, neg_y_hat[:pos_len]), 0)
+            sim_y = torch.cat((pos_y, neg_y[:pos_len]), -1)
+        
+        return sim_y_hat, sim_y
+    
+    def hem_cos_hard_sim(self, model, x, y):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+        wrong_ids = torch.argsort(wrong_sim_dist)[:16]
+        neg_y_hat = neg_y_hat[wrong_ids]
+        neg_y = neg_y[wrong_ids]
+        
+        pos_len, neg_len = len(pos_y_hat), len(neg_y_hat)
+    
+        if pos_len > neg_len:
+            sim_y_hat = torch.cat((pos_y_hat[:neg_len], neg_y_hat), 0)
+            sim_y = torch.cat((pos_y[:neg_len], neg_y), -1)
+        else:
+            sim_y_hat = torch.cat((pos_y_hat, neg_y_hat[:pos_len]), 0)
+            sim_y = torch.cat((pos_y, neg_y[:pos_len]), -1)
+        
+        return sim_y_hat, sim_y
+        
 
     def hem_batch_sampling(self, model, dataset):
         d_loader = DataLoader(dataset, 

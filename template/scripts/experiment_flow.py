@@ -28,20 +28,23 @@ def get_experiment_args():
     args = parser.parse_args()
 
     ### model basic info opts
-    args.model = 'mobilenet_v3_large'
+    # args.model = 'mobilenet_v3_large'
+    args.model = 'resnet18'
     args.pretrained = True
     args.sampling_type = 2
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
-    args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
+    # args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
+    args.train_method = 'hem-emb'
     # args.train_method = 'normal'
     args.batch_size = 128
+    # args.fold = '5'
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/project-200'
+    args.save_path = '/OOB_RECOG/logs/emb'
     args.num_gpus = 1
-    args.max_epoch = 1
+    args.max_epoch = 20
     args.min_epoch = 0
 
     ### etc opts
@@ -85,7 +88,7 @@ def train_main(args):
         default_hp_metric=False)
 
     x = CAMIO(args)
-    print(summary(x.model, (3,224,224))) # check model arch
+    # print(summary(x.model, (3,224,224))) # check model arch
     # x = TheatorTrainer(args)
 
     if args.num_gpus > 1:
@@ -97,10 +100,9 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            #limit_train_batches=0.01,
-                            #limit_val_batches=0.01,
-                            max_epochs=20, 
-                            # max_epochs=args.max_epoch, 
+                            # limit_train_batches=0.01,
+                            # limit_val_batches=0.01,
+                            max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
 
@@ -194,7 +196,7 @@ def main():
 if __name__ == '__main__':
     
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
     
     if __package__ is None:
         import sys

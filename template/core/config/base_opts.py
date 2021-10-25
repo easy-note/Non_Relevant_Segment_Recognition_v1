@@ -182,7 +182,7 @@ def parse_opts():
     # -------------- Train Methods --------------------
     parser.add_argument('--train_method', type=str,
             default='hem-softmax', 
-            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
+            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi', 'hem-emb'],
             help='Select train method, normal or hem method')
 
     parser.add_argument('--hem_bs_n_batch', type=int,
