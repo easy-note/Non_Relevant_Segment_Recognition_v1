@@ -100,14 +100,8 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-<<<<<<< HEAD
                             # limit_train_batches=0.01,
                             # limit_val_batches=0.01,
-=======
-                            # limit_train_batches=2,
-                            # limit_val_batches=2,
-                            # max_epochs=1, 
->>>>>>> 92af72c5853a19b3692c114a5dbc69f1fd3d1e0e
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -202,11 +196,7 @@ def main():
 if __name__ == '__main__':
     
     import os
-<<<<<<< HEAD
     os.environ['CUDA_VISIBLE_DEVICES'] = '3'
-=======
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
->>>>>>> 92af72c5853a19b3692c114a5dbc69f1fd3d1e0e
     
     if __package__ is None:
         import sys

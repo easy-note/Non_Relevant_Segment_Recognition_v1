@@ -345,14 +345,17 @@ class HEMHelper():
         neg_y_hat = neg_y_hat[wrong_ids]
         neg_y = neg_y[wrong_ids]
         
-        pos_len, neg_len = len(pos_y_hat), len(neg_y_hat)
+        sim_y_hat = torch.cat((pos_y_hat, neg_y_hat), 0)
+        sim_y = torch.cat((pos_y, neg_y), -1)
+        
+        # pos_len, neg_len = len(pos_y_hat), len(neg_y_hat)
     
-        if pos_len > neg_len:
-            sim_y_hat = torch.cat((pos_y_hat[:neg_len], neg_y_hat), 0)
-            sim_y = torch.cat((pos_y[:neg_len], neg_y), -1)
-        else:
-            sim_y_hat = torch.cat((pos_y_hat, neg_y_hat[:pos_len]), 0)
-            sim_y = torch.cat((pos_y, neg_y[:pos_len]), -1)
+        # if pos_len > neg_len:
+        #     sim_y_hat = torch.cat((pos_y_hat[:neg_len], neg_y_hat), 0)
+        #     sim_y = torch.cat((pos_y[:neg_len], neg_y), -1)
+        # else:
+        #     sim_y_hat = torch.cat((pos_y_hat, neg_y_hat[:pos_len]), 0)
+        #     sim_y = torch.cat((pos_y, neg_y[:pos_len]), -1)
         
         return sim_y_hat, sim_y
 

@@ -36,11 +36,11 @@ def get_experiment_args():
     ### dataset opts
     args.data_base_path = '/raid/img_db'
     args.batch_size = 64
-    args.IB_ratio = 7.7
+    # args.IB_ratio = 7.7
     args.experiment_type = 'theator'
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/theator-org-ratio'
+    args.save_path = '/OOB_RECOG/logs/theator-our-ratio'
     args.num_gpus = 1
     args.max_epoch = 120
     args.min_epoch = 0
@@ -190,7 +190,7 @@ def main():
 if __name__ == '__main__':
     
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '5'
     
     if __package__ is None:
         import sys
