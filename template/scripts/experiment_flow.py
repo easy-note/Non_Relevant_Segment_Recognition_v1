@@ -34,14 +34,17 @@ def get_experiment_args():
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
-    args.train_method = 'hem-vi' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
-    # args.train_method = 'normal'
-    args.batch_size = 128
+    args.batch_size = 32
+
+    ### hem opts
+    args.generate_hem_mode = 'hem-vi-softmax' # [None, 'hem-bs', 'hem-vi-softmax', 'hem-vi-voting'] 
+    args.train_method = 'normal' # ['normal', 'hem']
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/211023_HEM-softmax-FOLD2'
+    # args.save_path = '/OOB_RECOG/logs/211025_TRAIN_NORMAL-FOLD1-IBratio1'
+    args.save_path = '/OOB_RECOG/logs/211025_module-test'
     args.num_gpus = 1
-    args.max_epoch = 20
+    args.max_epoch = 1
     args.min_epoch = 0
 
     ### etc opts
@@ -97,10 +100,10 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=2,
-                            # limit_val_batches=2,
-                            # max_epochs=1, 
-                            max_epochs=args.max_epoch, 
+                            limit_train_batches=2,
+                            limit_val_batches=2,
+                            max_epochs=1, 
+                            # max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
 

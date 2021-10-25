@@ -79,7 +79,7 @@ def parse_opts():
 
     # /OOB_RECOG/logs/project-1/TB_log/version_0
     parser.add_argument('--save_path', type=str, 
-                        default='/OOB_RECOG/logs/211023_HEM-softmax-FOLD2', help='')
+                        default='/OOB_RECOG/logs/211023_TRAIN_HEM-softmax-FOLD1', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',
@@ -165,11 +165,11 @@ def parse_opts():
     parser.add_argument('--data_version',
             default='v3',
             type=str,
-            choices=['v1', 'v2', 'v3'],
+            choices=['v1', 'v2', 'v3', 'HEM'],
             help='Annotation dataset version')
 
     parser.add_argument('--IB_ratio',
-            default=3,
+            default=1,
             type=int,
             help='')
 
@@ -180,25 +180,30 @@ def parse_opts():
     
 
     # -------------- Train Methods --------------------
-    parser.add_argument('--hem-vi', type=str,
-            default='hem-vi', 
-            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
-            help='Select train method, normal or hem method')
+    parser.add_argument('--generate_hem_mode', type=str,
+            default=None, 
+            choices=[None, 'normal', 'hem-bs', 'hem-vi-softmax', 'hem-vi-voting'],
+            help='Set generate hem mode, None does not generate anything')
+
+    parser.add_argument('--train_method', type=str,
+            default='normal', 
+            choices=['normal', 'hem'],
+            help='Select train method, normal (normal dataset) or hem (hem dataset)')
+            
+    parser.add_argument('--top_ratio', type=float,
+            default=7/100,
+            help='Select HEM top ratio')
 
     parser.add_argument('--hem_bs_n_batch', type=int,
             default=4, 
             help='Set the number of batches')
     
-    parser.add_argument('--top_ratio', type=float,
-            default=30/100,
-            help='Select HEM top ratio')
-
     # -------------- etc --------------------
-    parser.add_argument('--random_seed', type=int, default=10, help='dataset ranbom seed')
+    parser.add_argument('--random_seed', type=int, default=10, help='dataset random seed')
 
     parser.add_argument('--use_lightning_style_save', action='store_true', help='If true, use lightning save module')
 
-    parser.add_argument('--save_top_n', type=int, default=1, help='dataset ranbom seed')
+    parser.add_argument('--save_top_n', type=int, default=1, help='dataset random seed')
 
 
     return parser
