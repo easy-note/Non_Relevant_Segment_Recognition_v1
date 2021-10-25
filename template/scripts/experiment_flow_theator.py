@@ -19,31 +19,30 @@ def get_experiment_args():
                     choices=['1', '2', '3', '4', '5', 'free'],
                     help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
 
-    parser.add_argument('--experiment_setup',
-                    default=1,
-                    type=int,
-                    choices=[1, 2, 3],
-                    )
-
 
     args = parser.parse_args()
 
     ### model basic info opts
     args.model = 'resnet18'
     args.optimizer = 'sgd'
-    args.lr_scheduler = ''
+    args.lr_scheduler = 'mul_step_lr'
+    # milestones = []
+    # for it in range(1,7):
+    #     for e in [9, 14]:
+    #         milestones.append(e + (it-1) * 20)
+    # print(milestones)
+    # args.lr_milestones = [2, 4] #milestones
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
-    args.experiment_setup = 1
     args.batch_size = 64
-    args.IB_ratio = 7.7
+    # args.IB_ratio = 7.7
     args.experiment_type = 'theator'
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/project-201'
+    args.save_path = '/OOB_RECOG/logs/theator'
     args.num_gpus = 1
-    args.max_epoch = 1
+    args.max_epoch = 120
     args.min_epoch = 0
 
     ### etc opts
@@ -191,7 +190,7 @@ def main():
 if __name__ == '__main__':
     
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
     
     if __package__ is None:
         import sys

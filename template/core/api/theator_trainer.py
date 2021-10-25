@@ -3,6 +3,7 @@ import math
 import numpy as np
 import random
 import torch
+from tqdm import tqdm
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from core.api import BaseTrainer
@@ -36,9 +37,12 @@ class TheatorTrainer(BaseTrainer):
 
         self.sanity_check = True
         self.restore_path = None
-        self.experiment_setup = 1
         self.iter_end_epoch = 20
-        
+
+    def on_epoch_start(self):
+        if self.current_epoch > 1 and (self.current_epoch + 1) % self.iter_end_epoch == 0:
+            # self.trainer.accelerator.setup_optimizers(self.trainer) # latest ver.
+            self.trainer.accelerator_backend.setup_optimizers(self.trainer)
 
     def setup(self, stage):
         '''
@@ -66,7 +70,7 @@ class TheatorTrainer(BaseTrainer):
             self.trainset,
             batch_size=self.args.batch_size,
             num_workers=self.args.num_workers,
-            sampler=oversampler(self.trainset.label_list)
+            sampler=MPerClassSampler(self.trainset.label_list, self.args.batch_size//2, self.args.batch_size)
         )
 
     def val_dataloader(self):
@@ -141,7 +145,6 @@ class TheatorTrainer(BaseTrainer):
     def validation_epoch_end(self, outputs): # val - every epoch
         if self.sanity_check:
             self.sanity_check = False
-
         else:
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir)
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
@@ -188,34 +191,24 @@ class TheatorTrainer(BaseTrainer):
                     self.best_val_loss = val_loss_mean # self.best_val_loss 업데이트. 
                     self.save_checkpoint()
 
-                if self.current_epoch+1 == self.args.max_epoch: # max_epoch 모델 저장
+                if self.current_epoch + 1 == self.args.max_epoch: # max_epoch 모델 저장
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
 
             # Re-labeling
-            if self.current_epoch % self.iter_end_epoch == 0:
-                if self.experiemnts_setup > 1:
-                    # TODO change dataset
-                    # re-load trainset and re-labeling
-                    pass
-                else: # exp. set 1 can do re-labeling only
-                    d_loader = DataLoader(self.trainset, shuffle=False)
+            if self.current_epoch > 1 and (self.current_epoch + 1) % self.iter_end_epoch == 0:
+                d_loader = DataLoader(self.trainset, batch_size=self.args.batch_size*20, shuffle=False, num_workers=self.args.num_workers)
+                
+                change_list = []
 
-                    change_list = []
+                for _, img, lbs in tqdm(d_loader):
+                    img = img.cuda()
+                    outputs = self.model(img)
+                    ids = list(torch.argmax(outputs, -1).cpu().data.numpy())
+                    change_list += ids
 
-                    for _, img, lbs in d_loader:
-                        img = img.cuda()
-                        outputs = self.model(img)
-                        ids = list(torch.argmax(outputs, -1).cpu().data.numpy())
-                        change_list += ids
-
-                    self.trainset.change_labels(change_list)
-
-
-                # model initialization
-                if self.experiment_setup == 3: # different dataset + re-initialize classifier
-                    self.model.fc = torch.nn.Linear(512, 2)
+                self.trainset.change_labels(change_list)
 
 
     def test_step(self, batch, batch_idx):
