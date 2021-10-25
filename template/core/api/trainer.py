@@ -53,7 +53,10 @@ class CAMIO(BaseTrainer):
             self.hem_helper.set_n_batch(self.args.hem_bs_n_batch)
             self.generate_hem_mode = self.args.generate_hem_mode
         
-        # hem-vi
+        elif 'hem-emb' in self.args.generate_hem_mode:
+            self.hem_helper.set_method(self.args.generate_hem_mode)
+            self.generate_hem_mode = self.args.generate_hem_mode
+
         elif self.args.generate_hem_mode in ['hem-vi-softmax', 'hem-vi-voting']:
             self.generate_hem_mode = self.args.generate_hem_mode
             self.hem_helper.set_method(self.generate_hem_mode)
@@ -124,6 +127,12 @@ class CAMIO(BaseTrainer):
             # Online HEM method
             # B samples are picked by outputs of N batches 
             y_hat, y = self.hem_helper.compute_hem(self.model, self.trainset)
+            loss = self.loss_fn(y_hat, y)
+        elif self.train_method == 'hem-emb' and self.training:
+            img_path, x, y = batch
+            
+            y_hat, y = self.hem_helper.hem_cos_sim(self.model, x, y)
+            # y_hat, y = self.hem_helper.hem_cos_hard_sim(self.model, x, y)
             loss = self.loss_fn(y_hat, y)
         else:
             img_path, x, y = batch
@@ -222,7 +231,7 @@ class CAMIO(BaseTrainer):
                     self.best_val_loss = val_loss_mean # self.best_val_loss 업데이트. 
                     self.save_checkpoint()
 
-                if self.current_epoch+1 == self.args.max_epoch: # max_epoch 모델 저장
+                if self.current_epoch + 1 == self.args.max_epoch: # max_epoch 모델 저장
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()

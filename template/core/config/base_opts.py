@@ -182,7 +182,7 @@ def parse_opts():
     # -------------- Train Methods --------------------
     parser.add_argument('--generate_hem_mode', type=str,
             default=None, 
-            choices=[None, 'normal', 'hem-bs', 'hem-vi-softmax', 'hem-vi-voting'],
+            choices=[None, 'normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'],
             help='Set generate hem mode, None does not generate anything')
 
     parser.add_argument('--train_method', type=str,
