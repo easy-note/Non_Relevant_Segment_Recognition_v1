@@ -29,14 +29,14 @@ def get_experiment_args():
 
     ### model basic info opts
     # args.model = 'mobilenet_v3_large'
-    args.model = 'resnet18'
+    # args.model = 'resnet18'
     args.pretrained = True
     args.sampling_type = 2
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
     # args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
-    args.train_method = 'hem-emb'
+    # args.train_method = 'hem-emb'
     # args.train_method = 'normal'
     args.batch_size = 128
     # args.fold = '5'

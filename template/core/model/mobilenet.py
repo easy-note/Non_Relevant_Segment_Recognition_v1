@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torchvision.models as models
 
@@ -26,6 +27,7 @@ class MobileNet(nn.Module):
             
             ml = list(model.children())
             self.feature_module = ml[0]
+            proxy_feat = num_ftrs
             
             self.classifier = nn.Sequential(
                 nn.Dropout(0.2),
@@ -39,6 +41,7 @@ class MobileNet(nn.Module):
             
             ml = list(model.children())
             self.feature_module = ml[0]
+            proxy_feat = 576
 
             self.classifier = nn.Sequential(
                 nn.Linear(576, num_ftrs), #lastconv_output_channels, last_channel
@@ -53,6 +56,7 @@ class MobileNet(nn.Module):
             
             ml = list(model.children())
             self.feature_module = ml[0]
+            proxy_feat = 960
 
             self.classifier = nn.Sequential(
                 nn.Linear(960, num_ftrs), #lastconv_output_channels, last_channel
@@ -60,6 +64,10 @@ class MobileNet(nn.Module):
                 nn.Dropout(p=0.2, inplace=True),
                 nn.Linear(num_ftrs, 2) #last_channel, num_classes
             )
+            
+        if self.args.train_method == 'hem-emb':
+            self.use_emb = True
+            self.proxies = nn.Parameter(torch.randn(proxy_feat, 2))
             
     def forward(self, x):
         features = self.feature_module(x)
