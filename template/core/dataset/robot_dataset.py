@@ -33,15 +33,30 @@ class RobotDataset(Dataset):
         elif self.args.experiment_type == 'theator':
             d_transforms = theator_data_transforms
 
-        if state == 'train':
-            self.aug = d_transforms['train']
-            self.patients_info_key = train_videos
-        elif state == 'val':
-            self.aug = d_transforms['val']
-            self.patients_info_key = val_videos
-        elif state == 'test':
-            self.aug = d_transforms['test']
-            self.patients_info_key = val_videos
+        if args.train_method in ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']: 
+            self.mode_hem = True
+
+        if self.mode_hem:
+            if state == 'train':
+                self.aug = d_transforms['train']
+                self.patients_info_key = hem_train_videos
+            elif state == 'val':
+                self.aug = d_transforms['val']
+                self.patients_info_key = hem_val_videos
+            elif state == 'test':
+                self.aug = d_transforms['test']
+                self.patients_info_key = hem_test_videos
+
+        else:
+            if state == 'train':
+                self.aug = d_transforms['train']
+                self.patients_info_key = train_videos
+            elif state == 'val':
+                self.aug = d_transforms['val']
+                self.patients_info_key = val_videos
+            elif state == 'test':
+                self.aug = d_transforms['test']
+                self.patients_info_key = val_videos
 
         # patients load
         self.load_patients()
@@ -76,9 +91,17 @@ class RobotDataset(Dataset):
             ## 임의의 data list 에 대해 학습 및 테스트를 할 경우, 별도의 룰에 의거해서 지정. e.g. random으로 100개 중 80개 선택, 2 step 씩 넘어가며 선택.
             pass
 
+    def load_data(self):
+        if self.args.data_version == 'v1':
+            self.load_v1()
+        elif self.args.data_version == 'v2':
+            self.load_v2()
+        elif self.args.data_version == 'v3':
+            self.load_v3()
+
+
     def load_v1(self):
-        # TODO load dataset ver. 1
-        # 나중에 민국님과 회의 때, 논문에 사용하는지 여쭤보고 -> 필요하면 작업. 
+        # TODO load dataset ver. 1 나중에 민국님과 회의 때, 논문에 사용하는지 여쭤보고 -> 필요하면 작업. 
         pass
 
     def load_data_from_ver(self, csv_path):
@@ -147,6 +170,7 @@ class RobotDataset(Dataset):
         self.img_list = self.assets_df.img_path.tolist()
         self.label_list = self.assets_df.class_idx.tolist()
 
+
     def change_labels(self, labels):
         self.label_list = labels
 
@@ -156,15 +180,14 @@ class RobotDataset(Dataset):
 
     # return img, label
     def __getitem__(self, index):
-        if self.mode_hem:
-            pass
-        else:
-            img_path, label = self.img_list[index], self.label_list[index]
+        img_path, label = self.img_list[index], self.label_list[index]
 
-            img = Image.open(img_path)
-            img = self.aug(img)
+        img = Image.open(img_path)
+        img = self.aug(img)
 
         return img_path, img, label
+
+    
 
 if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
