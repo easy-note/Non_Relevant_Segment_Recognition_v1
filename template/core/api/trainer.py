@@ -173,10 +173,10 @@ class CAMIO(BaseTrainer):
         return {
             'val_loss': loss,
             'img_path': img_path,
-            'x': x,
-            'y': y,
+            'x': x.detach().cpu(),
+            'y': y.detach().cpu(),
             'y_hat': y_hat.argmax(dim=1).detach().cpu(),
-            'logit': y_hat
+            'logit': y_hat.detach().cpu()
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch

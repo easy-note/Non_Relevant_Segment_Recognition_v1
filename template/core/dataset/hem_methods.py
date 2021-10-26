@@ -287,7 +287,7 @@ class HEMHelper():
             enable_dropout(model)
             for data in dataset:
                 with torch.no_grad():
-                    y_hat = model(data['x'])
+                    y_hat = model(data['x'].cuda())
                     y_hat = softmax(y_hat)
 
                 predictions = np.vstack((predictions, y_hat.cpu().numpy()))
