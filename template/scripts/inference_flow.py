@@ -5,19 +5,19 @@ def get_experiment_args():
 
     ### inference args
     parser.add_argument('--inference_save_dir', type=str, 
-                        default='../resutls',
+                        default='../results',
                         help='root directory for infernce saving')
         
 
     parser.add_argument('--inference_interval', type=int, 
-                        default=30,
+                        default=300,
                         help='Inference Interval of frame')
 
     parser.add_argument('--inference_fold',
-                    default='3',
+                    default='free',
                     type=str,
                     choices=['1', '2', '3', '4', '5', 'free'],
-                    help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
+                    help='valset 1, 2, 3, 4, 5, free')
 
     parser.add_argument('--sampling_type',
                     default=1,
@@ -60,10 +60,6 @@ def get_inference_model_path(restore_path):
             return f_name
 
 
-def save_experiments(args):
-    # TO DO : inference_main return으로 experiments 결과 저장, 저장하기 위해 experiemnts results sheet(csv) path가 args에 포함되어 있어야 하지 않을까?
-    return 0
-
 
 def train_main(args):
     print('train_main')
@@ -86,6 +82,7 @@ def train_main(args):
     x = CAMIO(args)
     print(summary(x.model, (3,224,224))) # check model arch
     # x = TheatorTrainer(args)
+    '''
 
     if args.num_gpus > 1:
         trainer = pl.Trainer(gpus=args.num_gpus, 
@@ -103,11 +100,50 @@ def train_main(args):
                             logger=tb_logger,)
 
     trainer.fit(x)
+    '''
 
-    # args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_4') # TO DO: we should define restore path
-    args.restore_path = os.path.join(x.restore_path)
+    args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_8') # TO DO: we should define restore path
+    
+    # args.restore_path = os.path.join(x.restore_path)
+    print('restore_path: ', args.restore_path)
     
     return args
+
+def clean_paging_chache():
+    import subprocess # for CLEAR PAGING CACHE
+
+    # clear Paging Cache because of I/O CACHE [docker run -it --name cam_io_hyeongyu -v /proc:/writable_proc -v /home/hyeongyuc/code/OOB_Recog:/OOB_RECOG -v /nas/OOB_Project:/data -p 6006:6006  --gpus all --ipc=host oob:1.0]
+    print('\n\n\t ====> CLEAN PAGINGCACHE, DENTRIES, INODES "echo 1 > /writable_proc/sys/vm/drop_caches"\n\n')
+    subprocess.run('sync', shell=True)
+    subprocess.run('echo 1 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
+
+
+def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
+    from core.utils.prepare import InferenceAssets # inference assets helper (for prepare inference assets)
+    from core.utils.prepare import OOBAssets # OOB assets helper (for prepare inference assets)
+    from core.utils.parser import FileLoader # file load helper
+    
+    # OOBAssets
+    assets_sheet_dir = os.path.join(save_path, 'assets')
+    oob_assets = OOBAssets(assets_sheet_dir)
+    # oob_assets.save_assets_sheet() # you can save assets sheet
+    video_sheet, annotation_sheet, img_db_sheet = oob_assets.get_assets_sheet() # you can only use assets although not saving
+    # video_sheet, annotation_sheet, img_db_sheet = oob_assets.load_assets_sheet(assets_sheet_dir) # you can also load saved aseets
+
+    # InferenceAssets
+    inference_assets_save_path = os.path.join(save_path, 'patients_aseets.yaml')
+    inference_assets_helper = InferenceAssets(case=case, anno_ver=anno_ver, fold=inference_fold)
+    inference_assets = inference_assets_helper.get_inference_assets() # dict (yaml)
+
+    # save InferenceAssets: serialization from python object(dict) to YAML stream and save
+    inference_assets_helper.save_dict_to_yaml(inference_assets, inference_assets_save_path)
+    
+    # load InferenceAssets: load saved inference assets yaml file // you can also load saved patients
+    f_loader = FileLoader()
+    f_loader.set_file_path(inference_assets_save_path)
+    inference_assets = f_loader.load()
+
+    return inference_assets
 
 
 def inference_main(args):
@@ -117,11 +153,12 @@ def inference_main(args):
     from core.api.trainer import CAMIO
     from core.api.inference import InferenceDB # inference module
     from core.api.evaluation import Evaluator # evaluation module
+    from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
+    from core.utils.logging import ReportHelper # report helper (for experiments reuslts and inference results)
 
     import os
     import pandas as pd
     import glob
-
 
     # from pretrained model
     '''
@@ -130,58 +167,137 @@ def inference_main(args):
     '''
 
     print('restore : ', args.restore_path)
+
     # from finetuning model
     model_path = get_inference_model_path(args.restore_path)
     model = CAMIO.load_from_checkpoint(model_path, args=args)
     model = model.cuda()
 
-    # load inference dataset
-    # TO DO : inference fold 에 따라 환자별 db. gt_json 잡을 수 있도록 set up (Inference, Evaluation module 사용시 for-loop로 set arguments)
-    
-    # use case 1 - init Inference
-    # db_path = '/raid/OOB_Recog/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
-    db_path = '/raid/img_db/ROBOT/R_100/01_G_01_R_100_ch1_01' # R_100_ch1_01
-    gt_json_path = '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V3/TBE/01_G_01_R_100_ch1_01_TBE_30.json'
-
+    # inference block
     os.makedirs(args.inference_save_dir, exist_ok=True)
-    predict_csv_path = os.path.join(args.inference_save_dir, 'R_100_ch1_01.csv')
-    metric_path = os.path.join(args.inference_save_dir, 'R_100_ch1_01-metric.json')
+
+    # 1. load inference dataset
+    # inference case(ROBOT, LAPA), anno_ver(1,2,3), inference fold(1,2,3,4,5)에 따라 환자별 db. gt_json 잡을 수 있도록 set up
+    case = args.dataset # ['ROBOT', LAPA]
+    anno_ver = '3'
+    inference_fold = args.inference_fold
+    save_path = args.inference_save_dir
+
+    inference_assets = prepare_inference_aseets(case=case , anno_ver=anno_ver, inference_fold=inference_fold, save_path=save_path)
+    patients = inference_assets['patients']
     
-    # Inference module
-    inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
-    predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
+    patients_count = len(patients)
 
-    # save predict list to csv
-    predict_df = pd.DataFrame({
-                    'frame_idx': target_frame_idx_list,
-                    'predict': predict_list,
-                    'target_img': target_img_list,
-                })
-    predict_df.to_csv(predict_csv_path)
+    # 2. for record metrics
+    # ReportHelper
+    patients_report_helper = ReportHelper(report_save_path=os.path.join(args.inference_save_dir, 'patients_report.csv'), report_type='patients')
+    videos_report_helper = ReportHelper(report_save_path=os.path.join(args.inference_save_dir, 'videos_report.csv'), report_type='videos')
 
-    # Evaluation module
-    evaluator = Evaluator(predict_csv_path, gt_json_path, args.inference_interval)
-    gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
-    print(gt_list)
-    print(predict_list)
+    patients_metrics_list = [] # save each patients metrics
+    for idx in range(patients_count): # per patients
+        patient = patients[idx]
+        patient_no = patient['patient_no']
+        patient_video = patient['patient_video']
 
-    print(len(gt_list))
-    print(len(predict_list))
+        videos_metrics_list = [] # save each videos metrics
 
-    metrics = evaluator.calc() # same return with metricHelper
-    CR, OR = metrics['OOB_metric'], metrics['Over_estimation']
-    TP, FP, TN, FN = metrics['TP'], metrics['FP'], metrics['TN'], metrics['FN']
+        # for save patients results
+        each_patients_save_dir = os.path.join(args.inference_save_dir, patient_no)
+        os.makedirs(each_patients_save_dir, exist_ok=True)
+
+        for video_path_info in patient['path_info']: # per videos
+            video_name = video_path_info['video_name']
+            video_path = video_path_info['video_path']
+            annotation_path = video_path_info['annotation_path']
+            db_path = video_path_info['db_path']
+
+            # Inference module
+            inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+            predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
+  
+            # for save video results
+            each_videos_save_dir = os.path.join(each_patients_save_dir, video_name)
+            os.makedirs(each_videos_save_dir, exist_ok=True)
+
+            # save predict list to csv
+            predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
+            predict_df = pd.DataFrame({
+                            'frame_idx': target_frame_idx_list,
+                            'predict': predict_list,
+                            'target_img': target_img_list,
+                        })
+            predict_df.to_csv(predict_csv_path)
+
+            # Evaluation module
+            evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
+            gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
+
+            # metric per video
+            video_metrics = evaluator.calc() # same return with metricHelper
+            video_CR, video_OR = video_metrics['OOB_metric'], video_metrics['Over_estimation']
+            video_TP, video_FP, video_TN, video_FN = video_metrics['TP'], video_metrics['FP'], video_metrics['TN'], video_metrics['FN']
+
+            print('\t => video_name: {}'.format(video_name))
+            print('\t    video_CR: {:.3f} | video_OR: {:.3f}'.format(video_CR, video_OR))
+            print('\t    video_TP: {} | video_FP: {} | video_TN: {} | video_FN: {}'.format(video_TP, video_FP, video_TN, video_FN))
+
+            # save video metrics
+            video_report_col = videos_report_helper.get_report_form()
+
+            video_report_col['Patient'] = patient_no
+            video_report_col['Video'] = video_name
+            video_report_col['FP'] = video_FP
+            video_report_col['TP'] = video_TP
+            video_report_col['FN'] = video_FN
+            video_report_col['TN'] = video_TN
+            video_report_col['TOTAL'] = video_FP + video_TP + video_FN + video_TN
+            video_report_col['CR'] = video_CR
+            video_report_col['OR'] = video_OR
+
+            videos_report_helper.save_report(video_report_col)
+
+            # for calc patients metric
+            videos_metrics_list.append(video_metrics)
+        
+        # calc each patients CR, OR
+        patient_metrics = MetricHelper().aggregate_calc_metric(videos_metrics_list)
+        patient_CR, patient_OR = patient_metrics['OOB_metric'], patient_metrics['Over_estimation']
+        patient_TP, patient_FP, patient_TN, patient_FN = patient_metrics['TP'], patient_metrics['FP'], patient_metrics['TN'], patient_metrics['FN']
+
+        print('\t\t => patient_no: {}'.format(patient_no))
+        print('\t\t    patient_CR: {:.3f} | patient_OR: {:.3f}'.format(patient_CR, patient_OR))
+        print('\t\t    patient_TP: {} | patient_FP: {} | patient_TN: {} | patient_FN: {}'.format(patient_TP, patient_FP, patient_TN, patient_FN))
+
+        # save patient metrics
+        patients_report_col = patients_report_helper.get_report_form()
+
+        patients_report_col['Patient'] = patient_no
+        patients_report_col['FP'] = patient_FP
+        patients_report_col['TP'] = patient_TP
+        patients_report_col['FN'] = patient_FN
+        patients_report_col['TN'] = patient_TN
+        patients_report_col['TOTAL'] = patient_FP + patient_TP + patient_FN + patient_TN
+        patients_report_col['CR'] = patient_CR
+        patients_report_col['OR'] = patient_OR
+
+        patients_report_helper.save_report(patients_report_col)
     
-    print(CR, OR)
-    print(TP, FP, TN, FN)
+        # for calc total patients CR, OR
+        patients_metrics_list.append(patient_metrics)
 
-    # return mCR, mOR
-    # TO DO : Inference 완료시 Pateints mCR, mOR, CR, OR 기록을 위해 return 필요
-    mCR, mOR, CR, OR = 0,0,0,0
-    return args, mCR, mOR, CR, OR
-    
+        # CLEAR PAGING CACHE
+        clean_paging_chache()
+
+    # for calc total patients CR, OR + (mCR, mOR)
+    total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
+    total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['OOB_metric'], total_metrics['Over_estimation']
+            
+    # return mCR, mOR, OR, CR of experiment
+    return args, total_mCR, total_mOR, total_CR, total_OR
     
 def main():    
+    import os
+    from core.utils.logging import ReportHelper # report helper (for experiments reuslts)
 
     # 0. set each experiment args 
     args = get_experiment_args()
@@ -191,10 +307,25 @@ def main():
     args = train_main(args)
 
     # 3. inference
-    args, mCR, mOR, CR, OR = inference_main(args)
+    args, experiment_mCR, experiment_mOR, experiment_CR, experiment_OR = inference_main(args)
 
-    # 4. save experiments results [model, train_fold, inference_fold, ... , mCR, mOR, CR, OR]
-    # save_experiments(args)
+    # 4. save experiments results
+    experiments_results_path = '../results'
+    os.makedirs(experiments_results_path, exist_ok=True)
+
+    # using reportHelper
+    patients_report_helper = ReportHelper(report_save_path=os.path.join(experiments_results_path, 'experiments_results.csv'), report_type='experiments')
+    patients_report_col = patients_report_helper.get_report_form()
+
+    patients_report_col['model'] = args.model
+    patients_report_col['method'] = args.train_method
+    patients_report_col['inference_fold'] = args.inference_fold
+    patients_report_col['mCR'] = experiment_mCR
+    patients_report_col['mOR'] = experiment_mOR
+    patients_report_col['CR'] = experiment_CR
+    patients_report_col['OR'] = experiment_OR
+
+    patients_report_helper.save_report(patients_report_col)
 
 if __name__ == '__main__':
     
