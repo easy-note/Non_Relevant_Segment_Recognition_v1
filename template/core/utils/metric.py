@@ -13,7 +13,7 @@ class MetricHelper():
     def __init__(self):
         # TODO 필요한거 더 넣기
         self.EXCEPTION_NUM = -100
-        self.OOB_CLASS = 1
+        self.IB_CLASS, self.OOB_CLASS = (0, 1)
         self.pred_list = []
         self.gt_list = []
 
@@ -38,7 +38,14 @@ class MetricHelper():
             self.test_loss.append(loss_val)
 
     def calc_metric(self):
-        cm = ConfusionMatrix(self.gt_list, self.pred_list)
+        classes = [self.IB_CLASS, self.OOB_CLASS]
+
+        cm = ConfusionMatrix(self.gt_list, self.pred_list, classes=classes) # pycm
+        
+        try: # for [1,1,1] [1,1,1] error solving
+            cm.relabel(mapping={0:self.IB_CLASS, 1:self.OOB_CLASS}) # when [1,1,0] [0,1,0] return => cm.classes : [0, 1]
+        except:
+            cm.relabel(mapping={'0':self.IB_CLASS, '1':self.OOB_CLASS}) # when [1,1,1] [1,1,1] return => cm.classes : ['0', '1']
 
         metrics = {
             'TP': cm.TP[self.OOB_CLASS],
@@ -56,12 +63,12 @@ class MetricHelper():
         FP = np.float16(metrics['FP'])
         TN = np.float16(metrics['TN'])
         FN = np.float16(metrics['FN'])
-        
-        metrics['OOB_metric'] = (metrics['TP']-metrics['FP']) / (metrics['FN'] + metrics['TP'] + metrics['FP']) # 잘못예측한 OOB / predict OOB + 실제 OOB
-        metrics['Over_estimation'] = metrics['FP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # OR
-        metrics['Under_estimation'] = metrics['FN'] / (metrics['FN'] + metrics['TP'] + metrics['FP'])
-        metrics['Correspondence_estimation'] = metrics['TP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # CR
-        metrics['UNCorrespondence_estimation'] = (metrics['FP'] + metrics['FN']) / (metrics['FN'] + metrics['TP'] + metrics['FP'])
+
+        metrics['OOB_metric'] = (TP - FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB
+        metrics['Over_estimation'] = FP / (FN + TP + FP) # OR
+        metrics['Under_estimation'] = FN / (FN + TP + FP)
+        metrics['Correspondence_estimation'] = TP / (FN + TP + FP) # CR
+        metrics['UNCorrespondence_estimation'] = (FP + FN) / (FN + TP + FP)
 
         # exception
         for k, v in metrics.items():
@@ -74,6 +81,55 @@ class MetricHelper():
         self.gt_list = []
 
         return metrics
+
+    def aggregate_calc_metric(self, metrics_list):
+        advanced_metrics = {
+            'TP': 0,
+            'TN': 0,
+            'FP': 0,
+            'FN': 0,
+            'Accuracy': self.EXCEPTION_NUM,
+            'Precision': self.EXCEPTION_NUM,
+            'Recall': self.EXCEPTION_NUM,
+            'F1-Score': self.EXCEPTION_NUM,
+        }
+
+        # sum of TP/TN/FP/FN
+        for metrics in metrics_list:
+            advanced_metrics['TP'] += metrics['TP']
+            advanced_metrics['TN'] += metrics['TN']
+            advanced_metrics['FP'] += metrics['FP']
+            advanced_metrics['FN'] += metrics['FN']
+
+        # np casting for zero divide to inf
+        TP = np.float16(advanced_metrics['TP'])
+        FP = np.float16(advanced_metrics['FP'])
+        TN = np.float16(advanced_metrics['TN'])
+        FN = np.float16(advanced_metrics['FN'])
+
+        advanced_metrics['Accuracy'] = (TP + TN) / (TP + TN + FP + FN)
+        advanced_metrics['Precision'] = TP / (TP + FP)
+        advanced_metrics['Recall'] = TP / (TP + FN)
+        advanced_metrics['F1-Score'] = 2 * ((advanced_metrics['Precision'] * advanced_metrics['Recall']) / (advanced_metrics['Precision'] + advanced_metrics['Recall']))
+
+        advanced_metrics['OOB_metric'] = (TP - FP) / (FN + TP +FP)
+        advanced_metrics['Over_estimation'] = FP / (FN + TP + FP)
+        advanced_metrics['Under_estimation'] = FN / (FN + TP + FP)
+        advanced_metrics['Correspondence_estimation'] = TP / (FN + TP + FP)
+        advanced_metrics['UNCorrespondence_estimation'] = (FP + FN) / (FN + TP + FP)
+
+        # calc mCR, mOR
+        advanced_metrics['mCR'] = np.mean([metrics['OOB_metric'] for metrics in metrics_list])
+        advanced_metrics['mOR'] = np.mean([metrics['Over_estimation'] for metrics in metrics_list])
+
+        # exception
+        for k, v in advanced_metrics.items():
+            if v == 'None': # ConfusionMetrix return
+                advanced_metrics[k] = self.EXCEPTION_NUM
+            elif np.isinf(v): # numpy return
+                advanced_metrics[k] = self.EXCEPTION_NUM
+
+        return advanced_metrics
 
     def save_metric(self, metric, epoch, args, save_path, task='OOB'):
         if task=='OOB':
