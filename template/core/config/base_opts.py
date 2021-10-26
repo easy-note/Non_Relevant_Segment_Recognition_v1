@@ -170,7 +170,7 @@ def parse_opts():
 
     parser.add_argument('--IB_ratio',
             default=1,
-            type=int,
+            type=float,
             help='')
 
     parser.add_argument('--num_workers',
