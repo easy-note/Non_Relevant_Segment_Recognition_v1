@@ -96,13 +96,39 @@ class BaseTrainer(pl.LightningModule):
                 milestones=self.args.lr_milestones,
                 gamma=self.args.lr_scheduler_factor,
             )
+        elif schdlr_name == 'reduced':
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                mode='min',
+                factor=self.args.lr_scheduler_factor,
+                patience=self.args.lr_scheduler_step,
+                threshold=1e-4,
+                threshold_mode='rel',
+                min_lr=1e-7,
+                verbose=True,
+            )
+        elif schdlr_name == 'cosine':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer,
+                T_max=self.args.t_max_iter,
+                eta_min=0,
+                last_epoch=-1,
+                verbose=True,
+            )
         else:
             scheduler = None
 
         print('[+] Optimizer and Scheduler are set ', optimizer, scheduler)
         
         if scheduler is not None:
-            return [optimizer], [scheduler]
+            if schdlr_name == 'reduced':
+                return {
+                    'optimizer': optimizer,
+                    'lr_scheduler': scheduler, # Changed scheduler to lr_scheduler
+                    'monitor': 'val_loss'
+                }
+            else: 
+                return [optimizer], [scheduler]
         else:
             return [optimizer]
     

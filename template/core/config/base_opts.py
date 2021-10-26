@@ -15,7 +15,8 @@ def parse_opts():
                         'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
                         'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
                         'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 
-                        'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'],
+                        'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
+                        'ig_resnext101_32x48d', 'swin_large_patch4_window7_224'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -115,7 +116,7 @@ def parse_opts():
     parser.add_argument('--lr_scheduler',
             default='step_lr',
             type=str,
-            choices=['step_lr', 'mul_lr'],
+            choices=['step_lr', 'mul_lr', 'mul_step_lr', 'reduced', 'cosine'],
             help='Learning scheduler selection \n[Types : step_lr, mul_lr]')
 
     parser.add_argument('--lr_scheduler_step', 
@@ -132,6 +133,11 @@ def parse_opts():
             default=[9, 14],
             type=list,
             help='Multi-step milestones for decreasing learning rate')
+    
+    parser.add_argument('--t_max_iter', 
+            type=int, 
+            default=200000, 
+            help='Use for Step LR Scheduler')
 
     # -------------- Dataset --------------------
     parser.add_argument('--dataset', 
@@ -170,7 +176,7 @@ def parse_opts():
 
     parser.add_argument('--IB_ratio',
             default=3,
-            type=int,
+            type=float,
             help='')
 
     parser.add_argument('--num_workers',

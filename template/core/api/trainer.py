@@ -160,7 +160,6 @@ class CAMIO(BaseTrainer):
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
-
         self.metric_helper.write_preds(y_hat.argmax(dim=1).detach().cpu(), y.cpu()) # MetricHelper 에 저장
 
         self.log('val_loss', loss, on_epoch=True, prog_bar=True)
@@ -168,10 +167,10 @@ class CAMIO(BaseTrainer):
         return {
             'val_loss': loss,
             'img_path': img_path,
-            'x': x,
-            'y': y,
+            'x': x.detach().cpu(),
+            'y': y.detach().cpu(),
             'y_hat': y_hat.argmax(dim=1).detach().cpu(),
-            'logit': y_hat
+            'logit': y_hat.detach().cpu()
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
