@@ -5,7 +5,7 @@ import torchvision.models as models
 
 def generate_resnet(args):
     model = ResNet(args)
-
+    
     return model
 
 

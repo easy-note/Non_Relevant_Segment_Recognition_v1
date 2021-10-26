@@ -165,7 +165,6 @@ class CAMIO(BaseTrainer):
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
-
         self.metric_helper.write_preds(y_hat.argmax(dim=1).detach().cpu(), y.cpu()) # MetricHelper 에 저장
 
         self.log('val_loss', loss, on_epoch=True, prog_bar=True)

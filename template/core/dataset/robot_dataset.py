@@ -33,7 +33,7 @@ class RobotDataset(Dataset):
         elif self.args.experiment_type == 'theator':
             d_transforms = theator_data_transforms
 
-        if args.generate_hem_mode in ['hem-bs', 'hem-vi-softmax', 'hem-vi-voting']: 
+        if args.generate_hem_mode in ['hem-vi-softmax', 'hem-vi-voting']: 
             self.mode_hem = True
 
         if self.mode_hem: # hem dataset 생성 O
