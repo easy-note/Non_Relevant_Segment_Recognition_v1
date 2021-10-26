@@ -10,8 +10,6 @@ import numpy as np
 import json
 import argparse
 
-import torch
-
 from core.utils.metric import MetricHelper # metric util
 from core.utils.parser import AnnotationParser, FileLoader # json util, file util
 from core.utils.parser import FileLoader 
@@ -89,7 +87,7 @@ class Evaluator():
 
         # 2. calc metric
         metric_helper = MetricHelper()
-        metric_helper.write_preds(torch.Tensor(predict_list), torch.Tensor(gt_list))
+        metric_helper.write_preds(np.array(predict_list), np.array(gt_list))
         metrics = metric_helper.calc_metric()
 
         return metrics
