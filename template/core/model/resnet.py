@@ -4,17 +4,6 @@ import torchvision.models as models
 
 
 def generate_resnet(args):
-    # arch_name = args.model
-
-    # if arch_name == 'resnet18':
-    #     model = models.resnet18(pretrained=True)
-
-    # if args.experiment_type == 'theator':
-    #     for p in model.parameters():
-    #         p.requires_grad = False
-    
-    # model.fc = torch.nn.Linear(512, 2)
-    
     model = ResNet(args)
 
     return model
@@ -44,6 +33,7 @@ class ResNet(nn.Module):
         self.fc = torch.nn.Linear(512, 2)
         
         if self.args.train_method == 'hem-emb':
+            self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(512, 2))
             # self.proxies = nn.Parameter(torch.randn(512, 4))
         
@@ -53,7 +43,7 @@ class ResNet(nn.Module):
         gap = self.gap(features).view(x.size(0), -1)
         output = self.fc(gap)
         
-        if self.args.train_method == 'hem-emb' and self.training:
+        if self.use_emb and self.training:
             return gap, output
         else:
             return output
