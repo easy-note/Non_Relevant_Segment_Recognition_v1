@@ -128,12 +128,14 @@ class CAMIO(BaseTrainer):
             # B samples are picked by outputs of N batches 
             y_hat, y = self.hem_helper.compute_hem(self.model, self.trainset)
             loss = self.loss_fn(y_hat, y)
-        elif self.train_method == 'hem-emb' and self.training:
+        
+        elif self.generate_hem_mode == 'hem-emb' and self.training:
             img_path, x, y = batch
             
             y_hat, y = self.hem_helper.hem_cos_sim(self.model, x, y)
             # y_hat, y = self.hem_helper.hem_cos_hard_sim(self.model, x, y)
             loss = self.loss_fn(y_hat, y)
+        
         else:
             img_path, x, y = batch
 

@@ -165,7 +165,7 @@ def parse_opts():
     parser.add_argument('--data_version',
             default='v3',
             type=str,
-            choices=['v1', 'v2', 'v3', 'HEM'],
+            choices=['v1', 'v2', 'v3'],
             help='Annotation dataset version')
 
     parser.add_argument('--IB_ratio',
@@ -181,9 +181,9 @@ def parse_opts():
 
     # -------------- Train Methods --------------------
     parser.add_argument('--generate_hem_mode', type=str,
-            default=None, 
-            choices=[None, 'normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'],
-            help='Set generate hem mode, None does not generate anything')
+            default='normal', 
+            choices=['normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'],
+            help='Set generate hem mode, normal does not generate anything')
 
     parser.add_argument('--train_method', type=str,
             default='normal', 

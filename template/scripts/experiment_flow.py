@@ -28,22 +28,22 @@ def get_experiment_args():
     args = parser.parse_args()
 
     ### model basic info opts
-    # args.model = 'mobilenet_v3_large'
-    args.model = 'resnet18'
+    args.model = 'mobilenet_v3_large'
     args.pretrained = True
     args.sampling_type = 2
 
     ### dataset opts
+    args.fold = '1'
     args.data_base_path = '/raid/img_db'
     args.batch_size = 32
 
     ### hem opts
-    args.generate_hem_mode = 'hem-vi-softmax' # [None, 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'] 
-    args.train_method = 'normal' # ['normal', 'hem']
+    args.generate_hem_mode = 'normal' # ['normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'] 
+    args.train_method = 'hem' # ['normal', 'hem']
 
     ### train args
     # args.save_path = '/OOB_RECOG/logs/211025_TRAIN_NORMAL-FOLD1-IBratio1'
-    args.save_path = '/OOB_RECOG/logs/211025_module-test'
+    args.save_path = '/OOB_RECOG/logs/211026_module-test'
     args.num_gpus = 1
     args.max_epoch = 1
     args.min_epoch = 0
@@ -101,22 +101,11 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-<<<<<<< HEAD
                             limit_train_batches=2,
                             limit_val_batches=2,
                             max_epochs=1, 
                             # max_epochs=args.max_epoch, 
-=======
-<<<<<<< HEAD
-                            # limit_train_batches=0.01,
-                            # limit_val_batches=0.01,
-=======
-                            # limit_train_batches=2,
-                            # limit_val_batches=2,
-                            # max_epochs=1, 
->>>>>>> 92af72c5853a19b3692c114a5dbc69f1fd3d1e0e
-                            max_epochs=args.max_epoch, 
->>>>>>> 5d5946bf292f967fd5edd304273baf89531a24d0
+
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
 
@@ -210,11 +199,7 @@ def main():
 if __name__ == '__main__':
     
     import os
-<<<<<<< HEAD
-    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
-=======
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
->>>>>>> 92af72c5853a19b3692c114a5dbc69f1fd3d1e0e
+    os.environ['CUDA_VISIBLE_DEVICES'] = '7'
     
     if __package__ is None:
         import sys
