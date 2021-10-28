@@ -21,7 +21,10 @@ class HEMHelper():
         self.bsz = self.args.batch_size
         
     def set_method(self, method):
-        self.method = method
+        if method in ['hem-vi-softmax', 'hem-vi-voting']:
+            self.method = 'hem-vi'
+        else:
+            self.method = method
 
     def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df):
         # df 정렬
@@ -59,6 +62,8 @@ class HEMHelper():
         print('\thard_neg_df {}, hard_pos_df {}, vanila_neg_df {}, vanila_pos_df {}'.format(len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)))
         print('========='* 10, '\n\n')
 
+        hem_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
+
         final_pos_assets_df = pd.concat([hard_pos_df, vanila_pos_df])[['Img_path', 'GT', 'HEM']]
         final_neg_assets_df = pd.concat([hard_neg_df, vanila_neg_df])[['Img_path', 'GT', 'HEM']]
 
@@ -71,7 +76,9 @@ class HEMHelper():
         
         final_assets_df.columns = ['img_path', 'class_idx', 'HEM']
 
-        return final_assets_df
+
+
+        return final_assets_df, hem_dataset_len_list
 
 
     def compute_hem(self, model, dataset):
@@ -169,6 +176,8 @@ class HEMHelper():
 
             vanila_neg_df = vanila_df[vanila_df['GT']==IB_CLASS]
             vanila_pos_df = vanila_df[vanila_df['GT']==OOB_CLASS]
+
+            
 
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
@@ -270,7 +279,7 @@ class HEMHelper():
             enable_dropout(model)
             for data in dataset:
                 with torch.no_grad():
-                    y_hat = model(data['x'])
+                    y_hat = model(data['x'].cuda())
                     y_hat = softmax(y_hat)
 
                 predictions = np.vstack((predictions, y_hat.cpu().numpy()))
@@ -279,19 +288,26 @@ class HEMHelper():
             dropout_predictions = np.vstack((dropout_predictions,
                                         predictions[np.newaxis, :, :]))
         
+
+        # extracting hem, apply generate hem mode
+        if self.args.generate_hem_mode == 'hem-vi-softmax':
+            print('\ngenerate hem mode : {}\n'.format(self.args.generate_hem_mode))
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
         
-        # extracting he // apply method
-        # hem_idx, mutual_info = extract_hem_idx_from_mutual_info(dropout_predictions)
-        hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
-        
+        elif self.args.generate_hem_mode == 'hem-vi-voting':
+            print('\ngenerate hem mode : {}\n'.format(self.args.generate_hem_mode))
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
+
         print('hard_neg_df', len(hard_neg_df))
         print('hard_pos_df', len(hard_pos_df))
         print('vanila_neg_df', len(vanila_neg_df))
         print('vanila_pos_df', len(vanila_pos_df))
 
-        hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+        total_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
 
-        return hem_final_df
+        hem_final_df, hem_dataset_len_list = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+
+        return hem_final_df, total_dataset_len_list, hem_dataset_len_list
     
     def hem_cos_sim(self, model, x, y):
         emb, y_hat = model(x)

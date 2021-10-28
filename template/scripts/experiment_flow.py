@@ -28,22 +28,23 @@ def get_experiment_args():
     args = parser.parse_args()
 
     ### model basic info opts
-    # args.model = 'mobilenet_v3_large'
-    # args.model = 'resnet18'
+    args.model = 'mobilenet_v3_large'
     args.pretrained = True
     args.sampling_type = 2
 
     ### dataset opts
+    args.fold = '1'
     args.data_base_path = '/raid/img_db'
-    # args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
-    # args.train_method = 'hem-emb'
-    # args.train_method = 'normal'
+    ### hem opts
+    args.generate_hem_mode = 'normal' # ['normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'] 
+    
+    ### train args
+    # args.save_path = '/OOB_RECOG/logs/211025_TRAIN_NORMAL-FOLD1-IBratio1'
+    args.num_gpus = 1
     # args.batch_size = 128
-    # args.fold = '5'
 
     ### train args
     # args.save_path = '/OOB_RECOG/logs/emb'
-    args.num_gpus = 1
     # args.max_epoch = 20
     args.min_epoch = 0
 
@@ -196,10 +197,7 @@ def main():
     # 4. save experiments results [model, train_fold, inference_fold, ... , mCR, mOR, CR, OR]
     # save_experiments(args)
 
-if __name__ == '__main__':
-    
-    
-    
+if __name__ == '__main__':   
     if __package__ is None:
         import sys
         from os import path    

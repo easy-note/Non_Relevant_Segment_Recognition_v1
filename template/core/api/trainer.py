@@ -10,6 +10,8 @@ from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
 
+import csv
+
 
 class CAMIO(BaseTrainer):
     def __init__(self, args):
@@ -26,6 +28,8 @@ class CAMIO(BaseTrainer):
         torch.backends.cudnn.deterministic=True
         torch.backends.cudnn.benchmark=True
         
+        self.args.generate_hem_mode = self.args.train_method
+        
         self.save_hyperparameters() # save with hparams
 
         self.model = get_model(self.args)
@@ -38,23 +42,19 @@ class CAMIO(BaseTrainer):
 
         self.sanity_check = True
         self.restore_path = None # inference module args / save path of hem df 
-
-        self.restore_path = None
-        self.train_method = 'normal'
+        
+        self.generate_hem_mode = None
         self.last_epoch = -1
 
+        ## only use for generating HEM
+        # hem-bs
+        if 'hem-emb' in self.args.generate_hem_mode:
+            self.hem_helper.set_method(self.args.generate_hem_mode)
+            self.generate_hem_mode = self.args.generate_hem_mode
 
-        # only use for HEM
-        if 'hem-emb' in self.args.train_method:
-            self.hem_helper.set_method(self.args.train_method)
-            self.train_method = self.args.train_method
-
-        elif self.args.train_method in ['hem-softmax', 'hem-vi']:
-            self.train_method = self.args.train_method
-            self.hem_helper.set_method(self.train_method)
-            self.last_epoch = self.args.max_epoch-1
-
-        print('self.last_epoch ====> ', self.last_epoch)
+        elif self.args.generate_hem_mode in ['hem-vi-softmax', 'hem-vi-voting']:
+            self.generate_hem_mode = self.args.generate_hem_mode
+            self.hem_helper.set_method(self.generate_hem_mode)
 
     def setup(self, stage):
         '''
@@ -81,9 +81,9 @@ class CAMIO(BaseTrainer):
         return DataLoader(
             self.trainset,
             batch_size=self.args.batch_size,
+            num_workers=self.args.num_workers,
             shuffle=True,
             drop_last=True,
-            num_workers=self.args.num_workers,
         )
 
     def val_dataloader(self):
@@ -112,24 +112,22 @@ class CAMIO(BaseTrainer):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        """
-            forward for mini-batch
-        """
-        if self.train_method == 'hem-emb' and self.training:
+        if self.generate_hem_mode == 'hem-emb' and self.training:
             img_path, x, y = batch
             y_hat, refine_y, sim_dist = self.hem_helper.hem_cos_hard_sim(self.model, x, y)
 
             loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, y)
-        elif self.train_method == 'hem-emb2' and self.training:
+        elif self.generate_hem_mode == 'hem-emb2' and self.training:
             img_path, x, y = batch
             
             y_hat, refine_y, sim_dist, pos_y = self.hem_helper.hem_cos_hard_sim2(self.model, x, y)
 
             loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, pos_y)
-        elif self.train_method == 'hem-emb3' and self.training:
+        elif self.generate_hem_mode == 'hem-emb3' and self.training:
             img_path, x, y = batch
             
             loss = self.hem_helper.hem_cos_hard_sim3(self.model, x, y, self.loss_fn)
+
         else:
             img_path, x, y = batch
 
@@ -233,20 +231,18 @@ class CAMIO(BaseTrainer):
 
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
-                '''
-                self.trainset.change_mode(True)
-                self.valset.change_mode(True)
-                
-                hem_train_ids = self.hem_helper(self.model, self.train_loader)
-                hem_val_ids = self.hem_helper(self.model, self.train_loader)
-                self.trainset.set_sample_ids(hem_train_ids)
-                self.valset.set_sample_ids(hem_val_ids)
-                '''
-                
-                if self.train_method == 'hem-vi':
-                    hem_df = self.hem_helper.compute_hem(self.model, outputs)
-                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-    
+                if self.generate_hem_mode in ['hem-vi-softmax', 'hem-vi-voting']:
+                    hem_df, total_dataset_len_list, hem_dataset_len_list = self.hem_helper.compute_hem(self.model, outputs)
+                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.generate_hem_mode, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+
+                    # field names  
+                    cols = ['hard_neg_df', 'hard_pos_df', 'vanila_neg_df', 'vanila_pos_df']  
+                    with open(os.path.join(self.restore_path, 'DATASET_LEN_{}-{}-{}.csv'.format(self.args.model, self.args.generate_hem_mode, self.args.fold)), 'w',newline='') as f: 
+                        write = csv.writer(f) 
+                        write.writerow(cols) 
+                        write.writerow(total_dataset_len_list) 
+                        write.writerow(hem_dataset_len_list)
+
 
     def test_step(self, batch, batch_idx):
         img_path, x, y = batch
