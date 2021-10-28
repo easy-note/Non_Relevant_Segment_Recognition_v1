@@ -32,7 +32,7 @@ class ResNet(nn.Module):
         self.gap = torch.nn.AdaptiveAvgPool2d(1)
         self.fc = torch.nn.Linear(512, 2)
         
-        if self.args.train_method == 'hem-emb':
+        if 'hem-emb' in self.args.train_method:
             self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(512, 2))
             # self.proxies = nn.Parameter(torch.randn(512, 4))

@@ -154,14 +154,23 @@ class BaseTrainer(pl.LightningModule):
         callbacks.append(lrMonitor)
         
         if self.args.use_lightning_style_save:
+            # checkpoint = ModelCheckpoint(
+            #     # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
+            #     filename='{epoch}-{val_loss:.4f}-best',
+            #     save_top_k=self.args.save_top_n,
+            #     save_last=True,
+            #     verbose=True,
+            #     monitor='val_loss',
+            #     mode='min')
+            
             checkpoint = ModelCheckpoint(
                 # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
-                filename='{epoch}-{val_loss:.4f}-best',
+                filename='{epoch}-{Mean_metric:.4f}-best',
                 save_top_k=self.args.save_top_n,
                 save_last=True,
                 verbose=True,
-                monitor='val_loss',
-                mode='min')
+                monitor='Mean_metric',
+                mode='max')
 
             checkpoint.CHECKPOINT_NAME_LAST = '{epoch}-{val_loss:.4f}-last'
         

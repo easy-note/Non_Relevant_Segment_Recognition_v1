@@ -17,17 +17,40 @@ class TIMM(nn.Module):
         super().__init__()
         
         self.args = args
+        self.use_emb = False
         arch_name = self.args.model
         
-        self.model = timm.create_model(arch_name, pretrained=True)
-        
-        if arch_name == 'ig_resnext101_32x48d':
-            self.model.fc = nn.Linear(2048, 2)
-        elif arch_name == 'swin_large_patch4_window7_224':
-            self.model.head = nn.Linear(1536, 2)
+        model = timm.create_model(arch_name, pretrained=True)
             
+        if self.args.model == 'swin_large_patch4_window7_224':
+            self.feature_module = nn.Sequential(
+                *list(model.children())[:-2],
+            )
+            self.gap = nn.AdaptiveAvgPool1d(1)
+        else:
+            self.feature_module = nn.Sequential(
+                *list(model.children())[:-1]
+            )
         
+        if self.args.experiment_type == 'theator':
+            for p in self.feature_module.parameters():
+                p.requires_grad = False
+                
+        self.classifier = nn.Linear(model.num_features, 2)
+        
+        if 'hem-emb' in self.args.train_method:
+            self.use_emb = True
+            self.proxies = nn.Parameter(torch.randn(model.num_features, 2))
         
         
     def forward(self, x):
-        return self.model(x)
+        features = self.feature_module(x)
+        if self.args.model == 'swin_large_patch4_window7_224':
+            features = self.gap(features.permute(0, 2, 1))
+            
+        output = self.classifier(features.view(x.size(0), -1))
+        
+        if self.use_emb and self.training:
+            return features, output
+        else:
+            return output

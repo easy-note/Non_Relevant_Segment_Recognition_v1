@@ -37,7 +37,7 @@ def get_experiment_args():
     args.data_base_path = '/raid/img_db'
     # args.train_method = 'hem-bs' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
     # args.train_method = 'hem-emb'
-    args.train_method = 'normal'
+    # args.train_method = 'normal'
     # args.batch_size = 128
     # args.fold = '5'
 

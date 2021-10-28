@@ -29,7 +29,7 @@ class CustomEfficientNet(nn.Module):
         ml = list(model.children())
         self.model = model
         
-        if self.args.train_method == 'hem-emb':
+        if 'hem-emb' in self.args.train_method:
             self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(ml[-2].in_features, 2))
         

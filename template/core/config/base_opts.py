@@ -16,7 +16,8 @@ def parse_opts():
                         'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
                         'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 
                         'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
-                        'ig_resnext101_32x48d', 'swin_large_patch4_window7_224'],
+                        'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
+                        'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -152,11 +153,6 @@ def parse_opts():
             choices=['OOB', 'NIR'], 
             help='[OOB, NIR] choice on task')
 
-    parser.add_argument('--experiment_type', 
-            default='ours', 
-            type=str,
-            choices=['ours', 'theator'], )
-
     parser.add_argument('--data_base_path',
             default='/raid/img_db',
             type=str,
@@ -186,18 +182,21 @@ def parse_opts():
     
 
     # -------------- Train Methods --------------------
+    parser.add_argument('--experiment_type', 
+            default='ours', 
+            type=str,
+            choices=['ours', 'theator'], )
+    
     parser.add_argument('--train_method', type=str,
             default='hem-softmax', 
-            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi', 'hem-emb'],
+            choices=['normal', 'hem-softmax', 'hem-vi', 'hem-emb', 'hem-emb2', 'hem-emb3'],
             help='Select train method, normal or hem method')
 
-    parser.add_argument('--hem_bs_n_batch', type=int,
-            default=4, 
-            help='Set the number of batches')
-    
     parser.add_argument('--top_ratio', type=float,
             default=30/100,
             help='Select HEM top ratio')
+    
+    
 
     # -------------- etc --------------------
     parser.add_argument('--random_seed', type=int, default=10, help='dataset ranbom seed')

@@ -45,12 +45,7 @@ class CAMIO(BaseTrainer):
 
 
         # only use for HEM
-        if 'hem-bs' in self.args.train_method:
-            self.hem_helper.set_method(self.args.train_method)
-            self.hem_helper.set_batch_size(self.args.batch_size)
-            self.hem_helper.set_n_batch(self.args.hem_bs_n_batch)
-            self.train_method = self.args.train_method
-        elif 'hem-emb' in self.args.train_method:
+        if 'hem-emb' in self.args.train_method:
             self.hem_helper.set_method(self.args.train_method)
             self.train_method = self.args.train_method
 
@@ -120,17 +115,21 @@ class CAMIO(BaseTrainer):
         """
             forward for mini-batch
         """
-        if self.train_method == 'hem-bs' and self.training:
-            # Online HEM method
-            # B samples are picked by outputs of N batches 
-            y_hat, y = self.hem_helper.compute_hem(self.model, self.trainset)
-            loss = self.loss_fn(y_hat, y)
-        elif self.train_method == 'hem-emb' and self.training:
+        if self.train_method == 'hem-emb' and self.training:
+            img_path, x, y = batch
+            y_hat, refine_y, sim_dist = self.hem_helper.hem_cos_hard_sim(self.model, x, y)
+
+            loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, y)
+        elif self.train_method == 'hem-emb2' and self.training:
             img_path, x, y = batch
             
-            y_hat, y = self.hem_helper.hem_cos_sim(self.model, x, y)
-            # y_hat, y = self.hem_helper.hem_cos_hard_sim(self.model, x, y)
-            loss = self.loss_fn(y_hat, y)
+            y_hat, refine_y, sim_dist, pos_y = self.hem_helper.hem_cos_hard_sim2(self.model, x, y)
+
+            loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, pos_y)
+        elif self.train_method == 'hem-emb3' and self.training:
+            img_path, x, y = batch
+            
+            loss = self.hem_helper.hem_cos_hard_sim3(self.model, x, y, self.loss_fn)
         else:
             img_path, x, y = batch
 

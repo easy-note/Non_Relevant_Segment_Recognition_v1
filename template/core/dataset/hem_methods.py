@@ -18,16 +18,10 @@ class HEMHelper():
         self.args = args
         self.NON_HEM, self.HEM = (0, 1)
         self.IB_CLASS, self.OOB_CLASS = (0, 1)
+        self.bsz = self.args.batch_size
         
     def set_method(self, method):
         self.method = method
-
-    def set_batch_size(self, bsz):
-        self.bsz = bsz
-
-    def set_n_batch(self, N):
-        self.n_bs = N
-
 
     def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df):
         # df 정렬
@@ -83,8 +77,6 @@ class HEMHelper():
     def compute_hem(self, model, dataset):
         if self.method == 'hem-vi':
             return self.hem_vi(model, dataset)
-        elif self.method == 'hem-bs':
-            return self.hem_batch_sampling(model, dataset)
         else: # exception
             return None
 
@@ -348,81 +340,59 @@ class HEMHelper():
         sim_y_hat = torch.cat((pos_y_hat, neg_y_hat), 0)
         sim_y = torch.cat((pos_y, neg_y), -1)
         
-        # pos_len, neg_len = len(pos_y_hat), len(neg_y_hat)
+        return sim_y_hat, sim_y, sim_dist
     
-        # if pos_len > neg_len:
-        #     sim_y_hat = torch.cat((pos_y_hat[:neg_len], neg_y_hat), 0)
-        #     sim_y = torch.cat((pos_y[:neg_len], neg_y), -1)
-        # else:
-        #     sim_y_hat = torch.cat((pos_y_hat, neg_y_hat[:pos_len]), 0)
-        #     sim_y = torch.cat((pos_y, neg_y[:pos_len]), -1)
+    def hem_cos_hard_sim2(self, model, x, y):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
         
-        return sim_y_hat, sim_y
-
-    def hem_batch_sampling(self, model, dataset):
-        d_loader = DataLoader(dataset, 
-                            batch_size=self.bsz, 
-                            shuffle=True,
-                            drop_last=True)
-        n_pick = self.bsz // (self.n_bs * 2)
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
         
-        y_hat = None
-        y_true = None
-
-        for _ in range(self.n_bs):
-            _, x, y = next(iter(d_loader))
-            x, y = x.cuda(), y.cuda()
-
-            output = nn.functional.softmax(model(x), -1)
-            pred_ids = torch.argmax(output, -1)
-            pos_chk = pred_ids == y
-            neg_chk = pred_ids != y
-
-            p_out = output[pos_chk]
-            n_out = output[neg_chk]
-
-            if self.args.sampling_type == 1:
-                p_diff = torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[:n_pick]
-                n_diff = torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[:n_pick]
-
-                pos_output = p_out[p_diff]
-                neg_output = n_out[n_diff]
-                pos_y = y[pos_chk][p_diff]
-                neg_y = y[neg_chk][n_diff]
-                
-            elif self.args.sampling_type == 2:
-                n_pick = self.bsz // (self.n_bs * 4)
-
-                p_diff = torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[:n_pick]
-                n_diff = torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[:n_pick]
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+        wrong_ids = torch.argsort(wrong_sim_dist)[:16]
+        neg_y_hat = neg_y_hat[wrong_ids]
+        neg_y = neg_y[wrong_ids]
+        
+        sim_y_hat = torch.cat((pos_y_hat, neg_y_hat), 0)
+        sim_y = torch.cat((pos_y, neg_y), -1)
+        
+        sim_dist = sim_dist[correct_answer]
+        
+        return sim_y_hat, sim_y, sim_dist, pos_y
     
-                p_diff = torch.cat((p_diff, torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[-n_pick:]), -1)
-                n_diff = torch.cat((n_diff, torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[-n_pick:]), -1)
-
-                pos_output = p_out[p_diff]
-                neg_output = n_out[n_diff]
-                pos_y = y[pos_chk][p_diff]
-                neg_y = y[neg_chk][n_diff]
-
-            elif self.args.sampling_type == 3: 
-                pos_output = output[pos_chk][:n_pick, ]
-                neg_output = output[neg_chk][:n_pick, ]
-
-                pos_y = y[pos_chk][:n_pick, ]
-                neg_y = y[neg_chk][:n_pick, ]
+    def hem_cos_hard_sim3(self, model, x, y, loss_fn):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        pos_loss = loss_fn(pos_y_hat, pos_y)
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+        wrong_ids = torch.argsort(wrong_sim_dist)
+        
+        w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
+        neg_y_hat = neg_y_hat[wrong_ids]
+        neg_y = neg_y[wrong_ids]
+        
+        neg_loss = 0
+        for wi in range(len(w)):
+            neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
             
-            if y_hat is not None:
-                y_hat = torch.cat((y_hat, pos_output), 0)
-                y_hat = torch.cat((y_hat, neg_output), 0)
-            else:
-                y_hat = pos_output
-                y_hat = torch.cat((y_hat, neg_output), 0)
-
-            if y_true is not None:
-                y_true = torch.cat((y_true, pos_y), 0)
-                y_true = torch.cat((y_true, neg_y), 0)
-            else:
-                y_true = pos_y
-                y_true = torch.cat((y_true, neg_y), 0)
-
-        return y_hat, y_true
+        return (pos_loss + neg_loss) / 2.

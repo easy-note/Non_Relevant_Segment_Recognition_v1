@@ -62,6 +62,7 @@ class MetricHelper():
         metrics['Under_estimation'] = metrics['FN'] / (metrics['FN'] + metrics['TP'] + metrics['FP'])
         metrics['Correspondence_estimation'] = metrics['TP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # CR
         metrics['UNCorrespondence_estimation'] = (metrics['FP'] + metrics['FN']) / (metrics['FN'] + metrics['TP'] + metrics['FP'])
+        metrics['Mean_metric'] = (metrics['Correspondence_estimation'] + (1-metrics['Over_estimation'])) / 2.
 
         # exception
         for k, v in metrics.items():
