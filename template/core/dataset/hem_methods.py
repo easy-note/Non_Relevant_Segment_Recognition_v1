@@ -21,7 +21,7 @@ class HEMHelper():
         self.bsz = self.args.batch_size
         
     def set_method(self, method):
-        if method in ['hem-vi-softmax', 'hem-vi-voting']:
+        if method in ['hem-softmax-offline', 'hem-vi-offline']:
             self.method = 'hem-vi'
         else:
             self.method = method
@@ -132,7 +132,6 @@ class HEMHelper():
         
         def extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
-            pd.options.display.max_rows = None
             
             cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
             CORRECT, INCORRECT = (0,1)
@@ -289,13 +288,13 @@ class HEMHelper():
                                         predictions[np.newaxis, :, :]))
         
 
-        # extracting hem, apply generate hem mode
-        if self.args.generate_hem_mode == 'hem-vi-softmax':
-            print('\ngenerate hem mode : {}\n'.format(self.args.generate_hem_mode))
+        # extracting hem, apply hem extract mode
+        if self.args.hem_extract_mode == 'hem-softmax-offline':
+            print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
         
-        elif self.args.generate_hem_mode == 'hem-vi-voting':
-            print('\ngenerate hem mode : {}\n'.format(self.args.generate_hem_mode))
+        elif self.args.hem_extract_mode == 'hem-vi-offline':
+            print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
 
         print('hard_neg_df', len(hard_neg_df))

@@ -11,8 +11,7 @@ import natsort
 from torch.utils.data import Dataset
 from core.config.data_info import data_transforms, theator_data_transforms
 
-from core.config.patients_info import train_videos, val_videos, hem_train_videos, hem_val_videos, hem_test_videos
-
+from core.config.patients_info import train_videos, val_videos
 
 class RobotDataset(Dataset):
     def __init__(self, args, state) :
@@ -33,61 +32,65 @@ class RobotDataset(Dataset):
         elif self.args.experiment_type == 'theator':
             d_transforms = theator_data_transforms
 
-        if args.generate_hem_mode in ['hem-vi-softmax', 'hem-vi-voting']: 
-            self.mode_hem = True
 
-        if self.mode_hem: # hem dataset 생성 O
-            print('\t>>>> hem dataset 생성')
+        if self.args.mini_fold is not 'general': # hem dataset 생성 (60/20) // offline 사용
             if state == 'train':
                 self.aug = d_transforms['train']
-                self.patients_info_key = hem_train_videos # 60 case
+                self.patients_info_key = train_videos # 60 case / 80 case
+                self.patients_name = self.patients_info_key[self.args.fold] # fold1 - train dataset (80 case)
+                self.patients_name = self.set_patient_per_mini_fold(self.patients_name, mode='train')
+                
             elif state == 'val':
                 self.aug = d_transforms['val']
-                self.patients_info_key = hem_val_videos # 20 case
+                self.patients_info_key = train_videos # 20 case / 80 case
+                self.patients_name = self.patients_info_key[self.args.fold] # fold1 - train dataset (80 case)
+                self.patients_name = self.set_patient_per_mini_fold(self.patients_name, mode='val')
+                
             elif state == 'test':
                 self.aug = d_transforms['test']
-                self.patients_info_key = hem_test_videos
-
-            print('\t>>>> Use general data for train and validation\n')
-            # patients load
-            self.load_patients()
+                self.patients_info_key = val_videos
+            
             # data load
             self.load_data()
 
-        else: # hem dataset 생성 X
-            print('\n\t>>>> 이 실험에서 hem dataset 생성 따윈 없다.\n')
-            if state == 'train':
-                self.aug = d_transforms['train']
+        elif self.args.mini_fold is 'general': # hem dataset 생성 X (80/20) // online, offline 모두 사용
+            if state == 'train':   
+                self.aug = d_transforms['train']     
                 self.patients_info_key = train_videos # 80 case
+                self.patients_name = self.patients_info_key[self.args.fold]
 
-                # hem dataset 으로 학습
-                if self.args.train_method == 'hem':
-                    print('\t>>>> Use HEM data for train\n')
-                    self.load_patients()
-                    
-                    # TODO 
-                    # path 정의 >>>> dir 내부에 fold2, fold3, fold4, fold5 result
-                    csv_path = os.path.join(self.args.data_base_path, 'oob_assets/HEM/MC_softmax')
-                    self.load_data_from_hem_idx(csv_path)
-                
-                # 일반 dataset 으로 학습
-                else:
-                    print('\t>>>> Use general data for train\n')
-                    self.load_patients()
+                if self.args.stage is 'hem_train': 
+                    self.load_data_from_hem_idx()
+
+                else: # general_train, bs-emb1-online, bs-emb2-online, bs-emb3-online
                     self.load_data()
 
             elif state == 'val':
                 self.aug = d_transforms['val']
                 self.patients_info_key = val_videos # 20 case
-
-                print('\t>>>> Use general data for validation\n')
-                self.load_patients()
+                self.patients_name = self.patients_info_key[self.args.fold] 
+                
                 self.load_data()
 
             elif state == 'test':
                 self.aug = d_transforms['test']
                 self.patients_info_key = val_videos
 
+
+    def set_patient_per_mini_fold(self, patients_list, mode='train'):
+        patients_list = natsort.natsorted(patients_list)
+
+        patients_dict = {
+            '0': patients_list[:20],
+            '1': patients_list[20:40],
+            '2': patients_list[40:60],   
+            '3': patients_list[60:80]
+        }
+
+        if mode == 'train':
+            return list(set(patients_list)-set(patients_dict[self.args.mini_fold]))
+        elif mode == 'val':
+            return patients_dict[self.args.mini_fold]
 
     def change_mode(self, to_hem=True): # JH 수정 : to_hem=False -> to_hem=True
         self.mode_hem = to_hem
@@ -132,7 +135,7 @@ class RobotDataset(Dataset):
         print('\n\n')
 
         # select patient frame 
-        print('==> \tPATIENT')
+        print('==> \tPATIENT ({})'.format(len(self.patients_name)))
         print('|'.join(self.patients_name))
         patients_name_for_parser = [patient + '_' for patient in self.patients_name]
         print('|'.join(patients_name_for_parser))
@@ -168,7 +171,7 @@ class RobotDataset(Dataset):
         # suffle 0,1
         self.assets_df = pd.concat([self.ib_assets_df, self.oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
         print('\n\n')
-        print('==> \tFINAL ASSETS')
+        print('==> \tFINAL ASSETS ({})'.format(len(self.assets_df)))
         print(self.assets_df)
         print('\n\n')
 
@@ -181,10 +184,13 @@ class RobotDataset(Dataset):
         self.img_list = self.assets_df.img_path.tolist()
         self.label_list = self.assets_df.class_idx.tolist()
 
-    def load_data_from_hem_idx(self, csv_path):
-    
-        # csv_path 내부의 모든 hem.csv (fold2, fold3, fold4, fold5) ==> 하나로 읽기
-        read_hem_csv = glob(os.path.join(csv_path, '*.csv'))
+    def load_data_from_hem_idx(self):
+        # self.args.restore_path 에서 version0, 1, 2, 3 에 대한 hem.csv 읽고
+        self.restore_path = '/'.join(self.args.restore_path.split('/')[:-1])
+        
+        # csv_path 내부의 모든 hem.csv (fold2, fold3, fold4, fold5) ==> 하나로 합침
+        read_hem_csv = glob(os.path.join(self.restore_path, '*', '*-*-*.csv'))
+
         read_hem_csv = natsort.natsorted(read_hem_csv)
 
         hem_df_list = []
@@ -197,7 +203,7 @@ class RobotDataset(Dataset):
         hem_assets_df = pd.concat(hem_df_list).reset_index(drop=True)
 
         # select patient frame 
-        print('==> \tPATIENT')
+        print('==> \tPATIENT ({})'.format(len(self.patients_name)))
         print('|'.join(self.patients_name))
         patients_name_for_parser = [patient + '_' for patient in self.patients_name]
         print('|'.join(patients_name_for_parser))
@@ -219,7 +225,7 @@ class RobotDataset(Dataset):
         # suffle 0,1
         self.assets_df = self.hem_assets_df.sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
         print('\n\n')
-        print('==> \tFINAL SUFFLE ASSETS')
+        print('==> \tFINAL SUFFLE ASSETS ({})'.format(len(self.assets_df)))
         print(self.assets_df)
         print('\n\n')
 

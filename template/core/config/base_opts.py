@@ -1,6 +1,5 @@
 import argparse
 
-
 def parse_opts():
     """
         Base arguments parser
@@ -41,7 +40,7 @@ def parse_opts():
             help='Minimum training epoch')
 
     parser.add_argument('--max_epoch',
-            default=20,
+            default=2,
             type=int,
             help='Maximum training epoch')
 
@@ -56,7 +55,7 @@ def parse_opts():
             help='What device to use for training or validation model')
 
     parser.add_argument('--cuda_list',
-            default='1',
+            default='7',
             type=str,
             help='Name list of gpus that are used to train')
 
@@ -164,6 +163,12 @@ def parse_opts():
             choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
 
+    parser.add_argument('--mini_fold',
+            default='1',
+            type=str,
+            choices=['general', '1', '2', '3', '4'],
+            help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
+
     parser.add_argument('--data_version',
             default='v3',
             type=str,
@@ -186,21 +191,16 @@ def parse_opts():
             default='ours', 
             type=str,
             choices=['ours', 'theator'], )
-    
-    parser.add_argument('--train_method', type=str,
-            default='hem-softmax', 
-            choices=['normal', 'hem-softmax', 'hem-vi', 'hem-emb', 'hem-emb2', 'hem-emb3'],
+
+    parser.add_argument('--stage', 
+            default='mini_fold_stage_0', 
+            type=str,
+            choices=['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train'])
+
+    parser.add_argument('--hem_extract_mode', type=str,
+            default='hem-emb-online', 
+            choices=['general', 'hem-softmax-offline', 'hem-vi-offline', 'hem-emb-online', 'hem-emb2-online', 'hem-emb3-online'],
             help='Select train method, normal or hem method')
-
-    parser.add_argument('--generate_hem_mode', type=str,
-            default='normal', 
-            choices=['normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'],
-            help='Set generate hem mode, normal does not generate anything')
-
-    # parser.add_argument('--train_method', type=str,
-    #         default='normal', 
-    #         choices=['normal', 'hem'],
-    #         help='Select train method, normal (normal dataset) or hem (hem dataset)')
             
     parser.add_argument('--top_ratio', type=float,
             default=7/100,
