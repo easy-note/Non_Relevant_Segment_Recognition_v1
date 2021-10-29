@@ -45,7 +45,7 @@ class Evaluator():
 
         anno_parser = AnnotationParser(self.gt_json_path)
         gt_list = anno_parser.get_event_sequence(self.inference_interval)
-        gt_list, predict_list = self._fit_to_min_length(predict_list, gt_list)
+        gt_list, predict_list = self._fit_to_min_length(gt_list, predict_list)
 
         return gt_list, predict_list
 
