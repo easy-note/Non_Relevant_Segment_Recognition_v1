@@ -1,6 +1,7 @@
 from core.model.mobilenet import generate_mobilenet
 from core.model.efficientnet import generate_efficientnet
 from core.model.resnet import generate_resnet
+from core.model.timm_model import generate_timm_model
 
 
 name_to_model = {
@@ -12,6 +13,15 @@ name_to_model = {
     'efficientnet_b3': generate_efficientnet,
     'efficientnet_b4': generate_efficientnet,
     'resnet18': generate_resnet,
+    
+    # 'resnet18': generate_timm_model,
+    # 'tf_efficientnetv2_b0': generate_timm_model,
+    # 'tf_efficientnet_b0_ns': generate_timm_model,
+    # 'efficientnet_b0': generate_timm_model,
+    'mobilenetv3_large_100': generate_timm_model,
+    'mobilenetv3_large_100_miil': generate_timm_model,
+    'ig_resnext101_32x48d': generate_timm_model, 
+    'swin_large_patch4_window7_224': generate_timm_model, 
 }
 
 

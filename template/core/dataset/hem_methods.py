@@ -16,144 +16,77 @@ class HEMHelper():
     def __init__(self, args):
         super().__init__()
         self.args = args
+        self.NON_HEM, self.HEM = (0, 1)
+        self.IB_CLASS, self.OOB_CLASS = (0, 1)
+        self.bsz = self.args.batch_size
         
     def set_method(self, method):
-        self.method = method
+        if method in ['hem-vi-softmax', 'hem-vi-voting']:
+            self.method = 'hem-vi'
+        else:
+            self.method = method
 
-    def set_batch_size(self, bsz):
-        self.bsz = bsz
-
-    def set_n_batch(self, N):
-        self.n_bs = N
-
-    def set_ratio(self, hem_ib_df, hem_oob_df, ib_df, oob_df):
+    def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df):
         # df 정렬
-        hem_ib_df = hem_ib_df.sort_values(by='Img_path')
-        hem_oob_df = hem_oob_df.sort_values(by='Img_path')
-        ib_df = ib_df.sort_values(by='Img_path')
-        oob_df = oob_df.sort_values(by='Img_path')
+        hard_neg_df = hard_neg_df.sort_values(by='Img_path')
+        hard_pos_df = hard_pos_df.sort_values(by='Img_path')
+        vanila_neg_df = vanila_neg_df.sort_values(by='Img_path')
+        vanila_pos_df = vanila_pos_df.sort_values(by='Img_path')
 
         # HEM 표기
-        hem_ib_df['HEM'] = [1]*len(hem_ib_df)
-        hem_oob_df['HEM'] = [1]*len(hem_oob_df)
-        ib_df['HEM'] = [0]*len(ib_df)
-        oob_df['HEM'] = [0]*len(oob_df)
+        hard_neg_df['HEM'] = [1]*len(hard_neg_df)
+        hard_pos_df['HEM'] = [1]*len(hard_pos_df)
+        vanila_neg_df['HEM'] = [0]*len(vanila_neg_df)
+        vanila_pos_df['HEM'] = [0]*len(vanila_pos_df)
 
         try:
-            oob_assets_df = oob_df.sample(n=len(hem_oob_df), replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, hem_oob 개
+            vanila_pos_df = vanila_pos_df.sample(n=len(hard_pos_df), replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, hem_oob 개
         except:
-            oob_assets_df = oob_df.sample(frac=1, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, 전체 oob_df
+            vanila_pos_df = vanila_pos_df.sample(frac=1, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, 전체 oob_df
 
-        target_ib_assets_df_len = (len(hem_oob_df)+len(oob_assets_df))*self.args.IB_ratio - len(hem_ib_df)
-        print('target_ib_assets_df_len ==> {}'.format(target_ib_assets_df_len))
+        target_vanila_neg_df_len = (len(hard_pos_df)+len(vanila_pos_df))*self.args.IB_ratio - len(hard_neg_df)
+        
+        print('target_vanila_neg_df_len : {}\n'.format(target_vanila_neg_df_len))
+
         
         try:
-            ib_assets_df = ib_df.sample(n=target_ib_assets_df_len, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, target_ib_assets_df_len 개
+            vanila_neg_df = vanila_neg_df.sample(n=target_vanila_neg_df_len, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, target_ib_assets_df_len 개
         except:
-            if target_ib_assets_df_len <= 0: 
-                ib_assets_df = ib_df.sample(frac=0, replace=False, random_state=self.args.random_seed)
-                hem_ib_df = hem_ib_df.sample(n=(len(hem_oob_df)+len(oob_assets_df))*self.args.IB_ratio, replace=False, random_state=self.args.random_seed)
+            if target_vanila_neg_df_len <= 0: 
+                vanila_neg_df = vanila_neg_df.sample(frac=0, replace=False, random_state=self.args.random_seed)
+                hard_neg_df = hard_neg_df.sample(n=(len(hard_pos_df)+len(vanila_pos_df))*self.args.IB_ratio, replace=False, random_state=self.args.random_seed)
             else:
-                ib_assets_df = ib_df.sample(frac=1, replace=False, random_state=10)
+                vanila_neg_df = vanila_neg_df.sample(frac=1, replace=False, random_state=10)
 
-        print('========='* 10)
-        print('\them_ib_df {}, hem_oob_df {}, ib_assets_df {}, oob_assets_df {}'.format(len(hem_ib_df), len(hem_oob_df), len(ib_assets_df), len(oob_assets_df)))
-        print('========='* 10)
+        print('\n\n', '========='* 10)
+        print('\thard_neg_df {}, hard_pos_df {}, vanila_neg_df {}, vanila_pos_df {}'.format(len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)))
+        print('========='* 10, '\n\n')
 
-        final_oob_assets = pd.concat([hem_oob_df, oob_assets_df])[['Img_path', 'GT', 'HEM']]
-        final_ib_assets = pd.concat([hem_ib_df, ib_assets_df])[['Img_path', 'GT', 'HEM']]
+        hem_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
+
+        final_pos_assets_df = pd.concat([hard_pos_df, vanila_pos_df])[['Img_path', 'GT', 'HEM']]
+        final_neg_assets_df = pd.concat([hard_neg_df, vanila_neg_df])[['Img_path', 'GT', 'HEM']]
 
         # sort & shuffle
-        final_assets = pd.concat([final_oob_assets, final_ib_assets]).sort_values(by='Img_path', axis=0, ignore_index=True)
-        print('\t>>>> SORT final_assets HEAD\n', final_assets.head(20), '\n\n')
+        final_assets_df = pd.concat([final_pos_assets_df, final_neg_assets_df]).sort_values(by='Img_path', axis=0, ignore_index=True)
+        print('\tSORT final_assets HEAD\n', final_assets_df.head(20), '\n\n')
 
-        final_assets = final_assets.sample(frac=1, random_state=self.args.random_seed).reset_index(drop=True)
-        print('\t>>>> SHUFFLE final_assets HEAD\n', final_assets.head(20), '\n\n')
+        final_assets_df = final_assets_df.sample(frac=1, random_state=self.args.random_seed).reset_index(drop=True)
+        print('\tSHUFFLE final_assets HEAD\n', final_assets_df.head(20), '\n\n')
         
-        final_assets.columns = ['img_path', 'class_idx', 'HEM']
+        final_assets_df.columns = ['img_path', 'class_idx', 'HEM']
 
-        return final_assets
+
+
+        return final_assets_df, hem_dataset_len_list
 
 
     def compute_hem(self, model, dataset):
-        if self.method == 'hem-softmax':
-            return self.hem_softmax_diff(model, dataset)
-        elif self.method == 'hem-vi':
+        if self.method == 'hem-vi':
             return self.hem_vi(model, dataset)
-        elif self.method == 'hem-bs':
-            return self.hem_batch_sampling(model, dataset)
         else: # exception
             return None
 
-    def hem_softmax_diff(self, model, dataset):
-        # pd.options.display.max_columns = None
-        pd.options.display.max_rows = None
-
-        cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
-        CORRECT, INCORRECT = (0,1)
-        IB_CLASS, OOB_CLASS = (0,1)
-
-        for i, data in enumerate(dataset):
-            img_path_list = list(data['img_path'])
-            gt_list = list(data['y'].cpu().data.numpy())
-            predict_list = list(data['y_hat'].cpu().data.numpy())
-            logit_list = nn.Softmax(dim=1)(data['logit']).cpu().data.numpy()
-
-            diff_list = [abs(logit[0]-logit[1]) for logit in logit_list]
-            consensus_list = [CORRECT if y==y_hat else INCORRECT for y, y_hat in zip(gt_list, predict_list)]
-
-            '''
-                df = {
-                    img_path | gt | predict | logit | diff | consensus 
-                }
-            '''
-            
-            if i == 0: # init df
-                df = pd.DataFrame([x for x in zip(img_path_list, gt_list, predict_list, logit_list, diff_list, consensus_list)],
-                                    columns=cols)
-            else:
-                df = df.append([pd.Series(x, index=df.columns) for x in zip(img_path_list, gt_list, predict_list, logit_list, diff_list, consensus_list)], 
-                                ignore_index=True)
-
- 
-        df = df.sort_values(by=['Diff'], axis=0) # 올림차순 정렬
-
-        print('\t>>>> TOTAL df | len(df): {}\n{}\n\n'.format(len(df), df.head(20)))
-
-        ### 1. 정답 맞춘 여부와 상관없이, diff 가 작은 경우 (threshold: 0.1)
-        hem_df_with_small_diff = df[df['Diff'] < self.args.hem_softmax_min_threshold]
-        df = df[df['Diff'] >= self.args.hem_softmax_min_threshold]
-
-        ### 2. 정답을 틀렸고, diff 값 차이가 큰 경우
-        hem_df_with_big_diff = df[(df['Consensus']==INCORRECT) & (df['Diff'] > self.args.hem_softmax_max_threshold)]
-        df = df[(df['Consensus']==CORRECT) | (df['Diff'] <= self.args.hem_softmax_max_threshold)]
-
-        print('\t>>>> hem_df_with_small_diff | len(hem_df_with_small_diff): {}\n{}\n\n'.format(len(hem_df_with_small_diff), hem_df_with_small_diff.head(20)))
-        print('\t>>>> hem_df_with_big_diff | len(hem_df_with_big_diff): {}\n{}\n\n'.format(len(hem_df_with_big_diff), hem_df_with_big_diff.head(20)))
-        print('\t>>>> LEFT df | len(df): {}\n{}\n\n'.format(len(df), df.head(20)))
-
-
-        ### 3. hem_assets_df = hem_df_with_small_diff + hem_df_with_big_diff
-        hem_df = pd.concat([hem_df_with_small_diff, hem_df_with_big_diff])
-
-        ### 4. set ib, oob ratio
-        '''
-            final_oob_assets : hem_oob_assets_df * 2 (hem_oob_assets_df 전체 포함 + alpha)
-            final_ib_assets : final_oob_assets * 3 (hem_ib_assets_df 포함 + alpha)
-        '''
-        hem_ib_assets_df = hem_df[hem_df['GT']==IB_CLASS]
-        hem_oob_assets_df = hem_df[hem_df['GT']==OOB_CLASS]
-        
-        ib_df = df[df['GT']==IB_CLASS]
-        oob_df = df[df['GT']==OOB_CLASS]
-        
-        final_assets = self.set_ratio(hem_ib_assets_df, hem_oob_assets_df, ib_df, oob_df)
-
-        print('\n\n','++++++++++'*10, '\nFINAL HEM ASSETS HEAD\n')
-        print(final_assets.head(50))
-        print('++++++++++'*10)
-
-        return final_assets
 
     def hem_vi(self, model, dataset): # MC dropout
         print('hem_mc methods')
@@ -165,33 +98,96 @@ class HEMHelper():
                     m.train()
         
         # extract hem idx method
-        def extract_hem_idx_from_voting(dropout_predictions):
+        def extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
             
+            # 1. extract hem index
             predict_table = np.argmax(dropout_predictions, axis=2) # (forward_passes, n_samples)
             predict_ratio = np.mean(predict_table, axis=0) # (n_samples)
 
-            predict_list = np.around(predict_ratio) # threshold == 0.5, if predict_ratio >= 0.5, predict_class == OOB(1)
+            predict_np = np.around(predict_ratio) # threshold == 0.5, if predict_ratio >= 0.5, predict_class == OOB(1)
+            predict_np = np.int8(predict_np) # casting float to int
+            predict_list = predict_np.tolist() # to list
 
-            answer = predict_list == np.array(gt_list) # compare with gt list
+            answer = predict_np == np.array(gt_list) # compare with gt list
 
             hem_idx = np.where(answer == False) # hard example
             hem_idx = hem_idx[0].tolist() # remove return turple
 
-            return hem_idx
+            # 2. split hem/vanila 
+            total_df_dict = {
+                'Img_path': img_path_list,
+                'predict': predict_list,
+                'GT': gt_list,
+                'voting': predict_ratio.tolist(),
+                'hem': [self.NON_HEM] * len(img_path_list) # init hem
+            }
+
+            total_df = pd.DataFrame(total_df_dict)
+            total_df.loc[hem_idx, ['hem']] = self.HEM # hem index
+
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = split_to_hem_vanila_df(total_df)
+
+            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
         
-        def extract_hem_idx_from_softmax_diff(dropout_predictions):
+        def extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list):
+            hem_idx = []
+            pd.options.display.max_rows = None
+            
+            cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
+            CORRECT, INCORRECT = (0,1)
+            IB_CLASS, OOB_CLASS = (0,1)
+
+            dropout_predictions_mean = np.mean(dropout_predictions, axis=0) # shape (n_samples, n_classes)
+            dropout_predictions_mean_argmax = np.argmax(dropout_predictions_mean, axis=1) # shape (n_samples,)
+            dropout_predictions_mean_abs_diff = np.squeeze(np.abs(np.diff(dropout_predictions_mean, axis=1)))# shape (n_samples,)
+
+            logit_list = dropout_predictions_mean.tolist()
+            predict_list = dropout_predictions_mean_argmax.tolist()
+            diff_list = dropout_predictions_mean_abs_diff.tolist()
+            consensus_list = [CORRECT if y==y_hat else INCORRECT for y, y_hat in zip(gt_list, predict_list)]
+
+            vanila_df = pd.DataFrame([x for x in zip(img_path_list, gt_list, predict_list, logit_list, diff_list, consensus_list)],
+                    columns=cols)
+
+            top_ratio = self.args.top_ratio # 30/100
+            top_k = int(len(vanila_df) * top_ratio)
+
+            hard_df_lower_idx = dropout_predictions_mean_abs_diff.argsort()[:top_k].tolist()
+            hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist()
+
+            hard_idx = []
+            for i, gt in enumerate(gt_list):
+                if (i in hard_df_upper_idx) and gt==INCORRECT:
+                    hard_idx.append(i)
+
+            hard_idx = hard_idx + hard_df_lower_idx
+
+            vanila_idx = []
+            for i in range(len(vanila_df)):
+                if (i not in hard_idx):
+                    vanila_idx.append(i)
+
+            hard_df = vanila_df.loc[hard_idx, :]
+            vanila_df = vanila_df.loc[vanila_idx, :]
+
+            hard_neg_df = hard_df[hard_df['GT']==IB_CLASS]
+            hard_pos_df = hard_df[hard_df['GT']==OOB_CLASS]
+
+            vanila_neg_df = vanila_df[vanila_df['GT']==IB_CLASS]
+            vanila_pos_df = vanila_df[vanila_df['GT']==OOB_CLASS]
+
+            
+
+            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+
+
+        def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
 
-            # TO DO
+            # 1. extract hem index
 
-            return hem_idx
-
-        def extract_hem_idx_from_mutual_info(dropout_predictions):
-            hem_idx = []
-
-            ## 2. Calculate maen and variance
-            print(dropout_predictions)
+            ## Calculate maen and variance
             mean = np.mean(dropout_predictions, axis=0) # shape (n_samples, n_classes) 
             variance = np.var(dropout_predictions, axis=0) # shape (n_samples, n_classes)
             
@@ -204,40 +200,67 @@ class HEMHelper():
             mutual_info = entropy - np.mean(np.sum(-dropout_predictions*np.log(dropout_predictions + epsilon),
                                                                                         axis=-1), axis=0) # shape (n_samples,)
             # if mutual info is high = relavence // low = non-relavence
-            # so in (hard example data selection?), if i'th data is high(relavence), non-indepandence, i'th data has similar so it's hard?
-            print(mutual_info)
+            # so in (hard example data selection?), if i'th data is high(relavence), non-indepandence, i'th data has similar so it's hard
 
-            # top(high) 30 % dataset
-            # if mutual_info 
+            # sort mi index & extract top/btm sample index 
             top_ratio = 30/100
             top_k = int(len(mutual_info) * top_ratio)
 
-            hem_idx = (-mutual_info).argsort()[:top_k].tolist() # descending
+            btm_ratio = 30/100
+            btm_k = int(len(mutual_info) * btm_ratio)
 
-            return hem_idx, mutual_info
+            sorted_mi_index = (-mutual_info).argsort() # desecnding index
+            top_mi_index = sorted_mi_index[:top_k] # highest 
+            btm_mi_index = sorted_mi_index[len(mutual_info) - btm_k:] # lowest
 
-        def split_hard_example_class(hem_idx, gt_list):
-            hard_neg_idx, hard_pos_idx = [], []
-            IB_CLASS, OOB_CLASS = 0, 1
+            # extract wrong anwer from mean softmax 
+            predict_np = np.argmax(mean, axis=1)
+            predict_list = predict_np.tolist() # to list
 
-            for idx in hem_idx: 
-                hem_example_class = gt_list[idx] # hard example's gt class
-                if hem_example_class == IB_CLASS: # hard negative sample
-                    hard_neg_idx.append(idx)
-                elif hem_example_class == OOB_CLASS: # hard positive sample
-                    hard_pos_idx.append(idx)
+            answer = predict_np == np.array(gt_list) # compare with gt list
 
-            return hard_neg_idx, hard_pos_idx
+            wrong_idx = np.where(answer == False) # wrong example
+            wrong_idx = wrong_idx[0].tolist() # remove return turple
 
-        hem_df = None
+            # append hem idx - high mi & wrong answer
+            hem_idx += np.intersect1d(wrong_idx, top_mi_index).tolist()
+            # append hem idx - low mi
+            hem_idx += btm_mi_index.tolist()
+            print('hem_idx')
+            
+            # 2. split hem/vanila 
+            total_df_dict = {
+                'Img_path': img_path_list,
+                'predict': predict_list,
+                'GT': gt_list,
+                'mi': mutual_info.tolist(),
+                'hem': [self.NON_HEM] * len(img_path_list) # init hem
+            }
 
+            total_df = pd.DataFrame(total_df_dict)
+            total_df.loc[hem_idx, ['hem']] = self.HEM # hem index
 
-        col_name = ['img_path', 'class_idx']
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = split_to_hem_vanila_df(total_df)
+
+            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+
+        def split_to_hem_vanila_df(total_df): # total_df should have ['hem', 'GT'] columne
+            hem_df = total_df[total_df['hem'] == self.HEM]
+            vanila_df = total_df[total_df['hem'] == self.NON_HEM]
+
+            hard_neg_df = hem_df[hem_df['GT'] == self.IB_CLASS]
+            hard_pos_df = hem_df[hem_df['GT'] == self.OOB_CLASS]
+            
+            vanila_neg_df = vanila_df[vanila_df['GT'] == self.IB_CLASS]
+            vanila_pos_df = vanila_df[vanila_df['GT'] == self.OOB_CLASS]
+
+            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+        
+        # init for parameter for hem methods
         img_path_list = []
         gt_list = []
-        
-        # init for return df(hem df)
-        for data in outputs:
+
+        for data in dataset:
             img_path_list += list(data['img_path'])
             gt_list += data['y'].tolist()
         
@@ -245,7 +268,6 @@ class HEMHelper():
         n_classes = 2
         forward_passes = 5
         n_samples = len(img_path_list)
-
         
         dropout_predictions = np.empty((0, n_samples, n_classes)) 
         softmax = nn.Softmax(dim=1)
@@ -255,9 +277,9 @@ class HEMHelper():
             predictions = np.empty((0, n_classes))
             model.eval()
             enable_dropout(model)
-            for data in outputs:
+            for data in dataset:
                 with torch.no_grad():
-                    y_hat = model(data['x'])
+                    y_hat = model(data['x'].cuda())
                     y_hat = softmax(y_hat)
 
                 predictions = np.vstack((predictions, y_hat.cpu().numpy()))
@@ -266,97 +288,127 @@ class HEMHelper():
             dropout_predictions = np.vstack((dropout_predictions,
                                         predictions[np.newaxis, :, :]))
         
+
+        # extracting hem, apply generate hem mode
+        if self.args.generate_hem_mode == 'hem-vi-softmax':
+            print('\ngenerate hem mode : {}\n'.format(self.args.generate_hem_mode))
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
         
-        # extracting he // apply method
-        hem_idx, mutual_info = extract_hem_idx_from_mutual_info(dropout_predictions)
+        elif self.args.generate_hem_mode == 'hem-vi-voting':
+            print('\ngenerate hem mode : {}\n'.format(self.args.generate_hem_mode))
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
 
-        # split hard example class from he 
-        hard_neg_idx, hard_pos_idx = split_hard_example_class(hem_idx, gt_list)
+        print('hard_neg_df', len(hard_neg_df))
+        print('hard_pos_df', len(hard_pos_df))
+        print('vanila_neg_df', len(vanila_neg_df))
+        print('vanila_pos_df', len(vanila_pos_df))
 
-        print(hard_neg_idx)
-        print(hard_pos_idx)
+        total_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
 
-        hem_df = pd.DataFrame(
-                {
-                    'img_path': img_path_list,
-                    'gt_list': gt_list,
-                    'mutual_info': mutual_info.tolist()
-                }
-            )
+        hem_final_df, hem_dataset_len_list = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
-        '''
-        img_path | class
-        ~.jpg | 0
-        ~.jpg | 1
-        # return df of final Hard Example
-        '''
-
-        return hem_df
-
-    def hem_batch_sampling(self, model, dataset):
-        d_loader = DataLoader(dataset, 
-                            batch_size=self.bsz, 
-                            shuffle=True,
-                            drop_last=True)
-        n_pick = self.bsz // (self.n_bs * 2)
-        
-        y_hat = None
-        y_true = None
-
-        for _ in range(self.n_bs):
-            _, x, y = next(iter(d_loader))
-            x, y = x.cuda(), y.cuda()
-
-            output = nn.functional.softmax(model(x), -1)
-            pred_ids = torch.argmax(output, -1)
-            pos_chk = pred_ids == y
-            neg_chk = pred_ids != y
-
-            p_out = output[pos_chk]
-            n_out = output[neg_chk]
-
-            if self.args.sampling_type == 1:
-                p_diff = torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[:n_pick]
-                n_diff = torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[:n_pick]
-
-                pos_output = p_out[p_diff]
-                neg_output = n_out[n_diff]
-                pos_y = y[pos_chk][p_diff]
-                neg_y = y[neg_chk][n_diff]
-                
-            elif self.args.sampling_type == 2:
-                n_pick = self.bsz // (self.n_bs * 4)
-
-                p_diff = torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[:n_pick]
-                n_diff = torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[:n_pick]
+        return hem_final_df, total_dataset_len_list, hem_dataset_len_list
     
-                p_diff = torch.cat((p_diff, torch.argsort(torch.abs(p_out[:,0] - p_out[:,1]), -1, True)[-n_pick:]), -1)
-                n_diff = torch.cat((n_diff, torch.argsort(torch.abs(n_out[:,0] - n_out[:,1]), -1, True)[-n_pick:]), -1)
-
-                pos_output = p_out[p_diff]
-                neg_output = n_out[n_diff]
-                pos_y = y[pos_chk][p_diff]
-                neg_y = y[neg_chk][n_diff]
-
-            elif self.args.sampling_type == 3: 
-                pos_output = output[pos_chk][:n_pick, ]
-                neg_output = output[neg_chk][:n_pick, ]
-
-                pos_y = y[pos_chk][:n_pick, ]
-                neg_y = y[neg_chk][:n_pick, ]
+    def hem_cos_sim(self, model, x, y):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        pos_len, neg_len = len(pos_y_hat), len(neg_y_hat)
+    
+        if pos_len > neg_len:
+            sim_y_hat = torch.cat((pos_y_hat[:neg_len], neg_y_hat), 0)
+            sim_y = torch.cat((pos_y[:neg_len], neg_y), -1)
+        else:
+            sim_y_hat = torch.cat((pos_y_hat, neg_y_hat[:pos_len]), 0)
+            sim_y = torch.cat((pos_y, neg_y[:pos_len]), -1)
+        
+        return sim_y_hat, sim_y
+    
+    def hem_cos_hard_sim(self, model, x, y):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+        wrong_ids = torch.argsort(wrong_sim_dist)[:16]
+        neg_y_hat = neg_y_hat[wrong_ids]
+        neg_y = neg_y[wrong_ids]
+        
+        sim_y_hat = torch.cat((pos_y_hat, neg_y_hat), 0)
+        sim_y = torch.cat((pos_y, neg_y), -1)
+        
+        return sim_y_hat, sim_y, sim_dist
+    
+    def hem_cos_hard_sim2(self, model, x, y):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+        wrong_ids = torch.argsort(wrong_sim_dist)[:16]
+        neg_y_hat = neg_y_hat[wrong_ids]
+        neg_y = neg_y[wrong_ids]
+        
+        sim_y_hat = torch.cat((pos_y_hat, neg_y_hat), 0)
+        sim_y = torch.cat((pos_y, neg_y), -1)
+        
+        sim_dist = sim_dist[correct_answer]
+        
+        return sim_y_hat, sim_y, sim_dist, pos_y
+    
+    def hem_cos_hard_sim3(self, model, x, y, loss_fn):
+        emb, y_hat = model(x)
+        sim_dist = emb @ model.proxies
+        sim_preds = torch.argmax(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        pos_y_hat = y_hat[correct_answer]
+        pos_y = y[correct_answer]
+        
+        pos_loss = loss_fn(pos_y_hat, pos_y)
+        
+        neg_y_hat = y_hat[wrong_answer]
+        neg_y = y[wrong_answer]
+        
+        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+        wrong_ids = torch.argsort(wrong_sim_dist)
+        
+        w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
+        neg_y_hat = neg_y_hat[wrong_ids]
+        neg_y = neg_y[wrong_ids]
+        
+        neg_loss = 0
+        for wi in range(len(w)):
+            neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
             
-            if y_hat is not None:
-                y_hat = torch.cat((y_hat, pos_output), 0)
-                y_hat = torch.cat((y_hat, neg_output), 0)
-            else:
-                y_hat = pos_output
-                y_hat = torch.cat((y_hat, neg_output), 0)
-
-            if y_true is not None:
-                y_true = torch.cat((y_true, pos_y), 0)
-                y_true = torch.cat((y_true, neg_y), 0)
-            else:
-                y_true = pos_y
-                y_true = torch.cat((y_true, neg_y), 0)
-
-        return y_hat, y_true
+        return (pos_loss + neg_loss) / 2.

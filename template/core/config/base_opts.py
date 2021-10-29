@@ -15,7 +15,9 @@ def parse_opts():
                         'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
                         'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
                         'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 
-                        'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'],
+                        'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
+                        'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
+                        'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -39,7 +41,7 @@ def parse_opts():
             help='Minimum training epoch')
 
     parser.add_argument('--max_epoch',
-            default=1,
+            default=20,
             type=int,
             help='Maximum training epoch')
 
@@ -79,7 +81,7 @@ def parse_opts():
 
     # /OOB_RECOG/logs/project-1/TB_log/version_0
     parser.add_argument('--save_path', type=str, 
-                        default='/OOB_RECOG/logs/project-hem', help='')
+                        default='/OOB_RECOG/logs/211023_TRAIN_HEM-softmax-FOLD1', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',
@@ -115,7 +117,7 @@ def parse_opts():
     parser.add_argument('--lr_scheduler',
             default='step_lr',
             type=str,
-            choices=['step_lr', 'mul_lr'],
+            choices=['step_lr', 'mul_lr', 'mul_step_lr', 'reduced', 'cosine'],
             help='Learning scheduler selection \n[Types : step_lr, mul_lr]')
 
     parser.add_argument('--lr_scheduler_step', 
@@ -132,6 +134,11 @@ def parse_opts():
             default=[9, 14],
             type=list,
             help='Multi-step milestones for decreasing learning rate')
+    
+    parser.add_argument('--t_max_iter', 
+            type=int, 
+            default=200000, 
+            help='Use for Step LR Scheduler')
 
     # -------------- Dataset --------------------
     parser.add_argument('--dataset', 
@@ -146,18 +153,13 @@ def parse_opts():
             choices=['OOB', 'NIR'], 
             help='[OOB, NIR] choice on task')
 
-    parser.add_argument('--experiment_type', 
-            default='ours', 
-            type=str,
-            choices=['ours', 'theator'], )
-
     parser.add_argument('--data_base_path',
             default='/raid/img_db',
             type=str,
             help='Data location')
 
     parser.add_argument('--fold',
-            default='3',
+            default='2',
             type=str,
             choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
@@ -170,7 +172,7 @@ def parse_opts():
 
     parser.add_argument('--IB_ratio',
             default=3,
-            type=int,
+            type=float,
             help='')
 
     parser.add_argument('--num_workers',
@@ -180,33 +182,36 @@ def parse_opts():
     
 
     # -------------- Train Methods --------------------
+    parser.add_argument('--experiment_type', 
+            default='ours', 
+            type=str,
+            choices=['ours', 'theator'], )
+    
     parser.add_argument('--train_method', type=str,
             default='hem-softmax', 
-            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
+            choices=['normal', 'hem-softmax', 'hem-vi', 'hem-emb', 'hem-emb2', 'hem-emb3'],
             help='Select train method, normal or hem method')
 
-    parser.add_argument('--hem_bs_n_batch', type=int,
-            default=4, 
-            help='Set the number of batches')
+    parser.add_argument('--generate_hem_mode', type=str,
+            default='normal', 
+            choices=['normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'],
+            help='Set generate hem mode, normal does not generate anything')
 
-    parser.add_argument('--hem_softmax_min_threshold', type=float,
-            default=0.1, 
-            choices=range(0, 1),
-            help='Set hem-softmax min threshold')
-
-    parser.add_argument('--hem_softmax_max_threshold', type=float,
-            default=0.7, 
-            choices=range(0, 1),
-            help='Set hem-softmax max threshold')
-
-    
+    # parser.add_argument('--train_method', type=str,
+    #         default='normal', 
+    #         choices=['normal', 'hem'],
+    #         help='Select train method, normal (normal dataset) or hem (hem dataset)')
+            
+    parser.add_argument('--top_ratio', type=float,
+            default=7/100,
+            help='Select HEM top ratio')
 
     # -------------- etc --------------------
-    parser.add_argument('--random_seed', type=int, default=10, help='dataset ranbom seed')
+    parser.add_argument('--random_seed', type=int, default=10, help='dataset random seed')
 
     parser.add_argument('--use_lightning_style_save', action='store_true', help='If true, use lightning save module')
 
-    parser.add_argument('--save_top_n', type=int, default=2, help='dataset ranbom seed')
+    parser.add_argument('--save_top_n', type=int, default=1, help='dataset random seed')
 
 
     return parser

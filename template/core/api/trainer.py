@@ -10,6 +10,8 @@ from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
 
+import csv
+
 
 class CAMIO(BaseTrainer):
     def __init__(self, args):
@@ -26,6 +28,8 @@ class CAMIO(BaseTrainer):
         torch.backends.cudnn.deterministic=True
         torch.backends.cudnn.benchmark=True
         
+        self.args.generate_hem_mode = self.args.train_method
+        
         self.save_hyperparameters() # save with hparams
 
         self.model = get_model(self.args)
@@ -38,23 +42,19 @@ class CAMIO(BaseTrainer):
 
         self.sanity_check = True
         self.restore_path = None # inference module args / save path of hem df 
-
-        self.restore_path = None
-        self.train_method = 'normal'
+        
+        self.generate_hem_mode = None
         self.last_epoch = -1
 
+        ## only use for generating HEM
+        # hem-bs
+        if 'hem-emb' in self.args.generate_hem_mode:
+            self.hem_helper.set_method(self.args.generate_hem_mode)
+            self.generate_hem_mode = self.args.generate_hem_mode
 
-        # only use for HEM
-        if 'hem-bs' in self.args.train_method:
-            self.hem_helper.set_method(self.args.train_method)
-            self.hem_helper.set_batch_size(self.args.batch_size)
-            self.hem_helper.set_n_batch(self.args.hem_bs_n_batch)
-            self.train_method = self.args.train_method
-
-        elif self.args.train_method in ['hem-softmax', 'hem-vi']:
-            self.train_method = self.args.train_method
-            self.hem_helper.set_method(self.train_method)
-            self.last_epoch = self.args.max_epoch-1
+        elif self.args.generate_hem_mode in ['hem-vi-softmax', 'hem-vi-voting']:
+            self.generate_hem_mode = self.args.generate_hem_mode
+            self.hem_helper.set_method(self.generate_hem_mode)
 
     def setup(self, stage):
         '''
@@ -81,9 +81,9 @@ class CAMIO(BaseTrainer):
         return DataLoader(
             self.trainset,
             batch_size=self.args.batch_size,
+            num_workers=self.args.num_workers,
             shuffle=True,
             drop_last=True,
-            num_workers=self.args.num_workers,
         )
 
     def val_dataloader(self):
@@ -112,14 +112,22 @@ class CAMIO(BaseTrainer):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        """
-            forward for mini-batch
-        """
-        if self.train_method == 'hem-bs' and self.training:
-            # Online HEM method
-            # B samples are picked by outputs of N batches 
-            y_hat, y = self.hem_helper.compute_hem(self.model, self.trainset)
-            loss = self.loss_fn(y_hat, y)
+        if self.generate_hem_mode == 'hem-emb' and self.training:
+            img_path, x, y = batch
+            y_hat, refine_y, sim_dist = self.hem_helper.hem_cos_hard_sim(self.model, x, y)
+
+            loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, y)
+        elif self.generate_hem_mode == 'hem-emb2' and self.training:
+            img_path, x, y = batch
+            
+            y_hat, refine_y, sim_dist, pos_y = self.hem_helper.hem_cos_hard_sim2(self.model, x, y)
+
+            loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, pos_y)
+        elif self.generate_hem_mode == 'hem-emb3' and self.training:
+            img_path, x, y = batch
+            
+            loss = self.hem_helper.hem_cos_hard_sim3(self.model, x, y, self.loss_fn)
+
         else:
             img_path, x, y = batch
 
@@ -149,7 +157,6 @@ class CAMIO(BaseTrainer):
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
-
         self.metric_helper.write_preds(y_hat.argmax(dim=1).detach().cpu(), y.cpu()) # MetricHelper 에 저장
 
         self.log('val_loss', loss, on_epoch=True, prog_bar=True)
@@ -157,9 +164,10 @@ class CAMIO(BaseTrainer):
         return {
             'val_loss': loss,
             'img_path': img_path,
-            'y': y,
+            'x': x.detach().cpu(),
+            'y': y.detach().cpu(),
             'y_hat': y_hat.argmax(dim=1).detach().cpu(),
-            'logit': y_hat
+            'logit': y_hat.detach().cpu()
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
@@ -171,6 +179,7 @@ class CAMIO(BaseTrainer):
 
         else:
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+            
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
         
             val_loss, cnt = 0, 0
@@ -215,31 +224,25 @@ class CAMIO(BaseTrainer):
                     self.best_val_loss = val_loss_mean # self.best_val_loss 업데이트. 
                     self.save_checkpoint()
 
-                if self.current_epoch+1 == self.args.max_epoch: # max_epoch 모델 저장
+                if self.current_epoch + 1 == self.args.max_epoch: # max_epoch 모델 저장
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
 
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
-                '''
-                self.trainset.change_mode(True)
-                self.valset.change_mode(True)
-                
-                hem_train_ids = self.hem_helper(self.model, self.train_loader)
-                hem_val_ids = self.hem_helper(self.model, self.train_loader)
-                self.trainset.set_sample_ids(hem_train_ids)
-                self.valset.set_sample_ids(hem_val_ids)
-                '''
+                if self.generate_hem_mode in ['hem-vi-softmax', 'hem-vi-voting']:
+                    hem_df, total_dataset_len_list, hem_dataset_len_list = self.hem_helper.compute_hem(self.model, outputs)
+                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.generate_hem_mode, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
 
-                if self.train_method == 'hem-softmax':
-                    hem_df = self.hem_helper.compute_hem(None, outputs)
-                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-                
-                elif self.train_method == 'hem-vi':
-                    hem_df = self.hem_helper.compute_hem(self.model, outputs)
-                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.train_method, self.args.fold))) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-    
+                    # field names  
+                    cols = ['hard_neg_df', 'hard_pos_df', 'vanila_neg_df', 'vanila_pos_df']  
+                    with open(os.path.join(self.restore_path, 'DATASET_LEN_{}-{}-{}.csv'.format(self.args.model, self.args.generate_hem_mode, self.args.fold)), 'w',newline='') as f: 
+                        write = csv.writer(f) 
+                        write.writerow(cols) 
+                        write.writerow(total_dataset_len_list) 
+                        write.writerow(hem_dataset_len_list)
+
 
     def test_step(self, batch, batch_idx):
         img_path, x, y = batch

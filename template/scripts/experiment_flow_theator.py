@@ -40,7 +40,7 @@ def get_experiment_args():
     args.experiment_type = 'theator'
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/theator'
+    # args.save_path = '/OOB_RECOG/logs/theator-our-ratio'
     args.num_gpus = 1
     args.max_epoch = 120
     args.min_epoch = 0
@@ -177,6 +177,9 @@ def main():
     # 0. set each experiment args 
     args = get_experiment_args()
     
+    import os
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
+    
     # 1. hyper prameter opts setup for experiments flow
     # 2. train
     args = train_main(args)
@@ -188,9 +191,6 @@ def main():
     # save_experiments(args)
 
 if __name__ == '__main__':
-    
-    import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
     
     if __package__ is None:
         import sys

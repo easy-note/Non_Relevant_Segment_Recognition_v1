@@ -56,6 +56,7 @@ class MetricHelper():
             'Precision': cm.PPV[self.OOB_CLASS],
             'Recall': cm.TPR[self.OOB_CLASS],
             'F1-Score': cm.F1[self.OOB_CLASS],
+            'Jaccard': cm.J[self.OOB_CLASS],
         }
 
         # np casting for zero divide to inf
@@ -66,6 +67,7 @@ class MetricHelper():
 
         metrics['CR'] = (TP - FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB # Confidence Ratio
         metrics['OR'] = FP / (FN + TP + FP) # Over estimation ratio
+        metrics['Mean_metric'] = (metrics['CR'] + (1-metrics['OR'])) / 2 # for train
 
         # Predict / GT CLASS elements num
         metrics['gt_IB']= self.gt_list.count(self.IB_CLASS)
@@ -95,6 +97,7 @@ class MetricHelper():
             'Precision': self.EXCEPTION_NUM,
             'Recall': self.EXCEPTION_NUM,
             'F1-Score': self.EXCEPTION_NUM,
+            'Jaccard': self.EXCEPTION_NUM, # TO-DO should calc
             'gt_IB': 0,
             'gt_OOB': 0,
             'predict_IB': 0,
@@ -127,10 +130,14 @@ class MetricHelper():
 
         advanced_metrics['CR'] = (TP - FP) / (FN + TP +FP) # 잘못예측한 OOB / predict OOB + 실제 OOB # Confidence Ratio
         advanced_metrics['OR'] = FP / (FN + TP + FP)  # Over estimation ratio
+        advanced_metrics['Mean_metric'] = (advanced_metrics['CR'] + (1-advanced_metrics['OR'])) / 2 # for train
 
         # calc mCR, mOR
         advanced_metrics['mCR'] = np.mean([metrics['CR'] for metrics in metrics_list])
         advanced_metrics['mOR'] = np.mean([metrics['OR'] for metrics in metrics_list])
+
+        # calc Jaccard index (https://neo4j.com/docs/graph-data-science/current/alpha-algorithms/jaccard/)
+        advanced_metrics['Jaccard'] = np.float16(advanced_metrics['TP']) / np.float16(advanced_metrics['predict_OOB'] + advanced_metrics['gt_OOB'] - advanced_metrics['TP'])
 
         # exception
         for k, v in advanced_metrics.items():
