@@ -61,6 +61,7 @@ class RobotDataset(Dataset):
 
                 if self.args.stage is 'hem_train': 
                     self.load_data_from_hem_idx()
+                    # self.load_data()
 
                 else: # general_train, bs-emb1-online, bs-emb2-online, bs-emb3-online
                     self.load_data()
@@ -193,6 +194,9 @@ class RobotDataset(Dataset):
 
         read_hem_csv = natsort.natsorted(read_hem_csv)
 
+        print(read_hem_csv)
+
+
         hem_df_list = []
         cols = ['img_path', 'class_idx', 'HEM']
 
@@ -200,7 +204,9 @@ class RobotDataset(Dataset):
             df = pd.read_csv(csv_file, names=cols)
             hem_df_list.append(df)
     
-        hem_assets_df = pd.concat(hem_df_list).reset_index(drop=True)
+        hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+
+        hem_assets_df.to_csv('./hem_assets_df.csv')
 
         # select patient frame 
         print('==> \tPATIENT ({})'.format(len(self.patients_name)))

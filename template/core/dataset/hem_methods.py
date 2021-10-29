@@ -21,7 +21,7 @@ class HEMHelper():
         self.bsz = self.args.batch_size
         
     def set_method(self, method):
-        if method in ['hem-softmax-offline', 'hem-vi-offline']:
+        if method in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
             self.method = 'hem-vi'
         else:
             self.method = method
@@ -292,6 +292,10 @@ class HEMHelper():
         if self.args.hem_extract_mode == 'hem-softmax-offline':
             print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
+
+        elif self.args.hem_extract_mode == 'hem-voting-offline':
+            print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
         
         elif self.args.hem_extract_mode == 'hem-vi-offline':
             print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))

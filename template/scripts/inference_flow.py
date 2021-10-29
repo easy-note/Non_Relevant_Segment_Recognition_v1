@@ -1,3 +1,6 @@
+global STAGE_LIST 
+STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
+
 def get_experiment_args():
     from core.config.base_opts import parse_opts
 
@@ -33,20 +36,45 @@ def get_experiment_args():
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
-    args.train_method = 'normal' # ['normal', 'hem-softmax', 'hem-bs', 'hem-vi']
     args.batch_size = 128
+    args.IB_ratio = 1 # [1, 3, 5]
+
+    # for hem
+    args.hem_extract_mode = 'hem-softmax-offline' # ['general', 'hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 'hem-emb-online', 'hem-emb2-online', 'hem-emb3-online'],
 
     ### train args
     args.fold = '1'
-    args.save_path = '/OOB_RECOG/logs/normal-temp'
+    args.save_path = '/OOB_RECOG/logs/hem-softmax-offline'
     args.num_gpus = 1
     args.max_epoch = 1
     args.min_epoch = 1
+
+
 
     ### etc opts
     args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
 
     return args
+
+def set_args_per_stage(args, ids, stage):
+    global STAGE_LIST 
+
+    args.stage = stage
+
+    if ids > 3:
+        args.mini_fold = 'general'        
+    else:
+        args.mini_fold = str(ids)
+
+    return args
+
+def check_hem_online_mode(args):
+    if 'online' in args.hem_extract_mode.lower():
+        return True
+    else:
+        return False 
+
+
 
 def get_inference_model_path(restore_path):
     # from finetuning model
@@ -91,8 +119,8 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            limit_train_batches=0.01,
-                            limit_val_batches=0.01,
+                            limit_train_batches=2,
+                            limit_val_batches=2,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -319,7 +347,7 @@ def inference_main(args):
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
 
-    report.set_experiment(model=args.model, methods=args.train_method, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, details_path=details_results_path, model_path=model_path)
+    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -328,7 +356,9 @@ def inference_main(args):
 
     experiment_summary = {
         'model':args.model,
-        'methods':args.train_method,
+        'methods':args.hem_extract_mode,
+        'stage': args.stage,
+        'IB_ratio': args.IB_ratio,
         'inference_fold':args.inference_fold,
         'mCR':total_mCR,
         'mOR':total_mOR,
@@ -341,9 +371,50 @@ def inference_main(args):
     # return mCR, mOR, OR, CR of experiment
     return args, experiment_summary, patients_CR, patients_OR
 
-def main():    
-    import os
 
+def hem_main():
+    import os
+    global STAGE_LIST 
+
+    # 0. set each experiment args 
+    args = get_experiment_args()
+    
+    import os
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
+
+    # online mode
+    if check_hem_online_mode(args):
+        args.mini_fold = 'general'
+        args.stage = 'general_train'
+
+        args.hem_extract_mode = 'hem-emb-online'
+
+        args = train_main(args)
+
+    # offline mode
+    else:
+        for ids, stage in enumerate(STAGE_LIST):
+            args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
+
+            print('\n\n')
+            print('====='*7, args.stage.upper(),'====='*7)
+            print('\n\n')
+
+            print(args)
+
+            args = train_main(args)
+
+            if ids > 3:
+                # 3. inference
+                args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+
+                # 4. save experiments summary
+                experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+                os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+
+                save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+
+def main():    
     # 0. set each experiment args 
     args = get_experiment_args()
     
@@ -372,7 +443,7 @@ if __name__ == '__main__':
         sys.path.append(base_path)
         print(base_path)
 
-    main()
+    hem_main()
 
 
 

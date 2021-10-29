@@ -56,7 +56,7 @@ class CAMIO(BaseTrainer):
             if self.args.stage not in ['hem_train', 'general_train']: 
                 # stage=mini_fold_stage_1, 2, 3, 4
                 # hem_helper.set_method
-                if self.args.hem_extract_mode in ['hem-softmax-offline', 'hem-vi-offline']:
+                if self.args.hem_extract_mode in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
                     self.hem_helper.set_method(self.hem_extract_mode)
                     
                     self.last_epoch = self.args.max_epoch - 1
@@ -238,7 +238,7 @@ class CAMIO(BaseTrainer):
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
                 if self.args.stage not in ['hem_train', 'general_train']: 
-                    if self.hem_extract_mode in ['hem-softmax-offline', 'hem-vi-offline']:
+                    if self.hem_extract_mode in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
                         hem_df, total_dataset_len_list, hem_dataset_len_list = self.hem_helper.compute_hem(self.model, outputs)
                         hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
 
