@@ -64,11 +64,14 @@ class MetricHelper():
         TN = np.float16(metrics['TN'])
         FN = np.float16(metrics['FN'])
 
-        metrics['OOB_metric'] = (TP - FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB
-        metrics['Over_estimation'] = FP / (FN + TP + FP) # OR
-        metrics['Under_estimation'] = FN / (FN + TP + FP)
-        metrics['Correspondence_estimation'] = TP / (FN + TP + FP) # CR
-        metrics['UNCorrespondence_estimation'] = (FP + FN) / (FN + TP + FP)
+        metrics['CR'] = (TP - FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB # Confidence Ratio
+        metrics['OR'] = FP / (FN + TP + FP) # Over estimation ratio
+
+        # Predict / GT CLASS elements num
+        metrics['gt_IB']= self.gt_list.count(self.IB_CLASS)
+        metrics['gt_OOB']= self.gt_list.count(self.OOB_CLASS)
+        metrics['predict_IB']= self.pred_list.count(self.IB_CLASS)
+        metrics['predict_OOB']= self.pred_list.count(self.OOB_CLASS)
 
         # exception
         for k, v in metrics.items():
@@ -92,6 +95,10 @@ class MetricHelper():
             'Precision': self.EXCEPTION_NUM,
             'Recall': self.EXCEPTION_NUM,
             'F1-Score': self.EXCEPTION_NUM,
+            'gt_IB': 0,
+            'gt_OOB': 0,
+            'predict_IB': 0,
+            'predict_OOB': 0,
         }
 
         # sum of TP/TN/FP/FN
@@ -100,6 +107,12 @@ class MetricHelper():
             advanced_metrics['TN'] += metrics['TN']
             advanced_metrics['FP'] += metrics['FP']
             advanced_metrics['FN'] += metrics['FN']
+            
+            # sum IB / OOB
+            advanced_metrics['gt_IB'] += metrics['gt_IB']
+            advanced_metrics['gt_OOB'] += metrics['gt_OOB']
+            advanced_metrics['predict_IB'] += metrics['predict_IB']
+            advanced_metrics['predict_OOB'] += metrics['predict_OOB']
 
         # np casting for zero divide to inf
         TP = np.float16(advanced_metrics['TP'])
@@ -112,15 +125,12 @@ class MetricHelper():
         advanced_metrics['Recall'] = TP / (TP + FN)
         advanced_metrics['F1-Score'] = 2 * ((advanced_metrics['Precision'] * advanced_metrics['Recall']) / (advanced_metrics['Precision'] + advanced_metrics['Recall']))
 
-        advanced_metrics['OOB_metric'] = (TP - FP) / (FN + TP +FP)
-        advanced_metrics['Over_estimation'] = FP / (FN + TP + FP)
-        advanced_metrics['Under_estimation'] = FN / (FN + TP + FP)
-        advanced_metrics['Correspondence_estimation'] = TP / (FN + TP + FP)
-        advanced_metrics['UNCorrespondence_estimation'] = (FP + FN) / (FN + TP + FP)
+        advanced_metrics['CR'] = (TP - FP) / (FN + TP +FP) # 잘못예측한 OOB / predict OOB + 실제 OOB # Confidence Ratio
+        advanced_metrics['OR'] = FP / (FN + TP + FP)  # Over estimation ratio
 
         # calc mCR, mOR
-        advanced_metrics['mCR'] = np.mean([metrics['OOB_metric'] for metrics in metrics_list])
-        advanced_metrics['mOR'] = np.mean([metrics['Over_estimation'] for metrics in metrics_list])
+        advanced_metrics['mCR'] = np.mean([metrics['CR'] for metrics in metrics_list])
+        advanced_metrics['mOR'] = np.mean([metrics['OR'] for metrics in metrics_list])
 
         # exception
         for k, v in advanced_metrics.items():
