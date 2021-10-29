@@ -4,9 +4,9 @@ def get_experiment_args():
     parser = parse_opts()
 
     ### inference args
-    parser.add_argument('--inference_save_dir', type=str, 
-                        default='/OOB_RECOG/template/results/normal-temp',
-                        help='root directory for infernce saving')
+    parser.add_argument('--experiments_sheet_dir', type=str, 
+                        default='/OOB_RECOG/template/results',
+                        help='root directory for experimets results')
         
 
     parser.add_argument('--inference_interval', type=int, 
@@ -14,7 +14,7 @@ def get_experiment_args():
                         help='Inference Interval of frame')
 
     parser.add_argument('--inference_fold',
-                    default='1',
+                    default='free',
                     type=str,
                     choices=['1', '2', '3', '4', '5', 'free'],
                     help='valset 1, 2, 3, 4, 5, free')
@@ -40,8 +40,8 @@ def get_experiment_args():
     args.fold = '1'
     args.save_path = '/OOB_RECOG/logs/normal-temp'
     args.num_gpus = 1
-    args.max_epoch = 20
-    args.min_epoch = 20
+    args.max_epoch = 1
+    args.min_epoch = 1
 
     ### etc opts
     args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
@@ -91,8 +91,8 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=0.01,
-                            # limit_val_batches=0.01,
+                            limit_train_batches=0.01,
+                            limit_val_batches=0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -194,25 +194,29 @@ def inference_main(args):
     model = model.cuda()
 
     # inference block
-    os.makedirs(args.inference_save_dir, exist_ok=True)
+    os.makedirs(args.restore_path, exist_ok=True)
+
+    inference_assets_save_path = args.restore_path
+    details_results_path = os.path.join(args.restore_path, 'inference_results')
+    patients_results_path = os.path.join(details_results_path, 'patients_report.csv')
+    videos_results_path = os.path.join(details_results_path, 'videos_report.csv')
+
+    report_path = os.path.join(args.restore_path, 'Report.json')
+
 
     # 1. load inference dataset
     # inference case(ROBOT, LAPA), anno_ver(1,2,3), inference fold(1,2,3,4,5)에 따라 환자별 db. gt_json 잡을 수 있도록 set up
     case = args.dataset # ['ROBOT', LAPA]
     anno_ver = '3'
     inference_fold = args.inference_fold
-    save_path = args.inference_save_dir
 
-    inference_assets = prepare_inference_aseets(case=case , anno_ver=anno_ver, inference_fold=inference_fold, save_path=save_path)
+    inference_assets = prepare_inference_aseets(case=case , anno_ver=anno_ver, inference_fold=inference_fold, save_path=inference_assets_save_path)
     patients = inference_assets['patients']
     
     patients_count = len(patients)
 
     # 2. for record metrics
     # Report
-    patients_results_path = os.path.join(args.inference_save_dir, 'patients_report.csv')
-    videos_results_path = os.path.join(args.inference_save_dir, 'videos_report.csv')
-    report_path = os.path.join(args.restore_path, 'Report.json')
     report = Report(report_path)
 
     patients_metrics_list = [] # save each patients metrics
@@ -224,7 +228,7 @@ def inference_main(args):
         videos_metrics_list = [] # save each videos metrics
 
         # for save patients results
-        each_patients_save_dir = os.path.join(args.inference_save_dir, patient_no)
+        each_patients_save_dir = os.path.join(details_results_path, patient_no)
         os.makedirs(each_patients_save_dir, exist_ok=True)
 
         for video_path_info in patient['path_info']: # per videos
@@ -274,12 +278,14 @@ def inference_main(args):
 
             video_gt_IB, video_gt_OOB, video_predict_IB, video_predict_OOB = video_metrics['gt_IB'], video_metrics['gt_OOB'], video_metrics['predict_IB'], video_metrics['predict_OOB']
 
+            video_jaccard = video_metrics['Jaccard']
+
             print('\t => video_name: {}'.format(video_name))
             print('\t    video_CR: {:.3f} | video_OR: {:.3f}'.format(video_CR, video_OR))
             print('\t    video_TP: {} | video_FP: {} | video_TN: {} | video_FN: {}'.format(video_TP, video_FP, video_TN, video_FN))
 
             # save video metrics
-            video_results_dict = report.add_videos_report(patient_no=patient_no, video_no=video_name, FP=video_FP, TP=video_TP, FN=video_FN, TN=video_TN, TOTAL=video_TOTAL, CR=video_CR, OR=video_OR, gt_IB=video_gt_IB, gt_OOB=video_gt_OOB, predict_IB=video_predict_IB, predict_OOB=video_predict_OOB)
+            video_results_dict = report.add_videos_report(patient_no=patient_no, video_no=video_name, FP=video_FP, TP=video_TP, FN=video_FN, TN=video_TN, TOTAL=video_TOTAL, CR=video_CR, OR=video_OR, gt_IB=video_gt_IB, gt_OOB=video_gt_OOB, predict_IB=video_predict_IB, predict_OOB=video_predict_OOB, jaccard=video_jaccard)
             save_dict_to_csv(video_results_dict, videos_results_path)
 
             # for calc patients metric
@@ -293,12 +299,14 @@ def inference_main(args):
 
         patient_gt_IB, patient_gt_OOB, patient_predict_IB, patient_predict_OOB = patient_metrics['gt_IB'], patient_metrics['gt_OOB'], patient_metrics['predict_IB'], patient_metrics['predict_OOB']
 
+        patient_jaccard = patient_metrics['Jaccard']
+
         print('\t\t => patient_no: {}'.format(patient_no))
         print('\t\t    patient_CR: {:.3f} | patient_OR: {:.3f}'.format(patient_CR, patient_OR))
         print('\t\t    patient_TP: {} | patient_FP: {} | patient_TN: {} | patient_FN: {}'.format(patient_TP, patient_FP, patient_TN, patient_FN))
 
         # save patient metrics        
-        patient_results_dict = report.add_patients_report(patient_no=patient_no, FP=patient_FP, TP=patient_TP, FN=patient_FN, TN=patient_TN, TOTAL=patient_TOTAL, CR=patient_CR, OR=patient_OR, gt_IB=patient_gt_IB, gt_OOB=patient_gt_OOB, predict_IB=patient_predict_IB, predict_OOB=patient_predict_OOB)
+        patient_results_dict = report.add_patients_report(patient_no=patient_no, FP=patient_FP, TP=patient_TP, FN=patient_FN, TN=patient_TN, TOTAL=patient_TOTAL, CR=patient_CR, OR=patient_OR, gt_IB=patient_gt_IB, gt_OOB=patient_gt_OOB, predict_IB=patient_predict_IB, predict_OOB=patient_predict_OOB, jaccard=patient_jaccard)
         save_dict_to_csv(patient_results_dict, patients_results_path)
     
         # for calc total patients CR, OR
@@ -311,7 +319,7 @@ def inference_main(args):
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
 
-    report.set_experiment(model=args.model, methods=args.train_method, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, details_path=args.inference_save_dir)
+    report.set_experiment(model=args.model, methods=args.train_method, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -326,7 +334,8 @@ def inference_main(args):
         'mOR':total_mOR,
         'CR':total_CR,
         'OR':total_OR,
-        'details_path':args.inference_save_dir
+        'details_path':details_results_path,
+        'model_path': model_path,
     }
     
     # return mCR, mOR, OR, CR of experiment
@@ -334,7 +343,6 @@ def inference_main(args):
 
 def main():    
     import os
-    from core.utils.logging import ReportHelper # report helper (for experiments reuslts)
 
     # 0. set each experiment args 
     args = get_experiment_args()
@@ -346,13 +354,9 @@ def main():
     # 3. inference
     args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-    print(experiment_summary)
-    print(patients_CR)
-
     # 4. save experiments summary
-    experiments_sheet_dir = '/OOB_RECOG/template/results' # you should define or change to args
-    experiments_sheet_path = os.path.join(experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-    os.makedirs(experiments_sheet_dir, exist_ok=True)
+    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+    os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
     save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
 
