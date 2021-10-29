@@ -4,14 +4,19 @@
     oob_assets save path
 """
 
+video_path = {
+    # dataset 1 (40 case) + dataset 2 (60 case)
+    'robot': ['/data1/HuToM/Video_Robot_cordname', '/data2/Video/Robot/Dataset2_60case'],
+}
+
 annotation_path = {
     'annotation_v1_base_path': '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V1',
     'annotation_v2_base_path': '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2',
-    'annotation_v3_base_path': '/nas2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V3/TBE'
+    'annotation_v3_base_path': '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V3/TBE'
 }
 
 img_db_path = {
-    '12': '/raid/img_db'
+    'robot': '/raid/img_db/ROBOT', ### cuaton @@@ changed key @@@ 12 -> robot
 }
 
 oob_assets_save_path = {
@@ -25,4 +30,3 @@ oob_assets_save_path = {
 
     'theator-oob_assets_v3_robot_save_path': '/raid/img_db/oob_assets/V3/theator-ROBOT'
 }
-

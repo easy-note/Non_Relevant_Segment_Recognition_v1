@@ -2,6 +2,8 @@ import os
 import json
 import pandas as pd
 import numpy as np
+import yaml
+import re
 
 class AnnotationParser():
     def __init__(self, annotation_path:str):
@@ -42,7 +44,7 @@ class AnnotationParser():
         return event_sequence.tolist()[::extract_interval]
 
 class FileLoader():
-    def __init__(self, file_path:str):
+    def __init__(self, file_path=''):
         self.file_path = file_path
 
     def set_file_path(self, file_path):
@@ -68,7 +70,7 @@ class FileLoader():
         support_loader = {
             '.json':(lambda x: self.load_json()), # json object
             '.csv':(lambda x: self.load_csv()), # Dataframe
-            '.yaml':-1, # dict
+            '.yaml':(lambda x: self.load_yaml()), # dict
             '.png':-1 # PIL
         }
 
@@ -85,10 +87,19 @@ class FileLoader():
     def load_csv(self): # to Dataframe
         df = pd.read_csv(self.file_path)
         return df
+    
+    def load_yaml(self): # to dict
+        load_dict = {}
+
+        with open(self.file_path, 'r') as f :
+            load_dict = yaml.load(f, Loader=yaml.FullLoader)
+    
+        return load_dict
+
 
 class InfoParser():
-    def __init__(self, parser_type='ROBOT_V1'):
-        self.file_name = ''
+    def __init__(self, parser_type='ROBOT_VIDEO_1'):
+        self.file_name = '' # name or path
         self.parser_type = parser_type
 
     def write_file_name(self, file_name):
@@ -142,14 +153,32 @@ class InfoParser():
         
 
     def _robot_video_name_to_info_v1(self):
-        file_name = self._clean_file_ext()
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no = file_name.split('_') # parsing video name
+        parents_dir, video = self.file_name.split(os.path.sep)[-2:] # R000001, ch1_video_01.mp4
+        video_name, ext = os.path.splitext(video) # ch1_video_01, .mp4
+
+        op_method, patient_idx = re.findall(r'R|\d+', parents_dir) # R, 000001
+        
+        patient_idx = str(int(patient_idx)) # 000001 => 1
+
+        video_channel, _, video_slice_no = video_name.split('_') # ch1, video, 01
+
+        new_nas_policy_name = "_".join([op_method, patient_idx, video_channel, video_slice_no]) # R_1_ch1_01
+        print('CONVERTED NAMING: {} \t ===> \t {}'.format(self.file_name, new_nas_policy_name))
+
+        hospital = '01'
+        surgery_type = 'G'
+        surgeon = '01'
+
         self.file_name = ''
 
         return hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no
 
     def _robot_video_name_to_info_v2(self):
-        pass
+        file_name = self._clean_file_ext()
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no = file_name.split('_') # parsing video name
+        self.file_name = ''
+
+        
     
     def _lapa_video_name_to_info_v1(self):
         file_name = self._clean_file_ext()
