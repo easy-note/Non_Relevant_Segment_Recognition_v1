@@ -5,7 +5,7 @@ def get_experiment_args():
 
     ### inference args
     parser.add_argument('--inference_save_dir', type=str, 
-                        default='../results',
+                        default='/OOB_RECOG/template/results/normal-temp',
                         help='root directory for infernce saving')
         
 
@@ -14,7 +14,7 @@ def get_experiment_args():
                         help='Inference Interval of frame')
 
     parser.add_argument('--inference_fold',
-                    default='free',
+                    default='1',
                     type=str,
                     choices=['1', '2', '3', '4', '5', 'free'],
                     help='valset 1, 2, 3, 4, 5, free')
@@ -23,7 +23,6 @@ def get_experiment_args():
                     default=1,
                     type=int,
                     choices=[1,2,3],)
-
 
     args = parser.parse_args()
 
@@ -38,10 +37,11 @@ def get_experiment_args():
     args.batch_size = 128
 
     ### train args
-    args.save_path = '/OOB_RECOG/logs/inference_project'
+    args.fold = '1'
+    args.save_path = '/OOB_RECOG/logs/normal-temp'
     args.num_gpus = 1
-    args.max_epoch = 1
-    args.min_epoch = 0
+    args.max_epoch = 20
+    args.min_epoch = 20
 
     ### etc opts
     args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
@@ -82,8 +82,6 @@ def train_main(args):
     x = CAMIO(args)
     print(summary(x.model, (3,224,224))) # check model arch
     # x = TheatorTrainer(args)
-    '''
-
     if args.num_gpus > 1:
         trainer = pl.Trainer(gpus=args.num_gpus, 
                             max_epochs=args.max_epoch, 
@@ -93,18 +91,17 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            limit_train_batches=0.01,
-                            limit_val_batches=0.01,
+                            # limit_train_batches=0.01,
+                            # limit_val_batches=0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
 
     trainer.fit(x)
-    '''
 
-    args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_8') # TO DO: we should define restore path
+    # args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_0') # TO DO: we should define restore path
     
-    # args.restore_path = os.path.join(x.restore_path)
+    args.restore_path = os.path.join(x.restore_path)
     print('restore_path: ', args.restore_path)
     
     return args
@@ -145,6 +142,29 @@ def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
 
     return inference_assets
 
+def save_dict_to_csv(results_dict, save_path):
+    import pandas as pd
+    from core.utils.parser import FileLoader # file load helper
+
+    results_df = pd.DataFrame.from_dict([results_dict]) # dict to df
+    results_df = results_df.reset_index(drop=True)
+
+    merged_df = results_df
+    if os.path.isfile(save_path): # append
+        f_loader = FileLoader()
+        f_loader.set_file_path(save_path)
+        saved_df = f_loader.load()
+
+        saved_df.drop(['Unnamed: 0'], axis = 1, inplace = True) # to remove Unmaned : 0 colume
+
+        merged_df = pd.concat([saved_df, results_df], ignore_index=True, sort=False)
+        
+        merged_df.to_csv(save_path, mode='w')
+
+        print(merged_df)
+
+    merged_df.to_csv(save_path, mode='w')
+
 
 def inference_main(args):
     print('inference_main')
@@ -154,7 +174,7 @@ def inference_main(args):
     from core.api.inference import InferenceDB # inference module
     from core.api.evaluation import Evaluator # evaluation module
     from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
-    from core.utils.logging import ReportHelper # report helper (for experiments reuslts and inference results)
+    from core.utils.logging import Report # report helper (for experiments reuslts and inference results)
 
     import os
     import pandas as pd
@@ -189,9 +209,11 @@ def inference_main(args):
     patients_count = len(patients)
 
     # 2. for record metrics
-    # ReportHelper
-    patients_report_helper = ReportHelper(report_save_path=os.path.join(args.inference_save_dir, 'patients_report.csv'), report_type='patients')
-    videos_report_helper = ReportHelper(report_save_path=os.path.join(args.inference_save_dir, 'videos_report.csv'), report_type='videos')
+    # Report
+    patients_results_path = os.path.join(args.inference_save_dir, 'patients_report.csv')
+    videos_results_path = os.path.join(args.inference_save_dir, 'videos_report.csv')
+    report_path = os.path.join(args.restore_path, 'Report.json')
+    report = Report(report_path)
 
     patients_metrics_list = [] # save each patients metrics
     for idx in range(patients_count): # per patients
@@ -232,55 +254,52 @@ def inference_main(args):
             evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
             gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
 
+            # save predict list to csv
+            predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
+            predict_df = pd.DataFrame({
+                            'frame_idx': target_frame_idx_list,
+                            'predict': predict_list,
+                            'gt': gt_list,
+                            'target_img': target_img_list,
+                        })
+            predict_df.to_csv(predict_csv_path)
+
+            # TO-DO: visulization
+
             # metric per video
             video_metrics = evaluator.calc() # same return with metricHelper
-            video_CR, video_OR = video_metrics['OOB_metric'], video_metrics['Over_estimation']
+            video_CR, video_OR = video_metrics['CR'], video_metrics['OR']
             video_TP, video_FP, video_TN, video_FN = video_metrics['TP'], video_metrics['FP'], video_metrics['TN'], video_metrics['FN']
+            video_TOTAL = video_FP + video_TP + video_FN + video_TN
+
+            video_gt_IB, video_gt_OOB, video_predict_IB, video_predict_OOB = video_metrics['gt_IB'], video_metrics['gt_OOB'], video_metrics['predict_IB'], video_metrics['predict_OOB']
 
             print('\t => video_name: {}'.format(video_name))
             print('\t    video_CR: {:.3f} | video_OR: {:.3f}'.format(video_CR, video_OR))
             print('\t    video_TP: {} | video_FP: {} | video_TN: {} | video_FN: {}'.format(video_TP, video_FP, video_TN, video_FN))
 
             # save video metrics
-            video_report_col = videos_report_helper.get_report_form()
-
-            video_report_col['Patient'] = patient_no
-            video_report_col['Video'] = video_name
-            video_report_col['FP'] = video_FP
-            video_report_col['TP'] = video_TP
-            video_report_col['FN'] = video_FN
-            video_report_col['TN'] = video_TN
-            video_report_col['TOTAL'] = video_FP + video_TP + video_FN + video_TN
-            video_report_col['CR'] = video_CR
-            video_report_col['OR'] = video_OR
-
-            videos_report_helper.save_report(video_report_col)
+            video_results_dict = report.add_videos_report(patient_no=patient_no, video_no=video_name, FP=video_FP, TP=video_TP, FN=video_FN, TN=video_TN, TOTAL=video_TOTAL, CR=video_CR, OR=video_OR, gt_IB=video_gt_IB, gt_OOB=video_gt_OOB, predict_IB=video_predict_IB, predict_OOB=video_predict_OOB)
+            save_dict_to_csv(video_results_dict, videos_results_path)
 
             # for calc patients metric
             videos_metrics_list.append(video_metrics)
         
         # calc each patients CR, OR
         patient_metrics = MetricHelper().aggregate_calc_metric(videos_metrics_list)
-        patient_CR, patient_OR = patient_metrics['OOB_metric'], patient_metrics['Over_estimation']
+        patient_CR, patient_OR = patient_metrics['CR'], patient_metrics['OR']
         patient_TP, patient_FP, patient_TN, patient_FN = patient_metrics['TP'], patient_metrics['FP'], patient_metrics['TN'], patient_metrics['FN']
+        patient_TOTAL = patient_FP + patient_TP + patient_FN + patient_TN
+
+        patient_gt_IB, patient_gt_OOB, patient_predict_IB, patient_predict_OOB = patient_metrics['gt_IB'], patient_metrics['gt_OOB'], patient_metrics['predict_IB'], patient_metrics['predict_OOB']
 
         print('\t\t => patient_no: {}'.format(patient_no))
         print('\t\t    patient_CR: {:.3f} | patient_OR: {:.3f}'.format(patient_CR, patient_OR))
         print('\t\t    patient_TP: {} | patient_FP: {} | patient_TN: {} | patient_FN: {}'.format(patient_TP, patient_FP, patient_TN, patient_FN))
 
-        # save patient metrics
-        patients_report_col = patients_report_helper.get_report_form()
-
-        patients_report_col['Patient'] = patient_no
-        patients_report_col['FP'] = patient_FP
-        patients_report_col['TP'] = patient_TP
-        patients_report_col['FN'] = patient_FN
-        patients_report_col['TN'] = patient_TN
-        patients_report_col['TOTAL'] = patient_FP + patient_TP + patient_FN + patient_TN
-        patients_report_col['CR'] = patient_CR
-        patients_report_col['OR'] = patient_OR
-
-        patients_report_helper.save_report(patients_report_col)
+        # save patient metrics        
+        patient_results_dict = report.add_patients_report(patient_no=patient_no, FP=patient_FP, TP=patient_TP, FN=patient_FN, TN=patient_TN, TOTAL=patient_TOTAL, CR=patient_CR, OR=patient_OR, gt_IB=patient_gt_IB, gt_OOB=patient_gt_OOB, predict_IB=patient_predict_IB, predict_OOB=patient_predict_OOB)
+        save_dict_to_csv(patient_results_dict, patients_results_path)
     
         # for calc total patients CR, OR
         patients_metrics_list.append(patient_metrics)
@@ -290,11 +309,29 @@ def inference_main(args):
 
     # for calc total patients CR, OR + (mCR, mOR)
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
-    total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['OOB_metric'], total_metrics['Over_estimation']
-            
-    # return mCR, mOR, OR, CR of experiment
-    return args, total_mCR, total_mOR, total_CR, total_OR
+    total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
+
+    report.set_experiment(model=args.model, methods=args.train_method, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, details_path=args.inference_save_dir)
+    report.save_report() # save report
+
+    # SUMMARY
+    patients_CR = report.get_patients_CR()
+    patients_OR = report.get_patients_CR()
+
+    experiment_summary = {
+        'model':args.model,
+        'methods':args.train_method,
+        'inference_fold':args.inference_fold,
+        'mCR':total_mCR,
+        'mOR':total_mOR,
+        'CR':total_CR,
+        'OR':total_OR,
+        'details_path':args.inference_save_dir
+    }
     
+    # return mCR, mOR, OR, CR of experiment
+    return args, experiment_summary, patients_CR, patients_OR
+
 def main():    
     import os
     from core.utils.logging import ReportHelper # report helper (for experiments reuslts)
@@ -307,30 +344,22 @@ def main():
     args = train_main(args)
 
     # 3. inference
-    args, experiment_mCR, experiment_mOR, experiment_CR, experiment_OR = inference_main(args)
+    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-    # 4. save experiments results
-    experiments_results_path = '../results'
-    os.makedirs(experiments_results_path, exist_ok=True)
+    print(experiment_summary)
+    print(patients_CR)
 
-    # using reportHelper
-    patients_report_helper = ReportHelper(report_save_path=os.path.join(experiments_results_path, 'experiments_results.csv'), report_type='experiments')
-    patients_report_col = patients_report_helper.get_report_form()
+    # 4. save experiments summary
+    experiments_sheet_dir = '/OOB_RECOG/template/results' # you should define or change to args
+    experiments_sheet_path = os.path.join(experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+    os.makedirs(experiments_sheet_dir, exist_ok=True)
 
-    patients_report_col['model'] = args.model
-    patients_report_col['method'] = args.train_method
-    patients_report_col['inference_fold'] = args.inference_fold
-    patients_report_col['mCR'] = experiment_mCR
-    patients_report_col['mOR'] = experiment_mOR
-    patients_report_col['CR'] = experiment_CR
-    patients_report_col['OR'] = experiment_OR
-
-    patients_report_helper.save_report(patients_report_col)
+    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
 
 if __name__ == '__main__':
     
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     
     if __package__ is None:
         import sys
