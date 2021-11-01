@@ -61,7 +61,6 @@ class RobotDataset(Dataset):
 
                 if self.args.stage is 'hem_train': 
                     self.load_data_from_hem_idx()
-                    # self.load_data()
 
                 else: # general_train, bs-emb1-online, bs-emb2-online, bs-emb3-online
                     self.load_data()
