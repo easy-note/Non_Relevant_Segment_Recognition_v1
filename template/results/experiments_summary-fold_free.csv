@@ -1,0 +1,2 @@
+,model,methods,inference_fold,mCR,mOR,CR,OR,details_path,model_path,R_10,R_210
+0,mobilenetv3_large_100,normal,free,0.6884765625,0.1417236328125,0.6875,0.137451171875,/code/OOB_Recog/logs/normal-temp/TB_log/version_1/inference_results,/code/OOB_Recog/logs/normal-temp/TB_log/version_1/checkpoints/epoch=0-val_loss=0.0819-last.ckpt,0.6923828125,0.68505859375

@@ -45,22 +45,14 @@ class CAMIO(BaseTrainer):
         self.last_epoch = -1
         self.hem_extract_mode = self.args.hem_extract_mode
 
-
         # hem-online
         if 'online' in self.args.hem_extract_mode:
-            if 'hem-emb' in self.args.hem_extract_mode:
-                self.hem_helper.set_method(self.hem_extract_mode)
+            self.hem_helper.set_method(self.hem_extract_mode)
         
         # hem-offline // hem_train, general_train 에서는 Hem 생성하지 않음.
-        if 'offline' in self.args.hem_extract_mode:
-            if self.args.stage not in ['hem_train', 'general_train']: 
-                # stage=mini_fold_stage_1, 2, 3, 4
-                # hem_helper.set_method
-                if self.args.hem_extract_mode in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
-                    self.hem_helper.set_method(self.hem_extract_mode)
-                    
-                    self.last_epoch = self.args.max_epoch - 1
-
+        elif 'offline' in self.args.hem_extract_mode:
+            self.hem_helper.set_method(self.hem_extract_mode)            
+            self.last_epoch = self.args.max_epoch - 1
 
     def setup(self, stage):
         '''
@@ -118,22 +110,21 @@ class CAMIO(BaseTrainer):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        if self.hem_extract_mode == 'hem-emb-online' and self.training:
+        if 'hem-emb' in self.hem_extract_mode and self.training:
             img_path, x, y = batch
-            y_hat, refine_y, sim_dist = self.hem_helper.hem_cos_hard_sim(self.model, x, y)
-
-            loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, y)
-        elif self.hem_extract_mode == 'hem-emb2-online' and self.training:
+            # loss = self.hem_helper.compute_hem(self.model, x, ys)
+            loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
+            # func = getattr(self.hem_helper, 'hem_cos_hard_sim{}'.format(self.hem_extract_mode.split('-')[-2][-1]))
+            # loss = func(self.model, x, y, self.loss_fn)
+            
+        elif 'hem-focus' in self.hem_extract_mode and self.training:
             img_path, x, y = batch
             
-            y_hat, refine_y, sim_dist, pos_y = self.hem_helper.hem_cos_hard_sim2(self.model, x, y)
-
-            loss = self.loss_fn(y_hat, refine_y) + self.loss_fn(sim_dist, pos_y)
-        elif self.hem_extract_mode == 'hem-emb3-online' and self.training:
-            img_path, x, y = batch
+            func = getattr(self.hem_helper, 'hem_focus{}'.format(self.hem_extract_mode.split('-')[-2][-1]))
             
-            loss = self.hem_helper.hem_cos_hard_sim3(self.model, x, y, self.loss_fn)
-
+            y_hat, y = func(self.model, self.trainset)
+            loss = self.loss_fn(y_hat, y)
+            
         else:
             img_path, x, y = batch
 
@@ -237,18 +228,17 @@ class CAMIO(BaseTrainer):
 
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
-                if self.args.stage not in ['hem_train', 'general_train']: 
-                    if self.hem_extract_mode in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
-                        hem_df, total_dataset_len_list, hem_dataset_len_list = self.hem_helper.compute_hem(self.model, outputs)
-                        hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+                if self.args.stage not in ['hem_train', 'general_train'] and 'offline' in self.args.hem_extract_mode: 
+                    hem_df, total_dataset_len_list, hem_dataset_len_list = self.hem_helper.compute_hem(self.model, outputs)
+                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
 
-                        # field names  
-                        cols = ['hard_neg_df', 'hard_pos_df', 'vanila_neg_df', 'vanila_pos_df']  
-                        with open(os.path.join(self.restore_path, 'DATASET_COUNT.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), 'w',newline='') as f: 
-                            write = csv.writer(f) 
-                            write.writerow(cols) 
-                            write.writerow(total_dataset_len_list) 
-                            write.writerow(hem_dataset_len_list)
+                    # field names  
+                    cols = ['hard_neg_df', 'hard_pos_df', 'vanila_neg_df', 'vanila_pos_df']  
+                    with open(os.path.join(self.restore_path, 'DATASET_COUNT.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), 'w',newline='') as f: 
+                        write = csv.writer(f) 
+                        write.writerow(cols) 
+                        write.writerow(total_dataset_len_list) 
+                        write.writerow(hem_dataset_len_list)
 
 
     def test_step(self, batch, batch_idx):

@@ -59,7 +59,8 @@ class RobotDataset(Dataset):
                 self.patients_info_key = train_videos # 80 case
                 self.patients_name = self.patients_info_key[self.args.fold]
 
-                if self.args.stage is 'hem_train': 
+                if 'offline' in self.args.hem_extract_mode and self.args.stage is 'hem_train': 
+                    # self.load_data()
                     self.load_data_from_hem_idx()
 
                 else: # general_train, bs-emb1-online, bs-emb2-online, bs-emb3-online
