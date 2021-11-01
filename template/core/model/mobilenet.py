@@ -65,7 +65,7 @@ class MobileNet(nn.Module):
                 nn.Linear(num_ftrs, 2) #last_channel, num_classes
             )
             
-        if 'hem-emb' in self.args.train_method:
+        if 'hem-emb' in self.args.hem_extract_mode:
             self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(proxy_feat, 2))
             

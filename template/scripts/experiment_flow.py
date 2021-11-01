@@ -1,3 +1,7 @@
+
+global STAGE_LIST 
+STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
+
 def get_experiment_args():
     from core.config.base_opts import parse_opts
 
@@ -36,22 +40,43 @@ def get_experiment_args():
     args.fold = '1'
     args.data_base_path = '/raid/img_db'
     ### hem opts
-    args.generate_hem_mode = 'normal' # ['normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'] 
-    
+    # args.generate_hem_mode = 'normal' # ['normal', 'hem-bs', 'hem-emb', 'hem-vi-softmax', 'hem-vi-voting'] 
+    args.hem_extract_mode = 'hem-softmax-offline'
+
     ### train args
-    # args.save_path = '/OOB_RECOG/logs/211025_TRAIN_NORMAL-FOLD1-IBratio1'
+    args.save_path = '/OOB_RECOG/logs/211030-module-test'
     args.num_gpus = 1
     # args.batch_size = 128
 
     ### train args
     # args.save_path = '/OOB_RECOG/logs/emb'
-    # args.max_epoch = 20
+    args.max_epoch = 3
     args.min_epoch = 0
 
     ### etc opts
     args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
 
     return args
+
+def set_args_per_stage(args, ids, stage):
+    global STAGE_LIST 
+
+    args.stage = stage
+
+    if ids > 3:
+        args.mini_fold = 'general'        
+    else:
+        args.mini_fold = str(ids)
+
+    return args
+
+
+def check_hem_online_mode(args):
+    if 'online' in args.hem_extract_mode.lower():
+        return True
+    else:
+        return False 
+
 
 def get_inference_model_path(restore_path):
     # from finetuning model
@@ -63,7 +88,6 @@ def get_inference_model_path(restore_path):
     for f_name in ckpts :
         if f_name.find('last') != -1 :
             return f_name
-
 
 def save_experiments(args):
     # TO DO : inference_main return으로 experiments 결과 저장, 저장하기 위해 experiemnts results sheet(csv) path가 args에 포함되어 있어야 하지 않을까?
@@ -83,6 +107,8 @@ def train_main(args):
 
     from torchsummary import summary
 
+    import os
+
     tb_logger = pl_loggers.TensorBoardLogger(
         save_dir=args.save_path,
         name='TB_log',
@@ -101,8 +127,8 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            limit_train_batches=0.01,
-                            # limit_val_batches=0.01,
+                            limit_train_batches=0.1,
+                            limit_val_batches=0.1,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -180,16 +206,46 @@ def inference_main(args):
     
     
 def main():    
+    global STAGE_LIST 
 
     # 0. set each experiment args 
     args = get_experiment_args()
     
     import os
     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
-    
-    # 1. hyper prameter opts setup for experiments flow
+
+    # online mode
+    if check_hem_online_mode(args):
+        args.mini_fold = 'general'
+        args.stage = 'general_train'
+
+        args.hem_extract_mode = 'hem-emb-online'
+
+        args = train_main(args)
+
+    # offline mode
+    else:
+        for ids, stage in enumerate(STAGE_LIST):
+            args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
+
+            print('\n\n')
+            print('====='*7, args.stage.upper(),'====='*7)
+            print('\n\n')
+
+            print(args)
+
+            args = train_main(args)
+
+            if ids > 3:
+                args, mCR, mOR, CR, OR = inference_main(args)            
+
+
+            
+
+        
+    # # 1. hyper prameter opts setup for experiments flow
     # 2. train
-    args = train_main(args)
+    # args = train_main(args)
 
     # 3. inference
     #args, mCR, mOR, CR, OR = inference_main(args)
