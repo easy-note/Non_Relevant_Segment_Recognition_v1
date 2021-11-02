@@ -108,6 +108,7 @@ def train_main(args):
         default_hp_metric=False)
 
     x = CAMIO(args)
+
     print(summary(x.model, (3,224,224))) # check model arch
     # x = TheatorTrainer(args)
     if args.num_gpus > 1:
@@ -125,11 +126,11 @@ def train_main(args):
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
 
-    trainer.fit(x)
+    # trainer.fit(x)
 
-    # args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_0') # TO DO: we should define restore path
+    args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_28') # TO DO: we should define restore path
     
-    args.restore_path = os.path.join(x.restore_path)
+    # args.restore_path = os.path.join(x.restore_path)
     print('restore_path: ', args.restore_path)
     
     return args

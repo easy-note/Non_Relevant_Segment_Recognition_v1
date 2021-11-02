@@ -11,7 +11,9 @@ from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR
 class VisualTool:
     def __init__(self, gt_list, patient_name, save_path):
         self.RS_CLASS, self.NRS_CLASS = (0,1)
+        self.FN_CLASS, self.FP_CLASS = (2,3)
         self.visual_helper = VisualHelper()
+        self.EXCEPTION_NUM = -100
 
         self.gt_list = gt_list
         self.patient_name = patient_name
@@ -21,7 +23,7 @@ class VisualTool:
         assert visual_type in ['predict', 'hem'], 'NOT SUPPORT VISUAL MODE'
 
         if visual_type == 'predict':
-            fig, ax = plt.subplots(3,1,figsize=(26,20)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
+            fig, ax = plt.subplots(3,1,figsize=(20,18)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
         elif visual_type == 'hem':
             fig, ax = plt.subplots(1,1,figsize=(26,20)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
 
@@ -33,30 +35,54 @@ class VisualTool:
     def set_patient_name(self, paitent_name):
         self.patient_name = patient_name
 
+    # for text on bar
+    def present_text(self, ax, bar, text, color='black'):
+        for rect in bar:
+            posx = rect.get_x()
+            posy = rect.get_y() - rect.get_height()*0.1
+            print(posx, posy)
+            ax.text(posx, posy, text, color=color, rotation=0, ha='left', va='bottom')
+
+    # for section metric
+    def draw_plot(self, ax, title, x_value, y_value, color='blue'):
+        ax.plot(x_value, y_value, marker='o', markersize=4, alpha=1.0, color=color)
+
+        # set title
+        ax.set_title(title)
+        
+        # set x ticks
+        ax.set_xticks(x_value)
+        xtick_labels = ['{}'.format(frame) if i_th % 2 == 0 else '\n{}'.format(frame) for i_th, frame in enumerate(x_value)]
+        ax.set_xticklabels(xtick_labels) # xtick change
+        ax.xaxis.set_tick_params(labelsize=6)
+        ax.set_xlabel('Start Frame', fontsize=12)
+
+        # 보조선
+        ax.set_axisbelow(True)
+        ax.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
+
     def visual_predict(self, predict_list, model_name, inference_interval):
         # TO-DO: if call gt_list from self.patient_name, better
         # TO-DO: visualization oob ratio, metrics on ax
+        
+        # calc section metric per model
+        window_size = 100 # number of elements in each section
+        section_num = 2 # section number // it will be overlap
 
         gt_list, predict_list = self.visual_helper.fit_to_min_length(self.gt_list, predict_list)
-        metrics = self.visual_helper.calc_metric(gt_list, predict_list)
-        calc_index = self.visual_helper.get_calc_index(gt_list, predict_list)
-
-        print('\nmetrics')
-        print(metrics)
-
-        print('\n\ncalc_index')
-        print(calc_index)
+        metrics = self.visual_helper.calc_metrics_with_index(gt_list, predict_list)
+        metrics_per_section = self.visual_helper.calc_section_metrics(gt_list, predict_list, window_size, section_num) # not yet used
         
         fig, ax = self._get_plt('predict')
         
         ### for plt variable, it should be pair synk
-        label_names = ['RS', 'NRS']
-        colors = ['cadetblue', 'orange']
+        label_names = ['RS', 'NRS', 'FN', 'FP']
+        colors = ['cadetblue', 'orange', 'blue', 'red']
         height = 0.5 # bar chart thic
 
         ### prepare data ###
         '''
-        predict_data = {'GT': [1, 1, 1, 0, 0, 1, 1, 1], # 0번 ~ 2번 frame , 5번 ~ 7번 frame
+        visual_data = {'GT': [1, 1, 1, 0, 0, 1, 1, 1], # 0번 ~ 2번 frame , 5번 ~ 7번 frame
 	        'Model A': [0, 0, 1, 1, 0, 0, 1, 1], # 2번 ~ 3번 frame
 			'Model B': [1, 0, 1, 1, 1, 0, 1, 0] # 0번 ~ 0번 frame, 2번 ~ 4번 frame, 6번 ~ 6번 frame
         }
@@ -79,13 +105,20 @@ class VisualTool:
         time_label = [self.visual_helper.idx_to_time(idx, fps=30) for idx in frame_label]
         yticks = ['GT', 'PREDICT'] # y축 names, 순서중요
 
-        predict_data = {
+        visual_data = {
             'GT':gt_list,
             'PREDICT':predict_list,
         }
+
+        # for visualize FP, FN // change class
+        predict_df = pd.DataFrame(predict_list)
+        predict_df.iloc[metrics['FN_idx'],] = self.FN_CLASS
+        predict_df.iloc[metrics['FP_idx'],] = self.FP_CLASS
+        visual_data['PREDICT'] = list(np.array(predict_df[0].tolist()))
+
         encode_data = {}
         for y_name in yticks : # run_length coding
-            encode_data[y_name] = pd.DataFrame(data=self.visual_helper.encode_list(predict_data[y_name]), columns=[y_name, 'class']) # [length, value]
+            encode_data[y_name] = pd.DataFrame(data=self.visual_helper.encode_list(visual_data[y_name]), columns=[y_name, 'class']) # [length, value]
 
         # arrange data
         runlength_df = pd.DataFrame(range(0,0)) # empty df
@@ -103,6 +136,8 @@ class VisualTool:
         ##### initalize label for legned, this code should be write before writing barchart #####
         init_bar = ax[0].barh(range(len(yticks)), np.zeros(len(yticks)), label=label_names[self.RS_CLASS], height=height, color=colors[self.RS_CLASS]) # dummy data
         init_bar = ax[0].barh(range(len(yticks)), np.zeros(len(yticks)), label=label_names[self.NRS_CLASS], height=height, color=colors[self.NRS_CLASS]) # dummy data
+        init_bar = ax[0].barh(range(len(yticks)), np.zeros(len(yticks)), label=label_names[self.FN_CLASS], height=height, color=colors[self.FN_CLASS]) # dummy data
+        init_bar = ax[0].barh(range(len(yticks)), np.zeros(len(yticks)), label=label_names[self.FP_CLASS], height=height, color=colors[self.FP_CLASS]) # dummy data
 	    ##### #### #### #### ##### #### #### #### 
 
         # data processing for barchart
@@ -119,18 +154,23 @@ class VisualTool:
             
             bar = ax[0].barh(range(len(yticks)), widths, left=starts, height=height, color=colors[frame_class]) # don't input label
 
-        ### write figure 
+        # write text on PREDICT bar
+        gt_oob_ratio = metrics['gt_OOB'] / (metrics['gt_IB'] + metrics['gt_OOB'])
+        predict_oob_ratio = metrics['predict_OOB'] / (metrics['predict_IB'] + metrics['predict_OOB'])
+        text_bar = ax[0].barh(1, 0, height=height) # dummy data        
+        self.present_text(ax[0], text_bar, 'CR : {:.3f} | OR : {:.3f} | JACCARD: {:.3f} | OOB_RATIO(GT) : {:.2f} | OOB_RATIO(PD) : {:.2f}'.format(metrics['CR'], metrics['OR'], metrics['Jaccard'], gt_oob_ratio, predict_oob_ratio))
+
+        ### write on figure 
         # set title
         title_name = 'Predict of {}'.format(self.patient_name)
         sub_title_name = 'model: {} | inferene interval: {}'.format(model_name, inference_interval)
         fig.suptitle(title_name, fontsize=16)
         ax[0].set_title(sub_title_name)
 
-        # set xticks
-        step_size = 30 # xtick step size : How many frame count in One section
-        ax[0].set_xticks(range(0, len(frame_label), step_size)) # step_size
+        # set xticks pre section size
+        ax[0].set_xticks(range(0, len(frame_label), window_size))
         
-        xtick_labels = ['{}\n{}'.format(time, frame) if i_th % 2 == 0 else '\n\n{}\n{}'.format(time, frame) for i_th, (time, frame) in enumerate(zip(frame_label[::step_size], time_label[::step_size]))]
+        xtick_labels = ['{}\n{}'.format(time, frame) if i_th % 2 == 0 else '\n\n{}\n{}'.format(time, frame) for i_th, (time, frame) in enumerate(zip(frame_label[::window_size], time_label[::window_size]))]
         ax[0].set_xticklabels(xtick_labels) # xtick change
         ax[0].xaxis.set_tick_params(labelsize=6)
         ax[0].set_xlabel('Frame / Time (h:m:s:fps)', fontsize=12)
@@ -149,7 +189,19 @@ class VisualTool:
         ax[0].set_axisbelow(True)
         ax[0].xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
 
-         ### file write
+        # 10. draw subplot ax (section metrics)
+        section_start_idx = np.array(metrics_per_section['start_idx']) * inference_interval
+        section_start_idx = section_start_idx.tolist()
+        CR_value = metrics_per_section['section_CR']
+        OR_value = metrics_per_section['section_OR']
+
+        CR_value = [1.0 if val==self.EXCEPTION_NUM else val for val in CR_value] # -100 EXP 일 경우 1로 처리
+        OR_value = [0.0 if val==self.EXCEPTION_NUM else val for val in OR_value] # -100 EXP 일 경우 0로 처리
+        
+        self.draw_plot(ax[1], 'CR of Predict', section_start_idx, CR_value, color='blue')
+        self.draw_plot(ax[2], 'OR of Predict', section_start_idx, OR_value, color='red')
+
+        ### file write
 	    # fig.tight_layout() # subbplot 간격 줄이기
         plt.show()
         plt.savefig(self.save_path, format='png', dpi=500)
@@ -179,8 +231,6 @@ class VisualHelper:
 
         for length, group in run_length : 
             decode_list += [group] * length
-        
-        # print(decode_list)
 
         return decode_list
 
@@ -196,28 +246,51 @@ class VisualHelper:
 
         return converted_time
 
+    def calc_section_metrics(self, gt_list, predict_list, window_size, section_num):
+        metrics_per_section = {
+            'start_idx':[],
+            'end_idx':[],
+            'section_CR':[],
+            'section_OR':[],
+        }
 
-    def calc_metric(self, gt_list, predict_list):
+        data = {
+            'GT': gt_list,
+            'PREDICT': predict_list,
+        }
+
+        total_info_df = pd.DataFrame(data)
+        total_len = len(total_info_df)
+        slide_window_start_end_idx= [[start_idx * window_size, (start_idx + section_num) * window_size] for start_idx in range(int(total_len/window_size))] # overlapping section
+
+        # calc metric per section
+        for start, end in slide_window_start_end_idx : # slicing            
+            section_df = total_info_df.iloc[start:end, ]
+
+            section_gt_list, section_predict_list = section_df['GT'].tolist(), section_df['PREDICT'].tolist()
+            section_metrics = self.calc_metrics_with_index(section_gt_list, section_predict_list)
+            
+            end = start + len(section_df) - 1 # truly end idx
+
+            metrics_per_section['start_idx'].append(start)
+            metrics_per_section['end_idx'].append(end)
+            metrics_per_section['section_CR'].append(section_metrics['CR'])
+            metrics_per_section['section_OR'].append(section_metrics['OR'])
+
+        return metrics_per_section
+        
+    def calc_metrics_with_index(self, gt_list, predict_list):
         metric_helper = MetricHelper()
         metric_helper.write_preds(np.array(predict_list), np.array(gt_list))
         metrics = metric_helper.calc_metric()
-
-        return metrics
-
-    def get_calc_index(self, gt_list, predict_list):
-        calc_index = {
-            'TP':[],
-            'TN':[],
-            'FP':[],
-            'FN':[],
-        }
-
+        
+        # with metric index
         gt_np = np.array(gt_list)
         predict_np = np.array(predict_list)
 
-        calc_index['TP'] = np.where((predict_np == self.NRS_CLASS) | (gt_np == self.NRS_CLASS))[0].tolist()
-        calc_index['TN'] = np.where((predict_np == self.RS_CLASS) | (gt_np == self.RS_CLASS))[0].tolist()
-        calc_index['FP'] = np.where((predict_np == self.NRS_CLASS) | (gt_np == self.RS_CLASS))[0].tolist()
-        calc_index['FN'] = np.where((predict_np == self.RS_CLASS) | (gt_np == self.NRS_CLASS))[0].tolist()
+        metrics['TP_idx'] = np.where((predict_np == self.NRS_CLASS) & (gt_np == self.NRS_CLASS))[0].tolist()
+        metrics['TN_idx'] = np.where((predict_np == self.RS_CLASS) & (gt_np == self.RS_CLASS))[0].tolist()
+        metrics['FP_idx'] = np.where((predict_np == self.NRS_CLASS) & (gt_np == self.RS_CLASS))[0].tolist()
+        metrics['FN_idx'] = np.where((predict_np == self.RS_CLASS) & (gt_np == self.NRS_CLASS))[0].tolist()
 
-        return calc_index
+        return metrics
