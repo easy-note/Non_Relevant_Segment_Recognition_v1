@@ -74,7 +74,7 @@ class MetricHelper():
         metrics['gt_OOB']= self.gt_list.count(self.OOB_CLASS)
         metrics['predict_IB']= self.pred_list.count(self.IB_CLASS)
         metrics['predict_OOB']= self.pred_list.count(self.OOB_CLASS)
-
+        
         # exception
         for k, v in metrics.items():
             if v == 'None': # ConfusionMetrix return

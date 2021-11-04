@@ -90,7 +90,7 @@ def parse_opts():
             action='store_true',
             help='If true, keep training from the checkpoint')
 
-    parser.add_argument('--restore_path', 
+    parser.add_argument('-- ', 
             type=str, 
             default=None, 
             help='Resume or test to train the model loaded from the path')
@@ -199,12 +199,18 @@ def parse_opts():
 
     parser.add_argument('--hem_extract_mode', type=str,
             default='hem-softmax-offline', 
-            choices=['general', 'hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 'hem-emb-online', 'hem-emb2-online', 'hem-emb3-online'],
+            choices=['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 
+                     'hem-emb1-online', 'hem-emb2-online', 'hem-emb3-online','hem-emb4-online', 
+                     'hem-focus1-online', 'hem-focus2-online'],
             help='Select train method, normal or hem method')
             
     parser.add_argument('--top_ratio', type=float,
             default=7/100,
             help='Select HEM top ratio')
+    
+    parser.add_argument('--balance_step', type=int,
+            default=3,
+            help='?')
 
     # -------------- etc --------------------
     parser.add_argument('--random_seed', type=int, default=10, help='dataset random seed')
@@ -212,6 +218,23 @@ def parse_opts():
     parser.add_argument('--use_lightning_style_save', action='store_true', help='If true, use lightning save module')
 
     parser.add_argument('--save_top_n', type=int, default=1, help='dataset random seed')
+    
+    parser.add_argument('--inference_interval', type=int, 
+                        default=30,
+                        help='Inference Interval of frame')
 
+    parser.add_argument('--inference_fold',
+                    default='free',
+                    type=str,
+                    choices=['1', '2', '3', '4', '5', 'free'],
+                    help='valset 1, 2, 3, 4, 5, free')
+
+    parser.add_argument('--experiments_sheet_dir', type=str, 
+                        default='/code/OOB_Recog/template/results',
+                        help='root directory for experimets results')
+    
+    parser.add_argument('--trial', type=int,
+            default=1,
+            help='?')
 
     return parser
