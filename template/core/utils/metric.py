@@ -79,7 +79,7 @@ class MetricHelper():
         for k, v in metrics.items():
             if v == 'None': # ConfusionMetrix return
                 metrics[k] = self.EXCEPTION_NUM
-            elif np.isinf(v): # numpy return
+            elif np.isinf(v) or np.isnan(v): # numpy return
                 metrics[k] = self.EXCEPTION_NUM
 
         self.pred_list = []
@@ -143,7 +143,7 @@ class MetricHelper():
         for k, v in advanced_metrics.items():
             if v == 'None': # ConfusionMetrix return
                 advanced_metrics[k] = self.EXCEPTION_NUM
-            elif np.isinf(v): # numpy return
+            elif np.isinf(v) or np.isnan(v): # numpy return
                 advanced_metrics[k] = self.EXCEPTION_NUM
 
         return advanced_metrics
