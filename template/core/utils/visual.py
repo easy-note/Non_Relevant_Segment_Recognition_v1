@@ -72,13 +72,18 @@ class VisualTool:
         ax.set_axisbelow(True)
         ax.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
 
-    def visual_predict(self, predict_list, model_name, inference_interval):
+    def visual_predict(self, predict_list, model_name, inference_interval, window_size = 100, section_num = 2):
         # TO-DO: if call gt_list from self.patient_name, better
         # TO-DO: visualization oob ratio, metrics on ax
+        '''
+        predict_list: [1,0,0...]
+        model_name: str - 'mobilenet .. ' => title name
+        inferene_interval: int
+        inference_interval: number of elements in each section => title name
+        section number: number of elements in each section => title name
+        '''
         
         # calc section metric per model
-        window_size = 100 # number of elements in each section
-        section_num = 2 # section number // it will be overlap
 
         gt_list, predict_list = self.visual_helper.fit_to_min_length(self.gt_list, predict_list)
         metrics = self.visual_helper.calc_metrics_with_index(gt_list, predict_list)
