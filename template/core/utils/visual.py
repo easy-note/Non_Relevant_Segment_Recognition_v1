@@ -23,7 +23,15 @@ class VisualTool:
         assert visual_type in ['predict', 'hem'], 'NOT SUPPORT VISUAL MODE'
 
         if visual_type == 'predict':
-            fig, ax = plt.subplots(3,1,figsize=(20,18)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
+            fig, ax = plt.subplots(3,1,figsize=(18,15)) # 1x1 figure matrix 생성, figsize=(가로, 세로) 크기지정
+
+            plt.subplots_adjust(left=0.125,
+                    bottom=0.1, 
+                    right=0.9, 
+                    top=0.9, 
+                    wspace=0, 
+                    hspace=0.35)
+
         elif visual_type == 'hem':
             fig, ax = plt.subplots(1,1,figsize=(26,20)) # 1x1 figure matrix 생성, 가로(18인치)x세로(20인치) 크기지정
 
@@ -44,7 +52,7 @@ class VisualTool:
             ax.text(posx, posy, text, color=color, rotation=0, ha='left', va='bottom')
 
     # for section metric
-    def draw_plot(self, ax, title, x_value, y_value, color='blue'):
+    def draw_plot(self, ax, title, x_value, y_value, y_min, y_max, color='blue'):
         ax.plot(x_value, y_value, marker='o', markersize=4, alpha=1.0, color=color)
 
         # set title
@@ -56,6 +64,9 @@ class VisualTool:
         ax.set_xticklabels(xtick_labels) # xtick change
         ax.xaxis.set_tick_params(labelsize=6)
         ax.set_xlabel('Start Frame', fontsize=12)
+        
+        # set y ticks
+        ax.set_ylim(y_min, y_max)
 
         # 보조선
         ax.set_axisbelow(True)
@@ -163,7 +174,7 @@ class VisualTool:
         ### write on figure 
         # set title
         title_name = 'Predict of {}'.format(self.patient_name)
-        sub_title_name = 'model: {} | inferene interval: {}'.format(model_name, inference_interval)
+        sub_title_name = 'model: {} | inferene interval: {} | windows size: {} | section num: {}'.format(model_name, inference_interval, window_size, section_num)
         fig.suptitle(title_name, fontsize=16)
         ax[0].set_title(sub_title_name)
 
@@ -198,8 +209,8 @@ class VisualTool:
         CR_value = [1.0 if val==self.EXCEPTION_NUM else val for val in CR_value] # -100 EXP 일 경우 1로 처리
         OR_value = [0.0 if val==self.EXCEPTION_NUM else val for val in OR_value] # -100 EXP 일 경우 0로 처리
         
-        self.draw_plot(ax[1], 'CR of Predict', section_start_idx, CR_value, color='blue')
-        self.draw_plot(ax[2], 'OR of Predict', section_start_idx, OR_value, color='red')
+        self.draw_plot(ax[1], 'CR of Predict', section_start_idx, CR_value, y_min=-1.0, y_max=1.0, color='blue')
+        self.draw_plot(ax[2], 'OR of Predict', section_start_idx, OR_value, y_min=0.0, y_max=1.0, color='red')
 
         ### file write
 	    # fig.tight_layout() # subbplot 간격 줄이기
