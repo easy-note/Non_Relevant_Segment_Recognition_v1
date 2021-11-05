@@ -38,7 +38,7 @@ class TIMM(nn.Module):
                 
         self.classifier = nn.Linear(model.num_features, 2)
         
-        if 'hem-emb' in self.args.hem_extract_mode:
+        if 'hem-emb' in self.args.hem_extract_mode or 'hem-focus' in self.args.hem_extract_mode:
             self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(model.num_features, 2))
         

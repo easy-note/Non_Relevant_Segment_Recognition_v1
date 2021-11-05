@@ -10,6 +10,7 @@ from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
 
+
 import csv
 
 
@@ -76,13 +77,25 @@ class CAMIO(BaseTrainer):
                 self.testset = LapaDataset(self.args, state='val')
 
     def train_dataloader(self):
-        return DataLoader(
-            self.trainset,
-            batch_size=self.args.batch_size,
-            num_workers=self.args.num_workers,
-            shuffle=True,
-            drop_last=True,
-        )
+        if 'hem-focus' in self.hem_extract_mode:
+            print(len(self.trainset)//self.args.batch_size,)
+            
+            return DataLoader(
+                self.trainset,
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                sampler=FocusSampler(self.trainset.label_list,
+                                     self.args.batch_size,
+                                     self.args.sampling_type)
+            )
+        else:
+            return DataLoader(
+                self.trainset,
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                shuffle=True,
+                drop_last=True,
+            )
 
     def val_dataloader(self):
         return DataLoader(
@@ -112,18 +125,12 @@ class CAMIO(BaseTrainer):
     def training_step(self, batch, batch_idx):
         if 'hem-emb' in self.hem_extract_mode and self.training:
             img_path, x, y = batch
-            # loss = self.hem_helper.compute_hem(self.model, x, ys)
             loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
-            # func = getattr(self.hem_helper, 'hem_cos_hard_sim{}'.format(self.hem_extract_mode.split('-')[-2][-1]))
-            # loss = func(self.model, x, y, self.loss_fn)
             
         elif 'hem-focus' in self.hem_extract_mode and self.training:
             img_path, x, y = batch
             
-            func = getattr(self.hem_helper, 'hem_focus{}'.format(self.hem_extract_mode.split('-')[-2][-1]))
-            
-            y_hat, y = func(self.model, self.trainset)
-            loss = self.loss_fn(y_hat, y)
+            loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
             
         else:
             img_path, x, y = batch
@@ -171,6 +178,7 @@ class CAMIO(BaseTrainer):
         if self.sanity_check:
             print('sanity check')
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+            print('SANITY RESTORE PATH : ', self.restore_path)
 
             self.sanity_check = False
 

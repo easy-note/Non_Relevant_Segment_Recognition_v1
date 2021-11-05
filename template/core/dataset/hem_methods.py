@@ -19,11 +19,7 @@ class HEMHelper():
         self.NON_HEM, self.HEM = (0, 1)
         self.IB_CLASS, self.OOB_CLASS = (0, 1)
         self.bsz = self.args.batch_size
-        self.balance_pick_step = self.args.balance_step
         self.cnt = 0
-        
-    def set_balance_pick_step(self, step):
-        self.self.balance_pick_step = step
         
     def set_method(self, method):
         if method in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
@@ -84,21 +80,12 @@ class HEMHelper():
 
 
         return final_assets_df, hem_dataset_len_list
-
-
-    # def compute_hem(self, model, dataset):
-    #     if self.method == 'hem-vi':
-    #         return self.hem_vi(model, dataset)
-    #     else: # exception
-    #         return None
         
     def compute_hem(self, *args):
         if self.method == 'hem-vi':
             return self.hem_vi(*args)
-        elif self.method == 'hem-emb1-online' or self.method == 'hem-emb2-online':
-            return self.hem_cos_hard_sim1(*args)
-        elif self.method == 'hem-emb3-online' or self.method == 'hem-emb4-online':
-            return self.hem_cos_hard_sim3(*args)
+        elif self.method == 'hem-emb-online':
+            return self.hem_cos_hard_sim(*args)
         else: # exception
             return None
 
@@ -326,57 +313,7 @@ class HEMHelper():
 
         return hem_final_df, total_dataset_len_list, hem_dataset_len_list
     
-    def hem_cos_hard_sim1(self, model, x, y):
-        emb, y_hat = model(x)
-        sim_dist = emb @ model.proxies
-        sim_preds = torch.argmax(sim_dist, -1)
-        
-        correct_answer = sim_preds == y
-        wrong_answer = sim_preds != y
-        
-        pos_y_hat = y_hat[correct_answer]
-        pos_y = y[correct_answer]
-        
-        neg_y_hat = y_hat[wrong_answer]
-        neg_y = y[wrong_answer]
-        
-        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
-        wrong_ids = torch.argsort(wrong_sim_dist)[:16]
-        neg_y_hat = neg_y_hat[wrong_ids]
-        neg_y = neg_y[wrong_ids]
-        
-        sim_y_hat = torch.cat((pos_y_hat, neg_y_hat), 0)
-        sim_y = torch.cat((pos_y, neg_y), -1)
-        
-        return sim_y_hat, sim_y, sim_dist
-    
-    def hem_cos_hard_sim2(self, model, x, y):
-        emb, y_hat = model(x)
-        sim_dist = emb @ model.proxies
-        sim_preds = torch.argmax(sim_dist, -1)
-        
-        correct_answer = sim_preds == y
-        wrong_answer = sim_preds != y
-        
-        pos_y_hat = y_hat[correct_answer]
-        pos_y = y[correct_answer]
-        
-        neg_y_hat = y_hat[wrong_answer]
-        neg_y = y[wrong_answer]
-        
-        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
-        wrong_ids = torch.argsort(wrong_sim_dist)[:16]
-        neg_y_hat = neg_y_hat[wrong_ids]
-        neg_y = neg_y[wrong_ids]
-        
-        sim_y_hat = torch.cat((pos_y_hat, neg_y_hat), 0)
-        sim_y = torch.cat((pos_y, neg_y), -1)
-        
-        sim_dist = sim_dist[correct_answer]
-        
-        return sim_y_hat, sim_y, sim_dist, pos_y
-    
-    def hem_cos_hard_sim3(self, model, x, y, loss_fn):
+    def hem_cos_hard_sim(self, model, x, y, loss_fn):
         emb, y_hat = model(x)
         sim_dist = emb @ model.proxies
         sim_preds = torch.argmax(sim_dist, -1)
@@ -403,99 +340,6 @@ class HEMHelper():
         for wi in range(len(w)):
             neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
             
-        return (pos_loss + neg_loss) / 2. 
+        return (pos_loss + neg_loss) / 2. + loss_fn(sim_dist[correct_answer], pos_y)
+        # return (pos_loss + neg_loss) / 2. + loss_fn(sim_dist, y)
     
-    def hem_cos_hard_sim4(self, model, x, y, loss_fn):
-        emb, y_hat = model(x)
-        sim_dist = emb @ model.proxies
-        sim_preds = torch.argmax(sim_dist, -1)
-        
-        correct_answer = sim_preds == y
-        wrong_answer = sim_preds != y
-        
-        pos_y_hat = y_hat[correct_answer]
-        pos_y = y[correct_answer]
-        
-        pos_loss = loss_fn(pos_y_hat, pos_y)
-        
-        neg_y_hat = y_hat[wrong_answer]
-        neg_y = y[wrong_answer]
-        
-        wrong_sim_dist = sim_dist[wrong_answer, neg_y]
-        wrong_ids = torch.argsort(wrong_sim_dist)
-        
-        w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
-        neg_y_hat = neg_y_hat[wrong_ids]
-        neg_y = neg_y[wrong_ids]
-        
-        neg_loss = 0
-        for wi in range(len(w)):
-            neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
-            
-        return (pos_loss + neg_loss) / 2. + loss_fn(sim_dist, y) * 0.5
-    
-    def hem_focus1(self, model, dataset):
-        labels_list = np.array(dataset.label_list)
-        oob_ids = np.where(labels_list == 1)
-        
-        cover = self.bsz // 2
-        
-        while True:
-            idx = np.random.randomint(0, len(oob_ids), 1)
-            
-            if oob_ids[idx] - cover >= 0 and oob_ids[idx] + cover < len(label_list):
-                lbs = labels_lsit[oob_ids[idx] - cover:oob_ids[idx] + cover]
-                if sum(lbs) != len(lbs):
-                    break
-        
-        x = []
-        y = []
-        
-        for lb in lbs:
-            img_path, img, label = dataset.__getitem__(lb)
-            x.append(img)
-            y.append(label)
-            
-        x = torchv.vstack(x, 0)
-         
-        y_hat = model(x)
-        
-        return y_hat, y
-    
-    def hem_focus2(self, model, dataset):
-        labels_list = np.array(dataset.label_list)
-        oob_ids = np.where(labels_list == 1)
-        
-        cover = self.bsz // 2
-        
-        if self.cnt % self.balance_pick_step == 0:
-            ib_ids = np.where(labels_list == 0)
-            ib_samples = np.random.choice(ib_ids, self.bsz // 2)
-            oob_samples = np.random.choice(oob_ids, self.bsz // 2)
-            lbs = np.concatenate((ib_samples,oob_samples), -1)
-        else:
-            while True:
-                idx = np.random.randomint(0, len(oob_ids), 1)
-                
-                if oob_ids[idx] - cover >= 0 and oob_ids[idx] + cover < len(label_list):
-                    lbs = labels_lsit[oob_ids[idx] - cover:oob_ids[idx] + cover]
-                    if sum(lbs) != len(lbs):
-                        break
-        
-        self.cnt += 1
-        if self.cnt % 100 == 0:
-            self.cnt = 0
-        
-        x = []
-        y = []
-        
-        for lb in lbs:
-            img_path, img, label = dataset.__getitem__(lb)
-            x.append(img)
-            y.append(label)
-            
-        x = torchv.vstack(x, 0)
-         
-        y_hat = model(x)
-        
-        return y_hat, y

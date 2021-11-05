@@ -44,6 +44,57 @@ class OverSampler(Sampler):
 
     def __len__(self):
         return len(self.labels)
+    
+    
+class FocusSampler(Sampler):
+    def __init__(self, labels, batch_size, sampling_type):
+        self.labels = labels
+        self.d_len = len(self.labels) #- (len(self.labels) % batch_size)
+        self.batch_size = batch_size
+        self.sampling_type = sampling_type
+        
+    def __len__(self):
+        return self.d_len
+    
+    def __iter__(self):
+        idx_list = [0] * self.d_len
+        
+        label_list = np.array(self.labels)
+        oob_ids = np.where(label_list == 1)[0]
+        ib_ids = np.where(label_list == 0)[0]
+        
+        if self.sampling_type == 1:
+            cover = self.batch_size // 4
+            
+            for i in range(self.d_len // self.batch_size):
+                while True:
+                    idx = np.random.randint(0, len(oob_ids), 1)[0]
+                    
+                    if oob_ids[idx] - cover >= 0 and oob_ids[idx] + cover < len(label_list):
+                        lbs = label_list[oob_ids[idx] - cover:oob_ids[idx] + cover]
+                        if sum(lbs) != len(lbs):
+                            break
+                
+                ib_samples = np.random.choice(ib_ids, self.batch_size // 4)
+                oob_samples = np.random.choice(oob_ids, self.batch_size // 4)
+                lbs = np.concatenate((lbs, label_list[ib_samples], label_list[oob_samples]), -1)
+                
+                idx_list[i*self.batch_size:(i+1)*self.batch_size] = lbs
+        elif self.sampling_type == 2:
+            cover = self.batch_size // 2
+            
+            for i in range(self.d_len // self.batch_size):
+                while True:
+                    idx = np.random.randint(0, len(oob_ids), 1)[0]
+                    
+                    if oob_ids[idx] - cover >= 0 and oob_ids[idx] + cover < len(label_list):
+                        lbs = label_list[oob_ids[idx] - cover:oob_ids[idx] + cover]
+                        if sum(lbs) != len(lbs):
+                            break
+                        
+                idx_list[i*self.batch_size:(i+1)*self.batch_size] = lbs
+            
+        return iter(idx_list)
 
 
 class MPerClassSampler(Sampler):

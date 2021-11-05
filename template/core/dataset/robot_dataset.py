@@ -60,7 +60,6 @@ class RobotDataset(Dataset):
                 self.patients_name = self.patients_info_key[self.args.fold]
 
                 if 'offline' in self.args.hem_extract_mode and self.args.stage is 'hem_train': 
-                    # self.load_data()
                     self.load_data_from_hem_idx()
 
                 else: # general_train, bs-emb1-online, bs-emb2-online, bs-emb3-online
@@ -186,6 +185,8 @@ class RobotDataset(Dataset):
         self.label_list = self.assets_df.class_idx.tolist()
 
     def load_data_from_hem_idx(self):
+
+        
         # self.args.restore_path 에서 version0, 1, 2, 3 에 대한 hem.csv 읽고
         self.restore_path = '/'.join(self.args.restore_path.split('/')[:-1])
         
@@ -193,9 +194,8 @@ class RobotDataset(Dataset):
         read_hem_csv = glob(os.path.join(self.restore_path, '*', '*-*-*.csv'))
 
         read_hem_csv = natsort.natsorted(read_hem_csv)
-
+        
         print(read_hem_csv)
-
 
         hem_df_list = []
         cols = ['img_path', 'class_idx', 'HEM']
@@ -243,7 +243,7 @@ class RobotDataset(Dataset):
         # last processing
         self.img_list = self.assets_df.img_path.tolist()
         self.label_list = self.assets_df.class_idx.tolist()
-
+        
 
     def change_labels(self, labels):
         self.label_list = labels
@@ -260,9 +260,7 @@ class RobotDataset(Dataset):
         img = self.aug(img)
 
         return img_path, img, label
-
     
-
 if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from core.config.base_opts import parse_opts

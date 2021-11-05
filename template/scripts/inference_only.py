@@ -25,67 +25,18 @@ def get_experiment_args():
 
     return args
 
-def train_main(args):
-    print('train_main')
-    
-    import os
-    import pytorch_lightning as pl
-    from pytorch_lightning import loggers as pl_loggers
-    from pytorch_lightning.plugins import DDPPlugin
-
-    from core.model import get_model, get_loss
-    from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
-
-    from torchsummary import summary
-
-    tb_logger = pl_loggers.TensorBoardLogger(
-        save_dir=args.save_path,
-        name='TB_log',
-        default_hp_metric=False)
-
-    if args.experiment_type == 'theator':
-        x = TheatorTrainer(args)
-    elif args.experiment_type == 'ours':
-        x = CAMIO(args)
-    
-    if args.num_gpus > 1:
-        trainer = pl.Trainer(gpus=args.num_gpus, 
-                            max_epochs=args.max_epoch, 
-                            min_epochs=args.min_epoch,
-                            logger=tb_logger,
-                            plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
-                            accelerator='ddp')
-    else:
-        trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=2,#0.01,
-                            # limit_val_batches=2,#0.01,
-                            max_epochs=args.max_epoch, 
-                            min_epochs=args.min_epoch,
-                            logger=tb_logger,)
-    
-    trainer.fit(x)
-
-    # args.restore_path = os.path.join(args.save_path, 'TB_log', 'version_0') # TO DO: we should define restore path
-    
-    args.restore_path = os.path.join(x.restore_path)
-    print('restore_path: ', args.restore_path)
-    
-    return args
-
 def inference_main(args):
     print('inference_main')
     
     ### test inference module
     from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
     from core.api.inference import InferenceDB # inference module
     from core.api.evaluation import Evaluator # evaluation module
     from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
     from core.utils.logging import Report # report helper (for experiments reuslts and inference results)
 
     from core.utils.visual import VisualTool # visual module
-    
+
     import os
     import pandas as pd
     import glob
@@ -100,12 +51,7 @@ def inference_main(args):
 
     # from finetuning model
     model_path = get_inference_model_path(args.restore_path)
-    
-    if args.experiment_type == 'theator':
-        model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-    elif args.experiment_type == 'ours':
-        model = CAMIO.load_from_checkpoint(model_path, args=args)
-        
+    model = CAMIO.load_from_checkpoint(model_path, args=args)
     model = model.cuda()
 
     # inference block
@@ -141,6 +87,9 @@ def inference_main(args):
         patient_video = patient['patient_video']
 
         videos_metrics_list = [] # save each videos metrics
+        
+        patient_gt_list = [] # for visual 
+        patient_predict_list = [] # for visual
 
         # for save patients results
         each_patients_save_dir = os.path.join(details_results_path, patient_no)
@@ -184,6 +133,8 @@ def inference_main(args):
             predict_df.to_csv(predict_csv_path)
 
             # TO-DO: visulization
+            patient_gt_list += gt_list
+            patient_predict_list += predict_list
 
             # metric per video
             video_metrics = evaluator.calc() # same return with metricHelper
@@ -226,7 +177,7 @@ def inference_main(args):
     
         # for calc total patients CR, OR
         patients_metrics_list.append(patient_metrics)
-        
+
         # visualization per patients
         patient_predict_visual_path = os.path.join(each_patients_save_dir, 'predict-{}.png'.format(patient_no))
         patient_gt_list += gt_list
@@ -266,66 +217,24 @@ def inference_main(args):
     # return mCR, mOR, OR, CR of experiment
     return args, experiment_summary, patients_CR, patients_OR
 
+
 def main():    
     # 0. set each experiment args 
-    import os
-
-    # 0. set each experiment args 
     args = get_experiment_args()
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
+    # 3. inference
+    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-    # general mode
-    if args.stage == 'general_train':
-        args.mini_fold = 'general'
-        args = train_main(args)
-        
-        # 3. inference
-        args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+    # 4. save experiments summary
+    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+    os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
-        # 4. save experiments summary
-        experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-        os.makedirs(args.experiments_sheet_dir, exist_ok=True)
-
-        save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
-    else: # online mode
-        if check_hem_online_mode(args):
-            args.mini_fold = 'general'
-            args.stage = 'hem_train'
-
-            args = train_main(args)
-
-            # 3. inference
-            args, experiment_summary, patients_CR, patients_OR = inference_main(args)
-
-            # 4. save experiments summary
-            experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-            os.makedirs(args.experiments_sheet_dir, exist_ok=True)
-
-            save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
-        # offline mode
-        else:
-            for ids, stage in enumerate(STAGE_LIST):
-                args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
-
-                print('\n\n')
-                print('====='*7, args.stage.upper(),'====='*7)
-                print('\n\n')
-
-                print(args)
-
-                args = train_main(args)
-
-                if ids > 3:
-                    # 3. inference
-                    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
-
-                    # 4. save experiments summary
-                    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-                    os.makedirs(args.experiments_sheet_dir, exist_ok=True)
-
-                    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
 
 if __name__ == '__main__':
+    
+    import os
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    
     if __package__ is None:
         import sys
         from os import path    
@@ -337,4 +246,3 @@ if __name__ == '__main__':
     set_args_per_stage, check_hem_online_mode, clean_paging_chache
 
     main()
-

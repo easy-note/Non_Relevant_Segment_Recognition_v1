@@ -26,7 +26,7 @@ def parse_opts():
     parser.add_argument('--loss_fn',
             default='ce',
             type=str,
-            choices=['ce'],
+            choices=['ce', 'focal'],
             help='Select loss_fn to train/test')
 
     parser.add_argument('--batch_size',
@@ -90,7 +90,7 @@ def parse_opts():
             action='store_true',
             help='If true, keep training from the checkpoint')
 
-    parser.add_argument('-- ', 
+    parser.add_argument('--restore_path', 
             type=str, 
             default=None, 
             help='Resume or test to train the model loaded from the path')
@@ -200,16 +200,15 @@ def parse_opts():
     parser.add_argument('--hem_extract_mode', type=str,
             default='hem-softmax-offline', 
             choices=['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 
-                     'hem-emb1-online', 'hem-emb2-online', 'hem-emb3-online','hem-emb4-online', 
-                     'hem-focus1-online', 'hem-focus2-online'],
+                     'hem-emb-online', 'hem-focus-online'],
             help='Select train method, normal or hem method')
             
     parser.add_argument('--top_ratio', type=float,
             default=7/100,
             help='Select HEM top ratio')
     
-    parser.add_argument('--balance_step', type=int,
-            default=3,
+    parser.add_argument('--sampling_type', type=int,
+            default=1,
             help='?')
 
     # -------------- etc --------------------
