@@ -341,5 +341,4 @@ class HEMHelper():
             neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
             
         return (pos_loss + neg_loss) / 2. + loss_fn(sim_dist[correct_answer], pos_y)
-        # return (pos_loss + neg_loss) / 2. + loss_fn(sim_dist, y)
     

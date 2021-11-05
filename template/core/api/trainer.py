@@ -85,8 +85,7 @@ class CAMIO(BaseTrainer):
                 batch_size=self.args.batch_size,
                 num_workers=self.args.num_workers,
                 sampler=FocusSampler(self.trainset.label_list,
-                                     self.args.batch_size,
-                                     self.args.sampling_type)
+                                     self.args)
             )
         else:
             return DataLoader(

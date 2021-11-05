@@ -43,11 +43,11 @@ nohup python visual_flow.py \
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list '5' \
+        --cuda_list '7' \
         --IB_ratio 3 \
         --random_seed 3829 \
         --stage 'hem_train' \
         --hem_extract_mode 'hem-focus-online' \
-        --sampling_type 2 \
-        --save_path '/code/OOB_Recog/logs/hem-online-ws2-3-1-step' > /dev/null &
+        --sampling_type 3 \
+        --save_path '/code/OOB_Recog/logs/hem-online-ws3-3-1-step' > /dev/null &
 
