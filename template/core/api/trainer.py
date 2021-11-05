@@ -137,7 +137,7 @@ class CAMIO(BaseTrainer):
             y_hat = self.forward(x)
             loss = self.loss_fn(y_hat, y)
 
-            self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
 
         return  {
             'loss': loss,
