@@ -13,6 +13,8 @@ from core.config.data_info import data_transforms, theator_data_transforms
 
 from core.config.patients_info import train_videos, val_videos
 
+from core.utils.heuristic_sampling import HeuristicSampler
+
 class RobotDataset(Dataset):
     def __init__(self, args, state) :
         super().__init__()
@@ -149,6 +151,16 @@ class RobotDataset(Dataset):
         self.ib_assets_df = self.ib_assets_df.sort_values(by=['img_path'])
         self.oob_assets_df = self.oob_assets_df.sort_values(by=['img_path'])
 
+        # hueristic_sampling
+        self.assets_df = pd.concat([self.ib_assets_df, self.oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
+        self.assets_df = self.assets_df.sort_values(by='img_path')
+
+        hueristic_sampler = HeuristicSampler(self.assets_df)
+        self.assets_df = hueristic_sampler.final_assets
+
+        '''
+        exit(0)
+        
         print('\n\n')
         print('==> \tSORT INBODY_CSV')
         print(self.ib_assets_df)
@@ -180,6 +192,7 @@ class RobotDataset(Dataset):
         print('==> \tFINAL HEAD')
         print(self.assets_df.head(20))
         print('\n\n')
+        '''
 
         # last processing
         self.img_list = self.assets_df.img_path.tolist()
