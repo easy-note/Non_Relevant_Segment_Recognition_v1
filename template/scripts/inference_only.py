@@ -2,10 +2,13 @@ STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mi
 
 def get_experiment_args():
     from core.config.base_opts import parse_opts
+    import os
 
     parser = parse_opts()
 
     args = parser.parse_args()
+    
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
 
     ### model basic info opts
     args.pretrained = True
@@ -51,6 +54,7 @@ def inference_main(args):
 
     # from finetuning model
     model_path = get_inference_model_path(args.restore_path)
+    print('model path : ', model_path)
     model = CAMIO.load_from_checkpoint(model_path, args=args)
     model = model.cuda()
 

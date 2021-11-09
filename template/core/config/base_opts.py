@@ -185,6 +185,13 @@ def parse_opts():
             type=int,
             help='How many CPUs to use for data loading')
     
+    parser.add_argument('--use_meta',
+            action='store_true',
+            help='If true, Only testing')
+    
+    parser.add_argument('--meta_sampling',
+            default=6,
+            help='If true, Only testing')
 
     # -------------- Train Methods --------------------
     parser.add_argument('--experiment_type', 

@@ -13,7 +13,6 @@ from core.utils.metric import MetricHelper
 
 import csv
 
-
 class CAMIO(BaseTrainer):
     def __init__(self, args):
         super(BaseTrainer, self).__init__()
@@ -43,6 +42,9 @@ class CAMIO(BaseTrainer):
         self.sanity_check = True
         self.restore_path = None # inference module args / save path of hem df 
         
+        self.cur_step = 0
+        self.max_steps = 62200
+        self.skip_training = False
         self.last_epoch = -1
         self.hem_extract_mode = self.args.hem_extract_mode
 
@@ -122,22 +124,30 @@ class CAMIO(BaseTrainer):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        if 'hem-emb' in self.hem_extract_mode and self.training:
-            img_path, x, y = batch
-            loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
+        if not self.skip_training:
+            if 'hem-emb' in self.hem_extract_mode and self.training:
+                img_path, x, y = batch
+                loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
+                
+            elif 'hem-focus' in self.hem_extract_mode and self.training:
+                img_path, x, y = batch
+                
+                loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
+                
+            else:
+                img_path, x, y = batch
+
+                y_hat = self.forward(x)
+                loss = self.loss_fn(y_hat, y)
+
+            self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
             
-        elif 'hem-focus' in self.hem_extract_mode and self.training:
-            img_path, x, y = batch
-            
-            loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
-            
+            if self.args.use_meta:
+                self.cur_step += 1
+                if self.cur_step == self.max_steps:
+                    self.skip_training = True
         else:
-            img_path, x, y = batch
-
-            y_hat = self.forward(x)
-            loss = self.loss_fn(y_hat, y)
-
-        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
+            loss = torch.Tensor(np.array([0] * self.args.batch_size)).cuda()
 
         return  {
             'loss': loss,

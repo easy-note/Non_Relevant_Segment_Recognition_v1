@@ -181,7 +181,6 @@ class HEMHelper():
 
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
-
         def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
 

@@ -12,7 +12,7 @@ def get_experiment_args():
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
     args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
-    args.experiments_sheet_dir = args.experiments_sheet_dir
+    args.experiments_sheet_dir = args.save_path
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'

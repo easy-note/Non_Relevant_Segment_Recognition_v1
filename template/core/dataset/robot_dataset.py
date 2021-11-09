@@ -23,6 +23,7 @@ class RobotDataset(Dataset):
 
         self.IB_ratio = self.args.IB_ratio
         self.random_seed = self.args.random_seed
+        self.state = state
 
         self.img_list = [] # img
         self.label_list = [] # label

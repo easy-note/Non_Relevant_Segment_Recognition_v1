@@ -49,7 +49,7 @@ class OverSampler(Sampler):
 class FocusSampler(Sampler):
     def __init__(self, labels, args):
         self.labels = labels
-        self.d_len = len(self.labels) - (len(self.labels) % batch_size)
+        self.d_len = len(self.labels) - (len(self.labels) % args.batch_size)
         self.batch_size = args.batch_size
         self.sampling_type = args.sampling_type
         self.IB_ratio = args.IB_ratio
@@ -102,17 +102,46 @@ class FocusSampler(Sampler):
                     idx = np.random.randint(0, len(oob_ids), 1)[0]
                     
                     if oob_ids[idx] - cover >= 0 and oob_ids[idx] + cover < len(label_list):
-                        lbs = label_list[oob_ids[idx] - cover:oob_ids[idx] + cover]
+                        lbs = label_list[int(oob_ids[idx] - cover):int(oob_ids[idx] + cover)]
                         if sum(lbs) != len(lbs) and len(lbs)/sum(lbs) >= self.IB_ratio:
                             break
-                tmp_label_list = np.concatenate((label_list[:oob_ids[idx]-cover], label_list[oob_ids[idx]+cover:]), -1)
+                tmp_label_list = np.concatenate((label_list[:int(oob_ids[idx]-cover)], label_list[int(oob_ids[idx]+cover):]), -1)
                 
                 tmp_oob_ids = np.where(tmp_label_list == 1)[0]
                 tmp_ib_ids = np.where(tmp_label_list == 0)[0]
         
-                n_oob = cover - sum(lbs)
-                n_ib = self.IB_ratio * cover - n_oob
+                n_oob = int(cover - sum(lbs))
+                n_ib = int(self.IB_ratio * cover - n_oob)
+                
+                ib_samples = np.random.choice(tmp_ib_ids, n_ib)
+                
+                if n_oob > 0:
+                    oob_samples = np.random.choice(tmp_oob_ids, n_oob)
+                    lbs = np.concatenate((lbs, tmp_label_list[ib_samples], tmp_label_list[oob_samples]), -1)
+                else:
+                    lbs = np.concatenate((lbs, tmp_label_list[ib_samples]), -1)
+                
+                idx_list[i*self.batch_size:(i+1)*self.batch_size] = lbs
+        elif self.sampling_type == 4:
+            cover = self.batch_size // (self.IB_ratio + 1)
+            hf_cover = self.batch_size // 2
+            
+            for i in range(self.d_len // self.batch_size):
+                while True:
+                    idx = np.random.randint(0, len(oob_ids), 1)[0]
+                    
+                    if oob_ids[idx] - cover >= 0 and oob_ids[idx] + cover < len(label_list):
+                        lbs = label_list[int(oob_ids[idx] - cover):int(oob_ids[idx] + cover)]
+                        if sum(lbs) != len(lbs) and len(lbs)/sum(lbs) >= self.IB_ratio:
+                            break
+                tmp_label_list = np.concatenate((label_list[:int(oob_ids[idx]-cover)], label_list[int(oob_ids[idx]+cover):]), -1)
+                
+                tmp_oob_ids = np.where(tmp_label_list == 1)[0]
+                tmp_ib_ids = np.where(tmp_label_list == 0)[0]
         
+                n_oob = int(hf_cover - sum(lbs))
+                n_ib = int(hf_cover - np.count_nonzero(lbs))
+                
                 ib_samples = np.random.choice(tmp_ib_ids, n_ib)
                 
                 if n_oob > 0:
