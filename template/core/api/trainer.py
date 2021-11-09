@@ -10,8 +10,8 @@ from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
 
-import csv
 
+import csv
 
 class CAMIO(BaseTrainer):
     def __init__(self, args):
@@ -42,6 +42,9 @@ class CAMIO(BaseTrainer):
         self.sanity_check = True
         self.restore_path = None # inference module args / save path of hem df 
         
+        self.cur_step = 0
+        self.max_steps = 62200
+        self.skip_training = False
         self.last_epoch = -1
         self.hem_extract_mode = self.args.hem_extract_mode
 
@@ -76,13 +79,24 @@ class CAMIO(BaseTrainer):
                 self.testset = LapaDataset(self.args, state='val')
 
     def train_dataloader(self):
-        return DataLoader(
-            self.trainset,
-            batch_size=self.args.batch_size,
-            num_workers=self.args.num_workers,
-            shuffle=True,
-            drop_last=True,
-        )
+        if 'hem-focus' in self.hem_extract_mode:
+            print(len(self.trainset)//self.args.batch_size,)
+            
+            return DataLoader(
+                self.trainset,
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                sampler=FocusSampler(self.trainset.label_list,
+                                     self.args)
+            )
+        else:
+            return DataLoader(
+                self.trainset,
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                shuffle=True,
+                drop_last=True,
+            )
 
     def val_dataloader(self):
         return DataLoader(
@@ -110,28 +124,30 @@ class CAMIO(BaseTrainer):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        if 'hem-emb' in self.hem_extract_mode and self.training:
-            img_path, x, y = batch
-            # loss = self.hem_helper.compute_hem(self.model, x, ys)
-            loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
-            # func = getattr(self.hem_helper, 'hem_cos_hard_sim{}'.format(self.hem_extract_mode.split('-')[-2][-1]))
-            # loss = func(self.model, x, y, self.loss_fn)
-            
-        elif 'hem-focus' in self.hem_extract_mode and self.training:
-            img_path, x, y = batch
-            
-            func = getattr(self.hem_helper, 'hem_focus{}'.format(self.hem_extract_mode.split('-')[-2][-1]))
-            
-            y_hat, y = func(self.model, self.trainset)
-            loss = self.loss_fn(y_hat, y)
-            
-        else:
-            img_path, x, y = batch
+        if not self.skip_training:
+            if 'hem-emb' in self.hem_extract_mode and self.training:
+                img_path, x, y = batch
+                loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
+                
+            elif 'hem-focus' in self.hem_extract_mode and self.training:
+                img_path, x, y = batch
+                
+                loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
+                
+            else:
+                img_path, x, y = batch
 
-            y_hat = self.forward(x)
-            loss = self.loss_fn(y_hat, y)
+                y_hat = self.forward(x)
+                loss = self.loss_fn(y_hat, y)
 
             self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
+            
+            if self.args.use_meta:
+                self.cur_step += 1
+                if self.cur_step == self.max_steps:
+                    self.skip_training = True
+        else:
+            loss = torch.Tensor(np.array([0] * self.args.batch_size)).cuda()
 
         return  {
             'loss': loss,
@@ -171,6 +187,7 @@ class CAMIO(BaseTrainer):
         if self.sanity_check:
             print('sanity check')
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+            print('SANITY RESTORE PATH : ', self.restore_path)
 
             self.sanity_check = False
 
@@ -186,26 +203,6 @@ class CAMIO(BaseTrainer):
 
             val_loss_mean = val_loss/cnt
             metrics['Loss'] = val_loss_mean
-
-            '''
-                metrics = {
-                    'TP': cm.TP[self.OOB_CLASS],
-                    'TN': cm.TN[self.OOB_CLASS],
-                    'FP': cm.FP[self.OOB_CLASS],
-                    'FN': cm.FN[self.OOB_CLASS],
-                    'Accuracy': cm.ACC[self.OOB_CLASS],
-                    'Precision': cm.PPV[self.OOB_CLASS],
-                    'Recall': cm.TPR[self.OOB_CLASS],
-                    'F1-Score': cm.F1[self.OOB_CLASS],
-                    'OOB_metric': (metrics['TP']-metrics['FP']) / (metrics['FN'] + metrics['TP'] + metrics['FP']) # 잘못예측한 OOB / predict OOB + 실제 OOB
-                    'Over_estimation': metrics['FP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # OR
-                    'Under_estimation': metrics['FN'] / (metrics['FN'] + metrics['TP'] + metrics['FP'])
-                    'Correspondence_estimation': metrics['TP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # CR
-                    'UNCorrespondence_estimation': (metrics['FP'] + metrics['FN']) / (metrics['FN'] + metrics['TP'] + metrics['FP'])
-                    'Mean_metric': (metrics['Correspondence_estimation'] + (1-metrics['Over_estimation'])) / 2.
-                    'Loss': val_loss/cnt
-                }
-            '''
 
             self.log_dict(metrics, on_epoch=True, prog_bar=True)
             

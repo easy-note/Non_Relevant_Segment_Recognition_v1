@@ -9,11 +9,10 @@ for trial in 1; do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list '2' \
-        --stage 'general_train' \
-        --save_path '/code/OOB_Recog/logs/baseline-mobilenet' \
+        --cuda_list '5' \
+        --stage 'hem_train' \
+        --hem_extract_mode 'hem-emb4-online' \
+        --save_path '/code/OOB_Recog/logs/hem-emb-mobilenet-ver4' \
         > /dev/null
     done
 done
-
-

@@ -64,8 +64,10 @@ def get_inference_model_path(restore_path):
     ckpts = glob.glob(ckpoint_path)
     
     for f_name in ckpts :
-        if f_name.find('last') != -1 :
+        if f_name.find('best') != -1 :
             return f_name
+        # if f_name.find('last') != -1 :
+        #     return f_name
 
 def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
     from core.utils.prepare import InferenceAssets # inference assets helper (for prepare inference assets)

@@ -70,7 +70,8 @@ class TheatorTrainer(BaseTrainer):
             self.trainset,
             batch_size=self.args.batch_size,
             num_workers=self.args.num_workers,
-            sampler=MPerClassSampler(self.trainset.label_list, self.args.batch_size//2, self.args.batch_size)
+            sampler=MPerClassSampler(self.trainset.label_list, 
+                                     self.args.batch_size//2, self.args.batch_size)
         )
 
     def val_dataloader(self):
