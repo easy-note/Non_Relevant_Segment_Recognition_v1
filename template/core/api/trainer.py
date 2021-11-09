@@ -194,26 +194,6 @@ class CAMIO(BaseTrainer):
             val_loss_mean = val_loss/cnt
             metrics['Loss'] = val_loss_mean
 
-            '''
-                metrics = {
-                    'TP': cm.TP[self.OOB_CLASS],
-                    'TN': cm.TN[self.OOB_CLASS],
-                    'FP': cm.FP[self.OOB_CLASS],
-                    'FN': cm.FN[self.OOB_CLASS],
-                    'Accuracy': cm.ACC[self.OOB_CLASS],
-                    'Precision': cm.PPV[self.OOB_CLASS],
-                    'Recall': cm.TPR[self.OOB_CLASS],
-                    'F1-Score': cm.F1[self.OOB_CLASS],
-                    'OOB_metric': (metrics['TP']-metrics['FP']) / (metrics['FN'] + metrics['TP'] + metrics['FP']) # 잘못예측한 OOB / predict OOB + 실제 OOB
-                    'Over_estimation': metrics['FP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # OR
-                    'Under_estimation': metrics['FN'] / (metrics['FN'] + metrics['TP'] + metrics['FP'])
-                    'Correspondence_estimation': metrics['TP'] / (metrics['FN'] + metrics['TP'] + metrics['FP']) # CR
-                    'UNCorrespondence_estimation': (metrics['FP'] + metrics['FN']) / (metrics['FN'] + metrics['TP'] + metrics['FP'])
-                    'Mean_metric': (metrics['Correspondence_estimation'] + (1-metrics['Over_estimation'])) / 2.
-                    'Loss': val_loss/cnt
-                }
-            '''
-
             self.log_dict(metrics, on_epoch=True, prog_bar=True)
             
             # save result.csv 

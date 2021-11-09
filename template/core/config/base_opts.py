@@ -223,7 +223,7 @@ def parse_opts():
                         help='Inference Interval of frame')
 
     parser.add_argument('--inference_fold',
-                    default='free',
+                    default='1',
                     type=str,
                     choices=['1', '2', '3', '4', '5', 'free'],
                     help='valset 1, 2, 3, 4, 5, free')

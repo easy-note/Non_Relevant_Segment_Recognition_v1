@@ -12,7 +12,7 @@ def get_experiment_args():
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
     args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
-    args.experiments_sheet_dir = args.save_path
+    args.experiments_sheet_dir = args.experiments_sheet_dir
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
@@ -141,6 +141,8 @@ def inference_main(args):
         patient_video = patient['patient_video']
 
         videos_metrics_list = [] # save each videos metrics
+        patient_gt_list = [] # each patients gt list for visual
+        patient_predict_list = [] # each patients predict list for visual
 
         # for save patients results
         each_patients_save_dir = os.path.join(details_results_path, patient_no)
@@ -205,6 +207,9 @@ def inference_main(args):
 
             # for calc patients metric
             videos_metrics_list.append(video_metrics)
+
+            patient_gt_list += gt_list
+            patient_predict_list += predict_list
         
         # calc each patients CR, OR
         patient_metrics = MetricHelper().aggregate_calc_metric(videos_metrics_list)
@@ -229,8 +234,6 @@ def inference_main(args):
         
         # visualization per patients
         patient_predict_visual_path = os.path.join(each_patients_save_dir, 'predict-{}.png'.format(patient_no))
-        patient_gt_list += gt_list
-        patient_predict_list += patient_predict_list
 
         visual_tool = VisualTool(patient_gt_list, patient_no, patient_predict_visual_path)
         visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval)
