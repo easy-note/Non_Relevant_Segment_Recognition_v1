@@ -6,12 +6,16 @@ import numpy as np
 
 
 class HeuristicSampler():
-    def __init__(self, assets_df):
+    def __init__(self, assets_df, args):
         # img_path 기준 sort 된 assets_df
         self.assets_df = assets_df.reset_index(drop=True)
 
         self.class_idx_list = self.assets_df['class_idx'].tolist()
         self.class_idx_len = len(self.class_idx_list)
+
+        self.args = args
+        self.IB_ratio = self.args.IB_ratio
+        self.random_seed = self.args.random_seed
 
         print('\n\n[TOTAL GT] class_idx_len : {}\n\n'.format(self.class_idx_len))
 
@@ -23,11 +27,6 @@ class HeuristicSampler():
 
         ##### 3. Set ratio
         self.final_assets = self.set_ratio()
-
-
-        # ##### 4. Last processing
-        # self.img_list = self.final_assets.img_path.tolist()
-        # self.label_list = self.final_assets.class_idx.tolist()
 
 
     def encode_list(self, s_list): # run-length encoding from list
@@ -72,13 +71,13 @@ class HeuristicSampler():
         for start_idx, end_idx in zip(start_idx_list, end_idx_list):
             nrs_start_end_idx_list.append([start_idx, end_idx])
 
-        print('\n\n================== NRS_START_END_IDX_LIST (len:{}) ================== \n\n{}\n\n'.format(len(nrs_start_end_idx_list), nrs_start_end_idx_list))
+        # print('\n\n================== NRS_START_END_IDX_LIST (len:{}) ================== \n\n{}\n\n'.format(len(nrs_start_end_idx_list), nrs_start_end_idx_list))
 
         return nrs_start_end_idx_list
         
         
     def extract_wise_rs_idx(self, nrs_start_end_idx_list):
-        ##### 2. Select RS (Wise-Related Surgery) idx
+        ##### 2. Extract RS (Wise-Related Surgery) idx
         wise_rs_idx = [False] * self.class_idx_len
 
         for nrs_idx in nrs_start_end_idx_list:
@@ -86,20 +85,21 @@ class HeuristicSampler():
             nrs_end_idx = nrs_idx[1]
 
             start_end_gap = nrs_end_idx-nrs_start_idx
+            wise_window_size = (start_end_gap//4) * self.IB_ratio # start_end_gap <= 4 -> wise_window_size = 0 
 
             if nrs_start_idx == 0: # nrs start idx == 0 이면, 그 이전의 프레임을 선택할 수 없음. 
                 pass
-            elif nrs_start_idx-start_end_gap < 0: # nrs start idx != 0 인데, gap 을 뺀 후가 0보다 작다면, 0 ~ nrs_start_idx select. 
-                wise_rs_idx[0:nrs_start_idx] = [True]*start_end_gap
+            elif nrs_start_idx-wise_window_size < 0: # nrs start idx != 0 인데, gap 을 뺀 후가 0보다 작다면, 0 ~ nrs_start_idx select. 
+                wise_rs_idx[0:nrs_start_idx] = [True]*wise_window_size
             else: 
-                wise_rs_idx[nrs_start_idx-start_end_gap:nrs_start_idx] = [True]*start_end_gap
+                wise_rs_idx[nrs_start_idx-wise_window_size:nrs_start_idx] = [True]*wise_window_size
             
             if nrs_end_idx+1 == self.class_idx_len: # nrs end idx + 1 == self.class_idx_len  이면, self.class_idx_len 을 넘어선 프레임을 선택할 수 없음. 
                 pass
-            elif nrs_end_idx+start_end_gap+1 > self.class_idx_len: # nrs end idx + 1 != self.class_idx_len  인데, gap 을 추가한 후가 self.class_idx_len 보다 크다면, nrs_end_idx+1 ~ 끝까지 select.
-                wise_rs_idx[nrs_end_idx+1:self.class_idx_len] = [True]*start_end_gap    
+            elif nrs_end_idx+wise_window_size+1 > self.class_idx_len: # nrs end idx + 1 != self.class_idx_len  인데, gap 을 추가한 후가 self.class_idx_len 보다 크다면, nrs_end_idx+1 ~ 끝까지 select.
+                wise_rs_idx[nrs_end_idx+1:self.class_idx_len] = [True]*wise_window_size    
             else:
-                wise_rs_idx[nrs_end_idx+1:nrs_end_idx+start_end_gap+1] = [True]*start_end_gap
+                wise_rs_idx[nrs_end_idx+1:nrs_end_idx+wise_window_size+1] = [True]*wise_window_size
 
         ## Parity check of wise_rs_idx, self.class_idx_len.
         if not self.wise_rs_parity_check:
@@ -127,18 +127,14 @@ class HeuristicSampler():
 
 
     def set_ratio(self):
+        ##### 3. Set ratio
         assets_nrs_df = self.assets_df[self.assets_df['class_idx']==1]
 
         assets_wise_rs_df = self.assets_df[self.assets_df['wise_rs']==True]
-        
-        # self.assets_vanila_df = self.assets_df[(self.assets_df['wise_rs']==False) & (self.assets_df['class_idx']==0)].sample(n=len(self.assets_nrs_df)*3-len(self.assets_wise_rs_df), random_state=self.random_seed)
-        assets_vanila_df = self.assets_df[(self.assets_df['wise_rs']==False) & (self.assets_df['class_idx']==0)].sample(n=len(assets_nrs_df)*3-len(assets_wise_rs_df))
+        assets_vanila_df = self.assets_df[(self.assets_df['wise_rs']==False) & (self.assets_df['class_idx']==0)].sample(n=len(assets_nrs_df)*self.IB_ratio-len(assets_wise_rs_df), random_state=self.random_seed)
+        assets_rs_df = pd.concat([assets_wise_rs_df, assets_vanila_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
 
-        # self.assets_rs_df = pd.concat([self.assets_wise_rs_df, self.assets_vanila_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
-        assets_rs_df = pd.concat([assets_wise_rs_df, assets_vanila_df]).sample(frac=1).reset_index(drop=True)
-
-        # self.final_assets = pd.concat([self.assets_nrs_df, self.assets_rs_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
-        final_assets = pd.concat([assets_nrs_df, assets_rs_df]).sample(frac=1).reset_index(drop=True)
+        final_assets = pd.concat([assets_nrs_df, assets_rs_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
 
         print('\nself.assets_nrs_df\n', assets_nrs_df)
         print('\nself.assets_rs_df\n', assets_rs_df)
@@ -147,16 +143,6 @@ class HeuristicSampler():
 
         return final_assets
     
-
-    # # return img, label
-    # def __getitem__(self, index):
-    #     img_path, label = self.img_list[index], self.label_list[index]
-
-    #     img = Image.open(img_path)
-    #     img = self.aug(img)
-
-    #     return img_path, img, label
-
 
         
 
