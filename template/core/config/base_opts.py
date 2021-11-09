@@ -8,7 +8,7 @@ def parse_opts():
 
     # --------------- Model basic info --------------------
     parser.add_argument('--model',
-            default='mobilenet_v3_large',
+            default='mobilenetv3_large_100',
             type=str,
             choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 
                         'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
@@ -55,7 +55,7 @@ def parse_opts():
             help='What device to use for training or validation model')
 
     parser.add_argument('--cuda_list',
-            default='7',
+            default='4',
             type=str,
             help='Name list of gpus that are used to train')
 
@@ -80,7 +80,7 @@ def parse_opts():
 
     # /OOB_RECOG/logs/project-1/TB_log/version_0
     parser.add_argument('--save_path', type=str, 
-                        default='/OOB_RECOG/logs/211023_TRAIN_HEM-softmax-FOLD1', help='')
+                        default='/OOB_RECOG/logs/211109_heuristic_sampling', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',

@@ -13,6 +13,8 @@ from core.config.data_info import data_transforms, theator_data_transforms
 
 from core.config.patients_info import train_videos, val_videos
 
+from core.utils.heuristic_sampling import HeuristicSampler
+
 class RobotDataset(Dataset):
     def __init__(self, args, state) :
         super().__init__()
@@ -33,6 +35,8 @@ class RobotDataset(Dataset):
         assets_type = '' # ['sub', 'meta', 'hem'] 
         ### ### ###
 
+        self.wise_sampling_mode = False
+
         if self.args.experiment_type == 'ours':
             d_transforms = data_transforms
         elif self.args.experiment_type == 'theator':
@@ -45,6 +49,8 @@ class RobotDataset(Dataset):
                 # split to 60/20 from 80 case
                 self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='train') # args.fold's train dataset(80 case) to 60 case
                 assets_type='sub'
+
+                self.wise_sampling_mode = True
                 
             elif state == 'val':
                 self.aug = d_transforms['val']
@@ -69,6 +75,9 @@ class RobotDataset(Dataset):
                 else: # general_train, bs-emb1-online, bs-emb2-online, bs-emb3-online
                     # TODO - general train and online 
                     assets_type='sub'
+
+                    self.wise_sampling_mode = True
+
                     
             elif state == 'val':
                 self.aug = d_transforms['val']
@@ -173,42 +182,52 @@ class RobotDataset(Dataset):
         ib_assets_df = ib_assets_df.sort_values(by=['img_path'])
         oob_assets_df = oob_assets_df.sort_values(by=['img_path'])
 
-        print('\n\n')
-        print('==> \tSORT INBODY_CSV')
-        print(ib_assets_df)
-        print('\t'* 4)
-        print('==> \tSORT OUTBODY_CSV')
-        print(oob_assets_df)
-        print('\n\n')
+        if self.wise_sampling_mode:
+            # hueristic_sampling
+            assets_df = pd.concat([ib_assets_df, oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
+            assets_df = assets_df.sort_values(by='img_path')
 
-        # random_sampling and setting IB:OOB data ratio
-        # HG 21.11.08 error fix, ratio로 구성 불가능 할 경우 전체 set 모두 사용
-        max_ib_count, target_ib_count = len(ib_assets_df), int(len(oob_assets_df)*self.IB_ratio)
-        sampling_ib_count = max_ib_count if max_ib_count < target_ib_count else target_ib_count
-        print('Random sampling from {} to {}'.format(max_ib_count, sampling_ib_count))
+            hueristic_sampler = HeuristicSampler(assets_df, self.args)
+            assets_df = hueristic_sampler.final_assets
 
-        ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-        oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
+        else:
+            print('\n\n')
+            print('==> \tSORT INBODY_CSV')
+            print(ib_assets_df)
+            print('\t'* 4)
+            print('==> \tSORT OUTBODY_CSV')
+            print(oob_assets_df)
+            print('\n\n')
 
-        print('\n\n')
-        print('==> \tRANDOM SAMPLING INBODY_CSV')
-        print(ib_assets_df)
-        print('\t'* 4)
-        print('==> \tRANDOM SAMPLING OUTBODY_CSV')
-        print(oob_assets_df)
-        print('\n\n')
+            # random_sampling and setting IB:OOB data ratio
+            # HG 21.11.08 error fix, ratio로 구성 불가능 할 경우 전체 set 모두 사용
+            max_ib_count, target_ib_count = len(ib_assets_df), int(len(oob_assets_df)*self.IB_ratio)
+            sampling_ib_count = max_ib_count if max_ib_count < target_ib_count else target_ib_count
+            print('Random sampling from {} to {}'.format(max_ib_count, sampling_ib_count))
 
-        # suffle 0,1
-        assets_df = pd.concat([ib_assets_df, oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
-        print('\n\n')
-        print('==> \tFINAL ASSETS ({})'.format(len(assets_df)))
-        print(assets_df)
-        print('\n\n')
+            ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+            oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
 
-        print('\n\n')
-        print('==> \tFINAL HEAD')
-        print(assets_df.head(20))
-        print('\n\n')
+            print('\n\n')
+            print('==> \tRANDOM SAMPLING INBODY_CSV')
+            print(ib_assets_df)
+            print('\t'* 4)
+            print('==> \tRANDOM SAMPLING OUTBODY_CSV')
+            print(oob_assets_df)
+            print('\n\n')
+
+            # suffle 0,1
+            assets_df = pd.concat([ib_assets_df, oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
+            print('\n\n')
+            print('==> \tFINAL ASSETS ({})'.format(len(assets_df)))
+            print(assets_df)
+            print('\n\n')
+
+            print('\n\n')
+            print('==> \tFINAL HEAD')
+            print(assets_df.head(20))
+            print('\n\n')
+
 
         # last processing
         self.img_list = assets_df.img_path.tolist()
