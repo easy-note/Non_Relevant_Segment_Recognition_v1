@@ -27,55 +27,59 @@ class RobotDataset(Dataset):
         self.img_list = [] # img
         self.label_list = [] # label
 
+        ### load dataset from under setting ###
+        self.patients_name = [] # init
+        assets_type = '' # ['sub', 'meta', 'hem'] 
+        ### ### ###
+
         if self.args.experiment_type == 'ours':
             d_transforms = data_transforms
         elif self.args.experiment_type == 'theator':
             d_transforms = theator_data_transforms
-
-
+        
         if self.args.mini_fold is not 'general': # hem dataset 생성 (60/20) // offline 사용
             if state == 'train':
                 self.aug = d_transforms['train']
-                self.patients_info_key = train_videos # 60 case / 80 case
-                self.patients_name = self.patients_info_key[self.args.fold] # fold1 - train dataset (80 case)
-                self.patients_name = self.set_patient_per_mini_fold(self.patients_name, mode='train')
+                
+                # split to 60/20 from 80 case
+                self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='train') # args.fold's train dataset(80 case) to 60 case
+                assets_type='sub'
                 
             elif state == 'val':
                 self.aug = d_transforms['val']
-                self.patients_info_key = train_videos # 20 case / 80 case
-                self.patients_name = self.patients_info_key[self.args.fold] # fold1 - train dataset (80 case)
-                self.patients_name = self.set_patient_per_mini_fold(self.patients_name, mode='val')
+
+                # split to 60/20 from 80 case
+                self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='val') # args.fold's train dataset(80 case) to 20 case
+                assets_type='meta'
                 
             elif state == 'test':
-                self.aug = d_transforms['test']
-                self.patients_info_key = val_videos
-            
-            # data load
-            self.load_data()
+                pass
 
         elif self.args.mini_fold is 'general': # hem dataset 생성 X (80/20) // online, offline 모두 사용
             if state == 'train':   
                 self.aug = d_transforms['train']     
-                self.patients_info_key = train_videos # 80 case
-                self.patients_name = self.patients_info_key[self.args.fold]
+                
+                # 20 case / 80 case
+                self.patients_name = train_videos[self.args.fold]
 
                 if 'offline' in self.args.hem_extract_mode and self.args.stage is 'hem_train': 
-                    self.load_data_from_hem_idx()
+                    assets_type='hem'
 
                 else: # general_train, bs-emb1-online, bs-emb2-online, bs-emb3-online
-                    self.load_data()
-
+                    # TODO - general train and online 
+                    assets_type='sub'
+                    
             elif state == 'val':
                 self.aug = d_transforms['val']
-                self.patients_info_key = val_videos # 20 case
-                self.patients_name = self.patients_info_key[self.args.fold] 
                 
-                self.load_data()
+                # 20 case
+                self.patients_name = val_videos[self.args.fold]
+                assets_type='sub'
 
             elif state == 'test':
-                self.aug = d_transforms['test']
-                self.patients_info_key = val_videos
+                pass
 
+        self.load_data(assets_type)
 
     def set_patient_per_mini_fold(self, patients_list, mode='train'):
         patients_list = natsort.natsorted(patients_list)
@@ -95,36 +99,56 @@ class RobotDataset(Dataset):
     def change_mode(self, to_hem=True): # JH 수정 : to_hem=False -> to_hem=True
         self.mode_hem = to_hem
 
-    def set_sample_ids(self, ids):
-        self.ids = ids
+    def load_data(self, assets_type):
+        support_type = ['sub', 'meta', 'hem']
+        assert assets_type in support_type, 'NOT SOPPORT TYPE'
 
-    def load_data(self):
+        assets_root_path = ''
+
         if self.args.data_version == 'v1':
-            self.load_v1()
+            assert False, 'Not Yet Support'
         elif self.args.data_version == 'v2':
-            csv_path = os.path.join(self.args.data_base_path, 'oob_assets/V2/ROBOT')
-            self.load_data_from_ver(csv_path)
+            assets_root_path = os.path.join(self.args.data_base_path, 'oob_assets/V2/ROBOT')
         elif self.args.data_version == 'v3':
-            csv_path = os.path.join(self.args.data_base_path, 'oob_assets/V3/ROBOT')
-            self.load_data_from_ver(csv_path)
+            assets_root_path = os.path.join(self.args.data_base_path, 'oob_assets/V3/ROBOT')
 
-    def load_patients(self):
-        if self.args.fold is not 'free':
-            self.patients_name = self.patients_info_key[self.args.fold] # train_videos['1']
-        else:
-            # self.patients_name = self.args.train_videos
-            ## 임의의 data list 에 대해 학습 및 테스트를 할 경우, 별도의 룰에 의거해서 지정. e.g. random으로 100개 중 80개 선택, 2 step 씩 넘어가며 선택.
-            pass
+        ## set meta/sub assets path
+        assets_path = {
+            'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=30.csv'),
+            'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=30.csv'),
+            'sub_ib':os.path.join(assets_root_path, 'oob_assets_inbody.csv'),
+            'sub_oob':os.path.join(assets_root_path, 'oob_assets_outofbody.csv'),
+        }
+        
+        if assets_type == 'sub': # 1fps
+            print('[LOAD FROM SUBSET]')
+            self.load_data_from_assets(assets_path['sub_ib'], assets_path['sub_oob'])
+        
+        elif assets_type == 'meta': # 30fps
+            print('[LOAD FROM METASET]')
+            self.load_data_from_assets(assets_path['meta_ib'], assets_path['meta_oob'])
+        
+        elif assets_type == 'hem': # from extracted csv
+            print('[LOAD FROM HEMSET]')
+            self.load_data_from_hem_assets()
 
     def load_v1(self):
         # TODO load dataset ver. 1 나중에 민국님과 회의 때, 논문에 사용하는지 여쭤보고 -> 필요하면 작업. 
         pass
 
-    def load_data_from_ver(self, csv_path):
+    def load_data_from_assets(self, ib_assets_csv_path, oob_assets_csv_path):
 
+        print('IB_ASSETS_PATH: {}'.format(ib_assets_csv_path))
+        print('OOB_ASSETS_PATH: {}'.format(oob_assets_csv_path))
+
+        read_ib_assets_df = pd.read_csv(ib_assets_csv_path, names=['img_path', 'class_idx']) # read inbody csv
+        read_oob_assets_df = pd.read_csv(oob_assets_csv_path, names=['img_path', 'class_idx']) # read inbody csv
+
+        '''
         # read oob_assets_inbody.csv, oob_assets_outofbody.csv
         read_ib_assets_df = pd.read_csv(os.path.join(csv_path, 'oob_assets_inbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
         read_oob_assets_df = pd.read_csv(os.path.join(csv_path, 'oob_assets_outofbody.csv'), names=['img_path', 'class_idx']) # read inbody csv
+        '''
         
         print('==> \tInbody_READ_CSV')
         print(read_ib_assets_df)
@@ -141,51 +165,55 @@ class RobotDataset(Dataset):
         print('|'.join(patients_name_for_parser))
 
         # select patient video
-        self.ib_assets_df = read_ib_assets_df[read_ib_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
-        self.oob_assets_df = read_oob_assets_df[read_oob_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
+        ib_assets_df = read_ib_assets_df[read_ib_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
+        oob_assets_df = read_oob_assets_df[read_oob_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
 
         # sort
-        self.ib_assets_df = self.ib_assets_df.sort_values(by=['img_path'])
-        self.oob_assets_df = self.oob_assets_df.sort_values(by=['img_path'])
+        ib_assets_df = ib_assets_df.sort_values(by=['img_path'])
+        oob_assets_df = oob_assets_df.sort_values(by=['img_path'])
 
         print('\n\n')
         print('==> \tSORT INBODY_CSV')
-        print(self.ib_assets_df)
+        print(ib_assets_df)
         print('\t'* 4)
         print('==> \tSORT OUTBODY_CSV')
-        print(self.oob_assets_df)
+        print(oob_assets_df)
         print('\n\n')
 
         # random_sampling and setting IB:OOB data ratio
-        self.ib_assets_df = self.ib_assets_df.sample(n=int(len(self.oob_assets_df)*self.IB_ratio), replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-        self.oob_assets_df = self.oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
+        # HG 21.11.08 error fix, ratio로 구성 불가능 할 경우 전체 set 모두 사용
+        max_ib_count, target_ib_count = len(ib_assets_df), int(len(oob_assets_df)*self.IB_ratio)
+        sampling_ib_count = max_ib_count if max_ib_count < target_ib_count else target_ib_count
+        print('Random sampling from {} to {}'.format(max_ib_count, sampling_ib_count))
+
+        ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+        oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
 
         print('\n\n')
         print('==> \tRANDOM SAMPLING INBODY_CSV')
-        print(self.ib_assets_df)
+        print(ib_assets_df)
         print('\t'* 4)
         print('==> \tRANDOM SAMPLING OUTBODY_CSV')
-        print(self.oob_assets_df)
+        print(oob_assets_df)
         print('\n\n')
 
         # suffle 0,1
-        self.assets_df = pd.concat([self.ib_assets_df, self.oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
+        assets_df = pd.concat([ib_assets_df, oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
         print('\n\n')
-        print('==> \tFINAL ASSETS ({})'.format(len(self.assets_df)))
-        print(self.assets_df)
+        print('==> \tFINAL ASSETS ({})'.format(len(assets_df)))
+        print(assets_df)
         print('\n\n')
 
         print('\n\n')
         print('==> \tFINAL HEAD')
-        print(self.assets_df.head(20))
+        print(assets_df.head(20))
         print('\n\n')
 
         # last processing
-        self.img_list = self.assets_df.img_path.tolist()
-        self.label_list = self.assets_df.class_idx.tolist()
+        self.img_list = assets_df.img_path.tolist()
+        self.label_list = assets_df.class_idx.tolist()
 
-    def load_data_from_hem_idx(self):
-
+    def load_data_from_hem_assets(self):
         
         # self.args.restore_path 에서 version0, 1, 2, 3 에 대한 hem.csv 읽고
         self.restore_path = '/'.join(self.args.restore_path.split('/')[:-1])
@@ -206,7 +234,7 @@ class RobotDataset(Dataset):
     
         hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
 
-        hem_assets_df.to_csv('./hem_assets_df.csv')
+        hem_assets_df.to_csv(os.path.join(self.args.restore_path, 'hem_assets.csv'))
 
         # select patient frame 
         print('==> \tPATIENT ({})'.format(len(self.patients_name)))
@@ -215,40 +243,35 @@ class RobotDataset(Dataset):
         print('|'.join(patients_name_for_parser))
 
         # select patient video
-        self.hem_assets_df = hem_assets_df[hem_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
+        hem_assets_df = hem_assets_df[hem_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
 
         # # sort
         # self.hem_hard = self.hem_assets_df[hem_assets_df['HEM']==1]
         # self.vanila = self.hem_assets_df[hem_assets_df['HEM']==0]
         # self.hem_assets_df = pd.concat([self.hem_hard, self.vanila])
 
-        self.hem_assets_df = self.hem_assets_df.sort_values(by=['img_path'])
+        hem_assets_df = hem_assets_df.sort_values(by=['img_path'])
 
         print('\n\n')
         print('==> \tSORT HEM_CSV')
-        print(self.hem_assets_df)
+        print(hem_assets_df)
 
         # suffle 0,1
-        self.assets_df = self.hem_assets_df.sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
+        assets_df = hem_assets_df.sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
         print('\n\n')
-        print('==> \tFINAL SUFFLE ASSETS ({})'.format(len(self.assets_df)))
-        print(self.assets_df)
+        print('==> \tFINAL SUFFLE ASSETS ({})'.format(len(assets_df)))
+        print(assets_df)
         print('\n\n')
 
         print('\n\n')
         print('==> \tFINAL HEAD')
-        print(self.assets_df.head(20))
+        print(assets_df.head(20))
         print('\n\n')
 
         # last processing
-        self.img_list = self.assets_df.img_path.tolist()
-        self.label_list = self.assets_df.class_idx.tolist()
+        self.img_list = assets_df.img_path.tolist()
+        self.label_list = assets_df.class_idx.tolist()
         
-
-    def change_labels(self, labels):
-        self.label_list = labels
-
-
     def __len__(self):
         return len(self.img_list)
 
