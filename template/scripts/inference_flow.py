@@ -58,8 +58,8 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            limit_train_batches=0.01,
-                            limit_val_batches=0.01,
+                            limit_train_batches=2,
+                            limit_val_batches=2,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
