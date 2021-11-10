@@ -85,7 +85,10 @@ class HEMHelper():
         if self.method == 'hem-vi':
             return self.hem_vi(*args)
         elif self.method == 'hem-emb-online':
-            return self.hem_cos_hard_sim(*args)
+            if self.args.emb_type == 1 or self.args.emb_type == 2:
+                return self.hem_cos_hard_sim(*args)
+            elif self.args.emb_type == 3:
+                return self.hem_cos_hard_sim2(*args)
         else: # exception
             return None
 
@@ -314,6 +317,56 @@ class HEMHelper():
     
     def hem_cos_hard_sim(self, model, x, y, loss_fn):
         emb, y_hat = model(x)
+        # emb = B x ch
+        # proxies = ch x classes
+        
+        if self.args.emb_type == 1:
+            sim_dist = emb @ model.proxies
+            sim_preds = torch.argmax(sim_dist, -1)
+        elif self.args.emb_type == 2:
+            sim_dist = torch.zeros((emb.size(0), model.proxies.size(1))).to(emb.device)
+            
+            for d in range(sim_dist.size(1)):
+                sim_dist[:, d] = 1 - torch.nn.functional.cosine_similarity(emb, model.proxies[:, d].unsqueeze(0))
+            
+            sim_preds = torch.argmin(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        if sum(correct_answer) > 0:
+            pos_y_hat = y_hat[correct_answer]
+            pos_y = y[correct_answer]
+            
+            pos_loss = loss_fn(pos_y_hat, pos_y)
+            proxy_loss = loss_fn(sim_dist[correct_answer], pos_y)
+        else:
+            pos_loss = 0
+            proxy_loss = 0
+        
+        if sum(wrong_answer) > 0:
+            neg_y_hat = y_hat[wrong_answer]
+            neg_y = y[wrong_answer]
+            
+            wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+            wrong_ids = torch.argsort(wrong_sim_dist)
+            
+            w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
+            neg_y_hat = neg_y_hat[wrong_ids]
+            neg_y = neg_y[wrong_ids]
+            
+            neg_loss = 0
+            for wi in range(len(w)):
+                neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+                
+            # neg_loss /= len(w)
+        else:
+            neg_loss = 0
+            
+        return (pos_loss + neg_loss) / 2. + proxy_loss
+    
+    def hem_cos_hard_sim2(self, model, x, y, loss_fn):
+        emb, y_hat = model(x)
         sim_dist = emb @ model.proxies
         sim_preds = torch.argmax(sim_dist, -1)
         
@@ -323,13 +376,25 @@ class HEMHelper():
         pos_y_hat = y_hat[correct_answer]
         pos_y = y[correct_answer]
         
-        pos_loss = loss_fn(pos_y_hat, pos_y)
-        
         neg_y_hat = y_hat[wrong_answer]
         neg_y = y[wrong_answer]
         
+        proxy_loss = loss_fn(sim_dist[correct_answer], pos_y)
+        
+        correct_sim_dist = sim_dist[correct_answer, pos_y]
+        correct_ids = torch.argsort(correct_sim_dist)
+        
         wrong_sim_dist = sim_dist[wrong_answer, neg_y]
         wrong_ids = torch.argsort(wrong_sim_dist)
+        
+        ##################################################
+        w = torch.Tensor(np.array(list(range(1, len(correct_ids)+1))) / len(correct_ids)).cuda()
+        pos_y_hat = pos_y_hat[correct_ids]
+        pos_y = pos_y[correct_ids]
+        
+        pos_loss = 0
+        for wi in range(len(w)):
+            pos_loss += torch.nn.functional.cross_entropy(pos_y_hat[wi:wi+1, ], pos_y[wi:wi+1]) * w[wi:wi+1]
         
         w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
         neg_y_hat = neg_y_hat[wrong_ids]
@@ -338,6 +403,7 @@ class HEMHelper():
         neg_loss = 0
         for wi in range(len(w)):
             neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+        
             
-        return (pos_loss + neg_loss) / 2. + loss_fn(sim_dist[correct_answer], pos_y)
+        return (pos_loss + neg_loss) / 2. + proxy_loss
     

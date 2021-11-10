@@ -80,8 +80,6 @@ class CAMIO(BaseTrainer):
 
     def train_dataloader(self):
         if 'hem-focus' in self.hem_extract_mode:
-            print(len(self.trainset)//self.args.batch_size,)
-            
             return DataLoader(
                 self.trainset,
                 batch_size=self.args.batch_size,
@@ -132,15 +130,15 @@ class CAMIO(BaseTrainer):
             elif 'hem-focus' in self.hem_extract_mode and self.training:
                 img_path, x, y = batch
                 
-                loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
-                
+                if self.args.emb_type == 3:
+                    loss = self.hem_helper.hem_cos_hard_sim2(self.model, x, y, self.loss_fn)
+                else:
+                    loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
             else:
                 img_path, x, y = batch
 
                 y_hat = self.forward(x)
                 loss = self.loss_fn(y_hat, y)
-
-            self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
             
             if self.args.use_meta:
                 self.cur_step += 1
@@ -148,6 +146,8 @@ class CAMIO(BaseTrainer):
                     self.skip_training = True
         else:
             loss = torch.Tensor(np.array([0] * self.args.batch_size)).cuda()
+
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
 
         return  {
             'loss': loss,

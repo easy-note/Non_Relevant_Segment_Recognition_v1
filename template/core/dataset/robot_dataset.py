@@ -10,10 +10,9 @@ import natsort
 
 from torch.utils.data import Dataset
 from core.config.data_info import data_transforms, theator_data_transforms
-
 from core.config.patients_info import train_videos, val_videos
-
 from core.utils.heuristic_sampling import HeuristicSampler
+
 
 class RobotDataset(Dataset):
     def __init__(self, args, state) :
@@ -35,7 +34,7 @@ class RobotDataset(Dataset):
         assets_type = '' # ['sub', 'meta', 'hem'] 
         ### ### ###
 
-        self.wise_sampling_mode = False
+        self.wise_sampling_mode = self.args.use_wise_sample
 
         if self.args.experiment_type == 'ours':
             d_transforms = data_transforms
@@ -50,7 +49,7 @@ class RobotDataset(Dataset):
                 self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='train') # args.fold's train dataset(80 case) to 60 case
                 assets_type='sub'
 
-                self.wise_sampling_mode = True
+                # self.wise_sampling_mode = True
                 
             elif state == 'val':
                 self.aug = d_transforms['val']
@@ -76,7 +75,7 @@ class RobotDataset(Dataset):
                     # TODO - general train and online 
                     assets_type='sub'
 
-                    self.wise_sampling_mode = True
+                    # self.wise_sampling_mode = True
 
                     
             elif state == 'val':
@@ -106,9 +105,6 @@ class RobotDataset(Dataset):
         elif mode == 'val':
             return patients_dict[self.args.mini_fold]
 
-    def change_mode(self, to_hem=True): # JH 수정 : to_hem=False -> to_hem=True
-        self.mode_hem = to_hem
-
     def load_data(self, assets_type):
         support_type = ['sub', 'meta', 'hem']
         assert assets_type in support_type, 'NOT SOPPORT TYPE'
@@ -124,8 +120,8 @@ class RobotDataset(Dataset):
 
         ## set meta/sub assets path
         assets_path = {
-            'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=30.csv'),
-            'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=30.csv'),
+            'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=5.csv'),
+            'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=5.csv'),
             'sub_ib':os.path.join(assets_root_path, 'oob_assets_inbody.csv'),
             'sub_oob':os.path.join(assets_root_path, 'oob_assets_outofbody.csv'),
         }
