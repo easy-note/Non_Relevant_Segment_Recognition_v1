@@ -184,6 +184,8 @@ def inference_main(args):
 
         # visualization per patients
         patient_predict_visual_path = os.path.join(each_patients_save_dir, 'predict-{}.png'.format(patient_no))
+        # patient_gt_list += gt_list
+        # patient_predict_list += patient_predict_list
 
         visual_tool = VisualTool(patient_gt_list, patient_no, patient_predict_visual_path)
         visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval)

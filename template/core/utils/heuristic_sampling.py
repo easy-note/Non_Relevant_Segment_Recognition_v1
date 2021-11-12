@@ -85,7 +85,7 @@ class HeuristicSampler():
             nrs_end_idx = nrs_idx[1]
 
             start_end_gap = nrs_end_idx-nrs_start_idx
-            wise_window_size = (start_end_gap//4) * self.IB_ratio # start_end_gap <= 4 -> wise_window_size = 0 
+            wise_window_size = int((start_end_gap//4) * self.IB_ratio) # start_end_gap <= 4 -> wise_window_size = 0 
 
             if nrs_start_idx == 0: # nrs start idx == 0 이면, 그 이전의 프레임을 선택할 수 없음. 
                 pass
@@ -131,7 +131,7 @@ class HeuristicSampler():
         assets_nrs_df = self.assets_df[self.assets_df['class_idx']==1]
 
         assets_wise_rs_df = self.assets_df[self.assets_df['wise_rs']==True]
-        assets_vanila_df = self.assets_df[(self.assets_df['wise_rs']==False) & (self.assets_df['class_idx']==0)].sample(n=len(assets_nrs_df)*self.IB_ratio-len(assets_wise_rs_df), random_state=self.random_seed)
+        assets_vanila_df = self.assets_df[(self.assets_df['wise_rs']==False) & (self.assets_df['class_idx']==0)].sample(n=int(len(assets_nrs_df)*self.IB_ratio-len(assets_wise_rs_df)), random_state=self.random_seed)
         assets_rs_df = pd.concat([assets_wise_rs_df, assets_vanila_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
 
         final_assets = pd.concat([assets_nrs_df, assets_rs_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
@@ -143,8 +143,3 @@ class HeuristicSampler():
 
         return final_assets
     
-
-        
-
-
-

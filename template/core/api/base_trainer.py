@@ -7,6 +7,9 @@ from glob import glob
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 
+# from ray.tune.integration.pytorch_lightning import TuneReportCallback, \
+#         TuneReportCheckpointCallback
+
 
 class BaseTrainer(pl.LightningModule):
     """
@@ -175,6 +178,13 @@ class BaseTrainer(pl.LightningModule):
             checkpoint.CHECKPOINT_NAME_LAST = '{epoch}-{val_loss:.4f}-last'
         
             callbacks.append(checkpoint)
+
+        # ray_callback = TuneReportCallback({
+        #                 "loss": "Loss",
+        #                 "mean_metric": "Mean_metric"
+        #             }, on="validation_end")
+
+        # callbacks.append(ray_callback)
 
         print('[+] Callbacks are set ', callbacks)
         

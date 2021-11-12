@@ -185,6 +185,10 @@ def parse_opts():
             type=int,
             help='How many CPUs to use for data loading')
     
+    parser.add_argument('--use_wise_sample',
+            action='store_true',
+            help='If true, Only testing')
+    
     parser.add_argument('--use_meta',
             action='store_true',
             help='If true, Only testing')
@@ -215,6 +219,10 @@ def parse_opts():
             help='Select HEM top ratio')
     
     parser.add_argument('--sampling_type', type=int,
+            default=1,
+            help='?')
+    
+    parser.add_argument('--emb_type', type=int,
             default=1,
             help='?')
 
