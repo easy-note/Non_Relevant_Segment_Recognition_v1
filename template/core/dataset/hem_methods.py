@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
+import json
+
+import os
 
 class HEMHelper():
     """
@@ -20,14 +23,31 @@ class HEMHelper():
         self.IB_CLASS, self.OOB_CLASS = (0, 1)
         self.bsz = self.args.batch_size
         self.cnt = 0
-        
+
     def set_method(self, method):
         if method in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
             self.method = 'hem-vi'
         else:
             self.method = method
 
+    def set_restore_path(self, restore_path):
+        self.restore_path = restore_path
+
+    def get_target_hem_count(self):
+
+        with open(os.path.join(self.restore_path, 'DATASET_COUNT.json')) as file:
+            try:
+                json_data = json.load(file)
+                return json_data['target_hem_count']['rs'], json_data['target_hem_count']['nrs']
+
+            except ValueError as e:
+                print('Parsing Fail, Error: {}'.format(e))
+                return None
+
     def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df):
+
+        target_rs_cnt, target_nrs_cnt = self.get_target_hem_count()
+
         # df 정렬
         hard_neg_df = hard_neg_df.sort_values(by='Img_path')
         hard_pos_df = hard_pos_df.sort_values(by='Img_path')
@@ -39,31 +59,46 @@ class HEMHelper():
         hard_pos_df['HEM'] = [1]*len(hard_pos_df)
         vanila_neg_df['HEM'] = [0]*len(vanila_neg_df)
         vanila_pos_df['HEM'] = [0]*len(vanila_pos_df)
+        
+        # train data 수 만큼 hem data extract
+        target_len_vanila_pos = target_nrs_cnt - len(hard_pos_df)
+        target_len_vanila_neg = target_rs_cnt - len(hard_neg_df)
 
+        if target_len_vanila_pos < 0: target_len_vanila_pos = 0
+        if target_len_vanila_neg < 0: target_len_vanila_neg = 0
+        
         try:
-            vanila_pos_df = vanila_pos_df.sample(n=len(hard_pos_df), replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, hem_oob 개
+            vanila_pos_df = vanila_pos_df.sample(n=target_len_vanila_pos, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, hem_oob 개
         except:
             vanila_pos_df = vanila_pos_df.sample(frac=1, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, 전체 oob_df
 
-        target_vanila_neg_df_len = (len(hard_pos_df)+len(vanila_pos_df))*self.args.IB_ratio - len(hard_neg_df)
-        
-        print('target_vanila_neg_df_len : {}\n'.format(target_vanila_neg_df_len))
-
-        
         try:
-            vanila_neg_df = vanila_neg_df.sample(n=target_vanila_neg_df_len, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, target_ib_assets_df_len 개
+            vanila_neg_df = vanila_neg_df.sample(n=target_len_vanila_neg, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, target_ib_assets_df_len 개
         except:
-            if target_vanila_neg_df_len <= 0: 
-                vanila_neg_df = vanila_neg_df.sample(frac=0, replace=False, random_state=self.args.random_seed)
-                hard_neg_df = hard_neg_df.sample(n=(len(hard_pos_df)+len(vanila_pos_df))*self.args.IB_ratio, replace=False, random_state=self.args.random_seed)
-            else:
-                vanila_neg_df = vanila_neg_df.sample(frac=1, replace=False, random_state=10)
+            vanila_neg_df = vanila_neg_df.sample(frac=1, replace=False, random_state=self.args.random_seed)
 
-        print('\n\n', '========='* 10)
-        print('\thard_neg_df {}, hard_pos_df {}, vanila_neg_df {}, vanila_pos_df {}'.format(len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)))
-        print('========='* 10, '\n\n')
+        save_data = {
+            "FINAL_HEM_DATASET": {
+                "rs": {
+                    "hem": len(hard_neg_df),
+                    "vanila": len(vanila_neg_df)
+                },
+                "nrs": {
+                    "hem": len(hard_pos_df),
+                    "vanila": len(vanila_pos_df)
+                }
+            }
+        }
 
-        hem_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
+        with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'r+') as f:
+            data = json.load(f)
+            data.update(save_data)
+
+ 
+        with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
+            json.dump(data, f, indent=2)
+
+
 
         final_pos_assets_df = pd.concat([hard_pos_df, vanila_pos_df])[['Img_path', 'GT', 'HEM']]
         final_neg_assets_df = pd.concat([hard_neg_df, vanila_neg_df])[['Img_path', 'GT', 'HEM']]
@@ -78,8 +113,7 @@ class HEMHelper():
         final_assets_df.columns = ['img_path', 'class_idx', 'HEM']
 
 
-
-        return final_assets_df, hem_dataset_len_list
+        return final_assets_df
         
     def compute_hem(self, *args):
         if self.method == 'hem-vi':
@@ -154,6 +188,10 @@ class HEMHelper():
             top_k = int(len(vanila_df) * top_ratio)
 
             hard_df_lower_idx = dropout_predictions_mean_abs_diff.argsort()[:top_k].tolist()
+
+            '''
+            # softmax hem 추출 시, lower_idx, upper_idx 따로 실험 :) 
+
             hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist()
 
             hard_idx = []
@@ -162,6 +200,9 @@ class HEMHelper():
                     hard_idx.append(i)
 
             hard_idx = hard_idx + hard_df_lower_idx
+            '''
+
+            hard_idx = hard_df_lower_idx
 
             vanila_idx = []
             for i in range(len(vanila_df)):
@@ -177,9 +218,10 @@ class HEMHelper():
             vanila_neg_df = vanila_df[vanila_df['GT']==IB_CLASS]
             vanila_pos_df = vanila_df[vanila_df['GT']==OOB_CLASS]
 
-            
+
 
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+
 
         def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
@@ -301,16 +343,11 @@ class HEMHelper():
             print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
 
-        print('hard_neg_df', len(hard_neg_df))
-        print('hard_pos_df', len(hard_pos_df))
-        print('vanila_neg_df', len(vanila_neg_df))
-        print('vanila_pos_df', len(vanila_pos_df))
+        
 
-        total_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
+        hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
-        hem_final_df, hem_dataset_len_list = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
-
-        return hem_final_df, total_dataset_len_list, hem_dataset_len_list
+        return hem_final_df
     
     def hem_cos_hard_sim(self, model, x, y, loss_fn):
         emb, y_hat = model(x)

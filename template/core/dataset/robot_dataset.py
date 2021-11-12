@@ -124,8 +124,8 @@ class RobotDataset(Dataset):
 
         ## set meta/sub assets path
         assets_path = {
-            'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=30.csv'),
-            'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=30.csv'),
+            'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=5.csv'),
+            'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=5.csv'),
             'sub_ib':os.path.join(assets_root_path, 'oob_assets_inbody.csv'),
             'sub_oob':os.path.join(assets_root_path, 'oob_assets_outofbody.csv'),
         }
@@ -134,7 +134,7 @@ class RobotDataset(Dataset):
             print('[LOAD FROM SUBSET]')
             self.load_data_from_assets(assets_path['sub_ib'], assets_path['sub_oob'])
         
-        elif assets_type == 'meta': # 30fps
+        elif assets_type == 'meta': # 30fps -> 5fps
             print('[LOAD FROM METASET]')
             self.load_data_from_assets(assets_path['meta_ib'], assets_path['meta_oob'])
         
@@ -291,7 +291,12 @@ class RobotDataset(Dataset):
         # last processing
         self.img_list = assets_df.img_path.tolist()
         self.label_list = assets_df.class_idx.tolist()
+
+
+    def number_of_rs_nrs(self):
+        return self.label_list.count(0) ,self.label_list.count(1)
         
+
     def __len__(self):
         return len(self.img_list)
 
