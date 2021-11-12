@@ -59,13 +59,17 @@ class HEMHelper():
         hard_pos_df['HEM'] = [1]*len(hard_pos_df)
         vanila_neg_df['HEM'] = [0]*len(vanila_neg_df)
         vanila_pos_df['HEM'] = [0]*len(vanila_pos_df)
-        
+
+
         # train data 수 만큼 hem data extract
+        if len(hard_pos_df) > target_nrs_cnt: hard_pos_df = hard_pos_df.sample(n=target_nrs_cnt, replace=False, random_state=self.args.random_seed)
+        if len(hard_neg_df) > target_rs_cnt: hard_neg_df = hard_neg_df.sample(n=target_rs_cnt, replace=False, random_state=self.args.random_seed) 
+
         target_len_vanila_pos = target_nrs_cnt - len(hard_pos_df)
         target_len_vanila_neg = target_rs_cnt - len(hard_neg_df)
 
-        if target_len_vanila_pos < 0: target_len_vanila_pos = 0
-        if target_len_vanila_neg < 0: target_len_vanila_neg = 0
+        # if target_len_vanila_pos < 0: target_len_vanila_pos = 0
+        # if target_len_vanila_neg < 0: target_len_vanila_neg = 0
         
         try:
             vanila_pos_df = vanila_pos_df.sample(n=target_len_vanila_pos, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, hem_oob 개
@@ -94,10 +98,8 @@ class HEMHelper():
             data = json.load(f)
             data.update(save_data)
 
- 
         with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
             json.dump(data, f, indent=2)
-
 
 
         final_pos_assets_df = pd.concat([hard_pos_df, vanila_pos_df])[['Img_path', 'GT', 'HEM']]
