@@ -130,7 +130,7 @@ class RobotDataset(Dataset):
             print('[LOAD FROM SUBSET]')
             self.load_data_from_assets(assets_path['sub_ib'], assets_path['sub_oob'])
         
-        elif assets_type == 'meta': # 30fps
+        elif assets_type == 'meta': # 30fps -> 5fps
             print('[LOAD FROM METASET]')
             self.load_data_from_assets(assets_path['meta_ib'], assets_path['meta_oob'])
         
@@ -287,7 +287,12 @@ class RobotDataset(Dataset):
         # last processing
         self.img_list = assets_df.img_path.tolist()
         self.label_list = assets_df.class_idx.tolist()
+
+
+    def number_of_rs_nrs(self):
+        return self.label_list.count(0) ,self.label_list.count(1)
         
+
     def __len__(self):
         return len(self.img_list)
 
