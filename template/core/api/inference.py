@@ -46,6 +46,8 @@ class InferenceDB(): # InferenceDB
         target_img_list = []
         target_frame_idx_list = []
 
+        print('expected loop-cnt : {:.1f}'.format(len(dl) / self.inference_interval))
+
         # inferencing model
         with torch.no_grad() :
             for sample in tqdm(dl, desc='Inferencing... \t ==> {}'.format(self.db_path)) :

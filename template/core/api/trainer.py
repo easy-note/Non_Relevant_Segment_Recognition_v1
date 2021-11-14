@@ -1,6 +1,11 @@
+import os
+import math
+import numpy as np
+import csv
+import json
+
+import random
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from core.api import BaseTrainer
@@ -8,16 +13,23 @@ from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
 
-import os
-import math
-import numpy as np
-import random
+
 
 class CAMIO(BaseTrainer):
     def __init__(self, args):
         super(BaseTrainer, self).__init__()
+ 
         # TODO 필요한거 더 추가하기
         self.args = args
+
+        random.seed(self.args.random_seed)
+        np.random.seed(self.args.random_seed)
+        os.environ["PYTHONHASHSEED"]=str(self.args.random_seed)
+        torch.manual_seed(self.args.random_seed)
+        torch.cuda.manual_seed(self.args.random_seed)
+        torch.backends.cudnn.deterministic=True
+        torch.backends.cudnn.benchmark=True
+        
         
         self.save_hyperparameters() # save with hparams
 
@@ -25,22 +37,27 @@ class CAMIO(BaseTrainer):
         self.loss_fn = get_loss(self.args)
 
         self.metric_helper = MetricHelper()
-        self.hem_helper = HEMHelper()
+        self.hem_helper = HEMHelper(self.args)
 
         self.best_val_loss = math.inf
 
         self.sanity_check = True
+        self.restore_path = None # inference module args / save path of hem df 
+        
+        self.cur_step = 0
+        self.max_steps = 62200
+        self.skip_training = False
+        self.last_epoch = -1
+        self.hem_extract_mode = self.args.hem_extract_mode
 
-        # only use for HEM
-        self.train_method = self.args.train_method
-        self.hem_helper.set_method(self.train_method)
-
-        if self.train_method in ['hem-softmax', 'hem-vi']:
-            self.reset_epoch = self.args.max_epoch // 2 - 1
-        else:
-            self.reset_epoch = -1
-
-
+        # hem-online
+        if 'online' in self.args.hem_extract_mode:
+            self.hem_helper.set_method(self.hem_extract_mode)
+        
+        # hem-offline // hem_train, general_train 에서는 Hem 생성하지 않음.
+        elif 'offline' in self.args.hem_extract_mode:
+            self.hem_helper.set_method(self.hem_extract_mode)            
+            self.last_epoch = self.args.max_epoch - 1
 
     def setup(self, stage):
         '''
@@ -64,13 +81,22 @@ class CAMIO(BaseTrainer):
                 self.testset = LapaDataset(self.args, state='val')
 
     def train_dataloader(self):
-        return DataLoader(
-            self.trainset,
-            batch_size=self.args.batch_size,
-            shuffle=True,
-            drop_last=True,
-            num_workers=self.args.num_workers,
-        )
+        if 'hem-focus' in self.hem_extract_mode:
+            return DataLoader(
+                self.trainset,
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                sampler=FocusSampler(self.trainset.label_list,
+                                     self.args)
+            )
+        else:
+            return DataLoader(
+                self.trainset,
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                shuffle=True,
+                drop_last=True,
+            )
 
     def val_dataloader(self):
         return DataLoader(
@@ -91,29 +117,38 @@ class CAMIO(BaseTrainer):
             num_workers=self.args.num_workers,
         )
 
-        
     def forward(self, x):
         """
             forward data
         """
-        if self.train_method == 'hem-bs':
-            # TODO future works
-            pass
-            # if self.training:
-            #     ids = self.hem_helper(self.model, self.train_loader)
-            #     self.trainset.set_sample_ids(ids)
-
-        else:
-            return self.model(x)
+        return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        """
-            forward for mini-batch
-        """
-        x, y = batch
+        if not self.skip_training:
+            if 'hem-emb' in self.hem_extract_mode and self.training:
+                img_path, x, y = batch
+                loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
+                
+            elif 'hem-focus' in self.hem_extract_mode and self.training:
+                img_path, x, y = batch
+                
+                if self.args.emb_type == 3:
+                    loss = self.hem_helper.hem_cos_hard_sim2(self.model, x, y, self.loss_fn)
+                else:
+                    loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
+            else:
+                img_path, x, y = batch
 
-        y_hat = self.forward(x)
-        loss = self.loss_fn(y_hat, y)
+                y_hat = self.forward(x)
+                loss = self.loss_fn(y_hat, y)
+            
+            if self.args.use_meta:
+                self.cur_step += 1
+                if self.cur_step == self.max_steps:
+                    self.skip_training = True
+        else:
+            loss = torch.Tensor(np.array([0] * self.args.batch_size)).cuda()
+
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
 
         return  {
@@ -132,9 +167,28 @@ class CAMIO(BaseTrainer):
         # write train loss
         self.metric_helper.write_loss(train_loss_mean, task='train')
 
+        # save number of train dataset (rs, nrs)
+        if self.current_epoch == self.last_epoch:
+            rs_count, nrs_count = self.trainset.number_of_rs_nrs()
+            
+            save_data = {
+                'train_dataset': {
+                    'rs': rs_count,
+                    'nrs': nrs_count 
+                },
+                'target_hem_count': {
+                    'rs': rs_count // 3,
+                    'nrs': nrs_count // 3
+                }
+            }
+
+            with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
+                json.dump(save_data, f, indent=2)
+
+       
 
     def validation_step(self, batch, batch_idx): # val - every batch
-        x, y = batch
+        img_path, x, y = batch
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
@@ -144,50 +198,41 @@ class CAMIO(BaseTrainer):
 
         return {
             'val_loss': loss,
+            'img_path': img_path,
+            'x': x.detach().cpu(),
+            'y': y.detach().cpu(),
+            'y_hat': y_hat.argmax(dim=1).detach().cpu(),
+            'logit': y_hat.detach().cpu()
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
         if self.sanity_check:
+            print('sanity check')
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+            print('SANITY RESTORE PATH : ', self.restore_path)
+
             self.sanity_check = False
 
         else:
+            self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
+            
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
         
             val_loss, cnt = 0, 0
-            for output in outputs:
+            for output in outputs: 
                 val_loss += output['val_loss'].cpu().data.numpy()
                 cnt += 1
 
             val_loss_mean = val_loss/cnt
             metrics['Loss'] = val_loss_mean
 
-            '''
-                metrics = {
-                    'TP': cm.TP[self.OOB_CLASS],
-                    'TN': cm.TN[self.OOB_CLASS],
-                    'FP': cm.FP[self.OOB_CLASS],
-                    'FN': cm.FN[self.OOB_CLASS],
-                    'Accuracy': cm.ACC[self.OOB_CLASS],
-                    'Precision': cm.PPV[self.OOB_CLASS],
-                    'Recall': cm.TPR[self.OOB_CLASS],
-                    'F1-Score': cm.F1[self.OOB_CLASS],
-                    'OOB_metric':
-                    'Over_estimation':
-                    'Under_estimation':
-                    'Correspondence_estimation':
-                    'UNCorrespondence_estimation':
-                    'Loss':
-            }
-            '''
-
             self.log_dict(metrics, on_epoch=True, prog_bar=True)
-
+            
             # save result.csv 
             self.metric_helper.save_metric(metric=metrics, epoch=self.current_epoch, args=self.args, save_path=os.path.join(self.args.save_path, self.logger.log_dir))
 
             # write val loss
             self.metric_helper.write_loss(val_loss_mean, task='val')
-            
             self.metric_helper.save_loss_pic(save_path=os.path.join(self.args.save_path, self.logger.log_dir))
 
             if not self.args.use_lightning_style_save:
@@ -195,24 +240,24 @@ class CAMIO(BaseTrainer):
                     self.best_val_loss = val_loss_mean # self.best_val_loss 업데이트. 
                     self.save_checkpoint()
 
-                if self.current_epoch+1 == self.args.max_epoch: # max_epoch 모델 저장
+                if self.current_epoch + 1 == self.args.max_epoch: # max_epoch 모델 저장
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
 
             # Hard Example Mining (Offline)
-            if self.current_epoch == self.reset_epoch and self.train_method in ['hem-softmax', 'hem-vi']:
-                self.trainset.change_mode(True)
-                self.valset.change_mode(True)
-                
-                hem_train_ids = self.hem_helper(self.model, self.train_loader)
-                hem_val_ids = self.hem_helper(self.model, self.train_loader)
-                self.trainset.set_sample_ids(hem_train_ids)
-                self.valset.set_sample_ids(hem_val_ids)
-    
+            if self.current_epoch == self.last_epoch:
+                if self.args.stage not in ['hem_train', 'general_train'] and 'offline' in self.args.hem_extract_mode: 
+
+                    self.hem_helper.set_restore_path(self.restore_path)
+
+                    hem_df = self.hem_helper.compute_hem(self.model, outputs)
+                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+
+
 
     def test_step(self, batch, batch_idx):
-        x, y = batch
+        img_path, x, y = batch
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
@@ -230,6 +275,3 @@ class CAMIO(BaseTrainer):
         for k, v in metrics.items():
             if k in ['Accuracy', 'Precision', 'Recall', 'F1-Score']:
                 self.log('test_'+k, v, on_epoch=True, prog_bar=True)
-
-    def online_hem(self):
-        pass

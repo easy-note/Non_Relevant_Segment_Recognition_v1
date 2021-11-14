@@ -1,11 +1,14 @@
 # logs 
-/logs
+/logs*
 
 # results
 /*results*
 
+/template/results
+
 # python
-/__pycache__
+__pycache__
 
 # dataset check
 /get_dataset_results
+template/scripts/test.sh

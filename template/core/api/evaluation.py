@@ -10,8 +10,6 @@ import numpy as np
 import json
 import argparse
 
-import torch
-
 from core.utils.metric import MetricHelper # metric util
 from core.utils.parser import AnnotationParser, FileLoader # json util, file util
 from core.utils.parser import FileLoader 
@@ -39,6 +37,17 @@ class Evaluator():
     def set_path(self, model_output_csv_path, gt_json_path):
         self.model_output_csv_path = model_output_csv_path
         self.gt_json_path = gt_json_path
+
+    def get_assets(self): # return gt_list(from .json), predict_list(from .csv)
+        file_loader= FileLoader(self.model_output_csv_path) # csv
+        predict_df = file_loader.load() # DataFrame
+        predict_list = list(predict_df['predict'].tolist())
+
+        anno_parser = AnnotationParser(self.gt_json_path)
+        gt_list = anno_parser.get_event_sequence(self.inference_interval)
+        gt_list, predict_list = self._fit_to_min_length(gt_list, predict_list)
+
+        return gt_list, predict_list
 
     def calc(self):
         """
@@ -73,20 +82,12 @@ class Evaluator():
                 }
         """
 
-        # 1. prepare data
-        file_loader= FileLoader(self.model_output_csv_path) # csv
-        predict_df = file_loader.load() # DataFrame
-
-        predict_list = list(predict_df['predict'].tolist())
-
-        anno_parser = AnnotationParser(self.gt_json_path)
-        gt_list = anno_parser.get_event_sequence(self.inference_interval)
-
-        gt_list, predict_list = self._fit_to_min_length(predict_list, gt_list)
+        # 1. prepare data(assets)
+        gt_list, predict_list = self.get_assets()
 
         # 2. calc metric
         metric_helper = MetricHelper()
-        metric_helper.write_preds(torch.Tensor(predict_list), torch.Tensor(gt_list))
+        metric_helper.write_preds(np.array(predict_list), np.array(gt_list))
         metrics = metric_helper.calc_metric()
 
         return metrics

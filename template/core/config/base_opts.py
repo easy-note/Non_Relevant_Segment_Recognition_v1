@@ -1,6 +1,5 @@
 import argparse
 
-
 def parse_opts():
     """
         Base arguments parser
@@ -9,13 +8,15 @@ def parse_opts():
 
     # --------------- Model basic info --------------------
     parser.add_argument('--model',
-            default='mobilenet_v3_large',
+            default='mobilenetv3_large_100',
             type=str,
             choices=['vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn', 
                         'resnet18', 'resnet34', 'resnet50', 'wide_resnet50_2', 'resnext50_32x4d',
                         'mobilenet_v2', 'mobilenet_v3_small', 'mobilenet_v3_large', 'squeezenet1_0', 'squeezenet1_1',
                         'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 
-                        'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7'],
+                        'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
+                        'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
+                        'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -25,7 +26,7 @@ def parse_opts():
     parser.add_argument('--loss_fn',
             default='ce',
             type=str,
-            choices=['ce'],
+            choices=['ce', 'focal'],
             help='Select loss_fn to train/test')
 
     parser.add_argument('--batch_size',
@@ -39,7 +40,7 @@ def parse_opts():
             help='Minimum training epoch')
 
     parser.add_argument('--max_epoch',
-            default=100,
+            default=2,
             type=int,
             help='Maximum training epoch')
 
@@ -54,7 +55,7 @@ def parse_opts():
             help='What device to use for training or validation model')
 
     parser.add_argument('--cuda_list',
-            default='1',
+            default='4',
             type=str,
             help='Name list of gpus that are used to train')
 
@@ -79,7 +80,7 @@ def parse_opts():
 
     # /OOB_RECOG/logs/project-1/TB_log/version_0
     parser.add_argument('--save_path', type=str, 
-                        default='/OOB_RECOG/logs/project-1', help='')
+                        default='/OOB_RECOG/logs/211109_heuristic_sampling', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',
@@ -115,7 +116,7 @@ def parse_opts():
     parser.add_argument('--lr_scheduler',
             default='step_lr',
             type=str,
-            choices=['step_lr', 'mul_lr'],
+            choices=['step_lr', 'mul_lr', 'mul_step_lr', 'reduced', 'cosine'],
             help='Learning scheduler selection \n[Types : step_lr, mul_lr]')
 
     parser.add_argument('--lr_scheduler_step', 
@@ -127,6 +128,16 @@ def parse_opts():
             default=0.9,
             type=float,
             help='Multiplicative factor for decreasing learning rate')
+
+    parser.add_argument('--lr_milestones',
+            default=[9, 14],
+            type=list,
+            help='Multi-step milestones for decreasing learning rate')
+    
+    parser.add_argument('--t_max_iter', 
+            type=int, 
+            default=200000, 
+            help='Use for Step LR Scheduler')
 
     # -------------- Dataset --------------------
     parser.add_argument('--dataset', 
@@ -147,20 +158,26 @@ def parse_opts():
             help='Data location')
 
     parser.add_argument('--fold',
-            default='5',
+            default='2',
             type=str,
             choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
 
-    parser.add_argument('--data_version',
-            default='v2',
+    parser.add_argument('--mini_fold',
+            default='1',
             type=str,
-            choices=['v1', 'v2'],
+            choices=['general', '1', '2', '3', '4'],
+            help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
+
+    parser.add_argument('--data_version',
+            default='v3',
+            type=str,
+            choices=['v1', 'v2', 'v3'],
             help='Annotation dataset version')
 
     parser.add_argument('--IB_ratio',
             default=3,
-            type=int,
+            type=float,
             help='')
 
     parser.add_argument('--num_workers',
@@ -168,20 +185,70 @@ def parse_opts():
             type=int,
             help='How many CPUs to use for data loading')
     
+    parser.add_argument('--use_wise_sample',
+            action='store_true',
+            help='If true, Only testing')
+    
+    parser.add_argument('--use_meta',
+            action='store_true',
+            help='If true, Only testing')
+    
+    parser.add_argument('--meta_sampling',
+            default=6,
+            help='If true, Only testing')
 
     # -------------- Train Methods --------------------
-    parser.add_argument('--train_method', type=str,
-            default='normal', 
-            choices=['normal', 'hem-softmax', 'hem-bs', 'hem-vi'],
-            help='Select train method, normal or hem method')
+    parser.add_argument('--experiment_type', 
+            default='ours', 
+            type=str,
+            choices=['ours', 'theator'], )
 
+    parser.add_argument('--stage', 
+            default='mini_fold_stage_0', 
+            type=str,
+            choices=['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train'])
+
+    parser.add_argument('--hem_extract_mode', type=str,
+            default='hem-softmax-offline', 
+            choices=['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 
+                     'hem-emb-online', 'hem-focus-online'],
+            help='Select train method, normal or hem method')
+            
+    parser.add_argument('--top_ratio', type=float,
+            default=7/100,
+            help='Select HEM top ratio')
+    
+    parser.add_argument('--sampling_type', type=int,
+            default=1,
+            help='?')
+    
+    parser.add_argument('--emb_type', type=int,
+            default=1,
+            help='?')
 
     # -------------- etc --------------------
-    parser.add_argument('--random_seed', type=int, default=10, help='dataset ranbom seed')
+    parser.add_argument('--random_seed', type=int, default=10, help='dataset random seed')
 
     parser.add_argument('--use_lightning_style_save', action='store_true', help='If true, use lightning save module')
 
-    parser.add_argument('--save_top_n', type=int, default=2, help='dataset ranbom seed')
+    parser.add_argument('--save_top_n', type=int, default=1, help='dataset random seed')
+    
+    parser.add_argument('--inference_interval', type=int, 
+                        default=30,
+                        help='Inference Interval of frame')
 
+    parser.add_argument('--inference_fold',
+                    default='1',
+                    type=str,
+                    choices=['1', '2', '3', '4', '5', 'free'],
+                    help='valset 1, 2, 3, 4, 5, free')
+
+    parser.add_argument('--experiments_sheet_dir', type=str, 
+                        default='/code/OOB_Recog/template/results',
+                        help='root directory for experimets results')
+    
+    parser.add_argument('--trial', type=int,
+            default=1,
+            help='?')
 
     return parser

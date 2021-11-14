@@ -1,5 +1,5 @@
-def main():
-    print('main')
+def logging_test():
+    print('logging_test')
     
     ### test logging module
     from core.config.base_opts import parse_opts
@@ -45,11 +45,38 @@ def main():
     log_helper.writeln('\t === END INFERENCE === \t')
     log_helper.writeln()
 
+def report_helper_test():
+    print('report_helper_test')
+
+    ### test report_helper module
+    from core.utils.logging import ReportHelper # report helper (for experiments reuslts and inference results)
+
+    ### ReportHelper Test
+    report_helper = ReportHelper(report_save_path='../results/report.csv', report_type='inference')
+    report_col = report_helper.get_report_form()
+
+    report_col['Patient'] = 'R_10'
+    report_col['FP'] = 120
+    report_col['TP'] = 130
+    report_col['FN'] = 140
+    report_col['TN'] = 150
+    report_col['TOTAL'] = 160
+    report_col['GT_OOB'] = 170
+    report_col['GT_IB'] = 180
+    report_col['PREDICT_OOB'] = 190
+    report_col['PREDICT_IB'] = 200
+    report_col['CR'] = 21.10
+    report_col['OR'] = 22.20
+
+    report_helper.save_report(report_col)
+
+
 if __name__ == '__main__':
     
     if __package__ is None:
         import sys
         from os import path
         sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
-
-    main()
+    
+    # logging_test()
+    report_helper_test()

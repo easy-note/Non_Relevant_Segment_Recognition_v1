@@ -7,6 +7,9 @@ from glob import glob
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 
+# from ray.tune.integration.pytorch_lightning import TuneReportCallback, \
+#         TuneReportCheckpointCallback
+
 
 class BaseTrainer(pl.LightningModule):
     """
@@ -90,10 +93,47 @@ class BaseTrainer(pl.LightningModule):
                 optimizer,
                 lr_lambda=lambda epoch: self.args.lr_scheduler_factor,
             )
+        elif schdlr_name == 'mul_step_lr':
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                optimizer,
+                milestones=self.args.lr_milestones,
+                gamma=self.args.lr_scheduler_factor,
+            )
+        elif schdlr_name == 'reduced':
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                mode='min',
+                factor=self.args.lr_scheduler_factor,
+                patience=self.args.lr_scheduler_step,
+                threshold=1e-4,
+                threshold_mode='rel',
+                min_lr=1e-7,
+                verbose=True,
+            )
+        elif schdlr_name == 'cosine':
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer,
+                T_max=self.args.t_max_iter,
+                eta_min=0,
+                last_epoch=-1,
+                verbose=True,
+            )
+        else:
+            scheduler = None
 
         print('[+] Optimizer and Scheduler are set ', optimizer, scheduler)
-
-        return [optimizer], [scheduler]
+        
+        if scheduler is not None:
+            if schdlr_name == 'reduced':
+                return {
+                    'optimizer': optimizer,
+                    'lr_scheduler': scheduler, # Changed scheduler to lr_scheduler
+                    'monitor': 'val_loss'
+                }
+            else: 
+                return [optimizer], [scheduler]
+        else:
+            return [optimizer]
     
     # @classmethod
     def configure_callbacks(self):
@@ -117,18 +157,34 @@ class BaseTrainer(pl.LightningModule):
         callbacks.append(lrMonitor)
         
         if self.args.use_lightning_style_save:
+            # checkpoint = ModelCheckpoint(
+            #     # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
+            #     filename='{epoch}-{val_loss:.4f}-best',
+            #     save_top_k=self.args.save_top_n,
+            #     save_last=True,
+            #     verbose=True,
+            #     monitor='val_loss',
+            #     mode='min')
+            
             checkpoint = ModelCheckpoint(
                 # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
-                filename='{epoch}-{val_loss:.4f}',
+                filename='{epoch}-{Mean_metric:.4f}-best',
                 save_top_k=self.args.save_top_n,
                 save_last=True,
                 verbose=True,
-                monitor='val_loss',
-                mode='min')
+                monitor='Mean_metric',
+                mode='max')
 
             checkpoint.CHECKPOINT_NAME_LAST = '{epoch}-{val_loss:.4f}-last'
         
             callbacks.append(checkpoint)
+
+        # ray_callback = TuneReportCallback({
+        #                 "loss": "Loss",
+        #                 "mean_metric": "Mean_metric"
+        #             }, on="validation_end")
+
+        # callbacks.append(ray_callback)
 
         print('[+] Callbacks are set ', callbacks)
         
