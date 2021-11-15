@@ -49,7 +49,7 @@ def make_oob_csv(anno_base_path, img_base_path, save_path, device):
         anno_list = [i for i in total_annotation_list if '_R_' in i]
         anno_list = natsort.natsorted(anno_list)
         print('anno_list : {}\n\n'.format(anno_list))
-        target_img_base_path = os.path.join(img_base_path, 'ROBOT')
+        target_img_base_path = img_base_path
 
     elif device.lower() == 'lapa':
         anno_list = [i for i in total_annotation_list if '_L_' in i]
@@ -70,7 +70,7 @@ def make_oob_csv(anno_base_path, img_base_path, save_path, device):
                 print('Processing in ====> {}\n'.format(anno_file))
                 oob_list = parsing_oob_list(anno_file)
                 print('oob_list : {}\n\n'.format(oob_list))
-                save_log(os.path.join(save_path, 'oob_assets_log.txt'), anno_file)
+                save_log(os.path.join(save_path, 'oob_assets_log-fps=5.txt'), anno_file)
             else:
                 continue
 
@@ -79,7 +79,7 @@ def make_oob_csv(anno_base_path, img_base_path, save_path, device):
             print('ERROR: cannot parsing oob_list ====> {}'.format(anno_file))
             print('====' * 5)
             error_list.append([anno_file])
-            save_log(os.path.join(save_path, 'oob_assets_log.txt'), anno_file+'\t ====> ERROR!')
+            save_log(os.path.join(save_path, 'oob_assets_log-fps=5.txt'), anno_file+'\t ====> ERROR!')
 
         patient_folder_name = '_'.join(anno_file.split('/')[-1].split('_')[3:5]) # R_94
         video_folder_name = '_'.join(anno_file.split('/')[-1].split('_')[:7]) # 01_G_01_R_94_ch1_03
@@ -106,7 +106,8 @@ def make_oob_csv(anno_base_path, img_base_path, save_path, device):
         for target_img in target_img_list:
             target_img_idx = target_img.split('-')[1][:-4]
             
-            if int(target_img_idx) % 30 == 0: # train step : 30
+            # if int(target_img_idx) % 30 == 0: # train step : 30
+            if int(target_img_idx) % 6 == 0: # train step : 6
                 if target_img_idx in oob_list:
                     outbody_list.append([target_img, 1])
 
@@ -117,12 +118,12 @@ def make_oob_csv(anno_base_path, img_base_path, save_path, device):
     inbody_list = natsort.natsorted(inbody_list)
     outbody_list = natsort.natsorted(outbody_list)
 
-    save_list_to_csv(os.path.join(save_path, 'oob_assets_outofbody.csv'), outbody_list, 'w')
-    save_list_to_csv(os.path.join(save_path, 'oob_assets_inbody.csv'), inbody_list, 'w')
+    save_list_to_csv(os.path.join(save_path, 'oob_assets_outofbody-fps=5.csv'), outbody_list, 'w')
+    save_list_to_csv(os.path.join(save_path, 'oob_assets_inbody-fps=5.csv'), inbody_list, 'w')
 
     if error_list:
         print('ERROR list ====> ', error_list)
-        save_list_to_csv(os.path.join(output_save_path, 'ERROR_img.csv'), error_list, 'w')
+        save_list_to_csv(os.path.join(output_save_path, 'ERROR_img-fps=5.csv'), error_list, 'w')
 
 
 if __name__ == '__main__':
@@ -131,4 +132,4 @@ if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from core.config.assets_info import annotation_path, img_db_path, oob_assets_save_path
 
-    make_oob_csv(anno_base_path=annotation_path['annotation_v3_base_path'], img_base_path=img_db_path['12'], save_path=oob_assets_save_path['oob_assets_v3_robot_save_path'], device='robot')
+    make_oob_csv(anno_base_path=annotation_path['annotation_v3_base_path'], img_base_path=img_db_path['robot'], save_path=oob_assets_save_path['oob_assets_v3_robot_save_path'], device='robot')

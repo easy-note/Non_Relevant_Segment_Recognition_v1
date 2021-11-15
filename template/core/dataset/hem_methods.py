@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
+import json
+
+import os
 
 class HEMHelper():
     """
@@ -20,14 +23,31 @@ class HEMHelper():
         self.IB_CLASS, self.OOB_CLASS = (0, 1)
         self.bsz = self.args.batch_size
         self.cnt = 0
-        
+
     def set_method(self, method):
         if method in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
             self.method = 'hem-vi'
         else:
             self.method = method
 
+    def set_restore_path(self, restore_path):
+        self.restore_path = restore_path
+
+    def get_target_hem_count(self):
+
+        with open(os.path.join(self.restore_path, 'DATASET_COUNT.json')) as file:
+            try:
+                json_data = json.load(file)
+                return json_data['target_hem_count']['rs'], json_data['target_hem_count']['nrs']
+
+            except ValueError as e:
+                print('Parsing Fail, Error: {}'.format(e))
+                return None
+
     def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df):
+
+        target_rs_cnt, target_nrs_cnt = self.get_target_hem_count()
+
         # df 정렬
         hard_neg_df = hard_neg_df.sort_values(by='Img_path')
         hard_pos_df = hard_pos_df.sort_values(by='Img_path')
@@ -40,30 +60,47 @@ class HEMHelper():
         vanila_neg_df['HEM'] = [0]*len(vanila_neg_df)
         vanila_pos_df['HEM'] = [0]*len(vanila_pos_df)
 
+
+        # train data 수 만큼 hem data extract
+        if len(hard_pos_df) > target_nrs_cnt: hard_pos_df = hard_pos_df.sample(n=target_nrs_cnt, replace=False, random_state=self.args.random_seed)
+        if len(hard_neg_df) > target_rs_cnt: hard_neg_df = hard_neg_df.sample(n=target_rs_cnt, replace=False, random_state=self.args.random_seed) 
+
+        target_len_vanila_pos = target_nrs_cnt - len(hard_pos_df)
+        target_len_vanila_neg = target_rs_cnt - len(hard_neg_df)
+
+        # if target_len_vanila_pos < 0: target_len_vanila_pos = 0
+        # if target_len_vanila_neg < 0: target_len_vanila_neg = 0
+        
         try:
-            vanila_pos_df = vanila_pos_df.sample(n=len(hard_pos_df), replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, hem_oob 개
+            vanila_pos_df = vanila_pos_df.sample(n=target_len_vanila_pos, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, hem_oob 개
         except:
             vanila_pos_df = vanila_pos_df.sample(frac=1, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, 전체 oob_df
 
-        target_vanila_neg_df_len = (len(hard_pos_df)+len(vanila_pos_df))*self.args.IB_ratio - len(hard_neg_df)
-        
-        print('target_vanila_neg_df_len : {}\n'.format(target_vanila_neg_df_len))
-
-        
         try:
-            vanila_neg_df = vanila_neg_df.sample(n=target_vanila_neg_df_len, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, target_ib_assets_df_len 개
+            vanila_neg_df = vanila_neg_df.sample(n=target_len_vanila_neg, replace=False, random_state=self.args.random_seed) # 중복뽑기x, random seed 고정, target_ib_assets_df_len 개
         except:
-            if target_vanila_neg_df_len <= 0: 
-                vanila_neg_df = vanila_neg_df.sample(frac=0, replace=False, random_state=self.args.random_seed)
-                hard_neg_df = hard_neg_df.sample(n=(len(hard_pos_df)+len(vanila_pos_df))*self.args.IB_ratio, replace=False, random_state=self.args.random_seed)
-            else:
-                vanila_neg_df = vanila_neg_df.sample(frac=1, replace=False, random_state=10)
+            vanila_neg_df = vanila_neg_df.sample(frac=1, replace=False, random_state=self.args.random_seed)
 
-        print('\n\n', '========='* 10)
-        print('\thard_neg_df {}, hard_pos_df {}, vanila_neg_df {}, vanila_pos_df {}'.format(len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)))
-        print('========='* 10, '\n\n')
+        save_data = {
+            "FINAL_HEM_DATASET": {
+                "rs": {
+                    "hem": len(hard_neg_df),
+                    "vanila": len(vanila_neg_df)
+                },
+                "nrs": {
+                    "hem": len(hard_pos_df),
+                    "vanila": len(vanila_pos_df)
+                }
+            }
+        }
 
-        hem_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
+        with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'r+') as f:
+            data = json.load(f)
+            data.update(save_data)
+
+        with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
+            json.dump(data, f, indent=2)
+
 
         final_pos_assets_df = pd.concat([hard_pos_df, vanila_pos_df])[['Img_path', 'GT', 'HEM']]
         final_neg_assets_df = pd.concat([hard_neg_df, vanila_neg_df])[['Img_path', 'GT', 'HEM']]
@@ -78,14 +115,16 @@ class HEMHelper():
         final_assets_df.columns = ['img_path', 'class_idx', 'HEM']
 
 
-
-        return final_assets_df, hem_dataset_len_list
+        return final_assets_df
         
     def compute_hem(self, *args):
         if self.method == 'hem-vi':
             return self.hem_vi(*args)
         elif self.method == 'hem-emb-online':
-            return self.hem_cos_hard_sim(*args)
+            if self.args.emb_type == 1 or self.args.emb_type == 2:
+                return self.hem_cos_hard_sim(*args)
+            elif self.args.emb_type == 3:
+                return self.hem_cos_hard_sim2(*args)
         else: # exception
             return None
 
@@ -154,6 +193,10 @@ class HEMHelper():
             top_k = int(len(vanila_df) * top_ratio)
 
             hard_df_lower_idx = dropout_predictions_mean_abs_diff.argsort()[:top_k].tolist()
+
+            '''
+            # softmax hem 추출 시, lower_idx, upper_idx 따로 실험 :) 
+
             hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist()
 
             hard_idx = []
@@ -162,6 +205,9 @@ class HEMHelper():
                     hard_idx.append(i)
 
             hard_idx = hard_idx + hard_df_lower_idx
+            '''
+
+            hard_idx = hard_df_lower_idx
 
             vanila_idx = []
             for i in range(len(vanila_df)):
@@ -177,9 +223,10 @@ class HEMHelper():
             vanila_neg_df = vanila_df[vanila_df['GT']==IB_CLASS]
             vanila_pos_df = vanila_df[vanila_df['GT']==OOB_CLASS]
 
-            
+
 
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+
 
         def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
@@ -301,18 +348,63 @@ class HEMHelper():
             print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
 
-        print('hard_neg_df', len(hard_neg_df))
-        print('hard_pos_df', len(hard_pos_df))
-        print('vanila_neg_df', len(vanila_neg_df))
-        print('vanila_pos_df', len(vanila_pos_df))
+        
 
-        total_dataset_len_list = [len(hard_neg_df), len(hard_pos_df), len(vanila_neg_df), len(vanila_pos_df)]
+        hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
-        hem_final_df, hem_dataset_len_list = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
-
-        return hem_final_df, total_dataset_len_list, hem_dataset_len_list
+        return hem_final_df
     
     def hem_cos_hard_sim(self, model, x, y, loss_fn):
+        emb, y_hat = model(x)
+        # emb = B x ch
+        # proxies = ch x classes
+        
+        if self.args.emb_type == 1:
+            sim_dist = emb @ model.proxies
+            sim_preds = torch.argmax(sim_dist, -1)
+        elif self.args.emb_type == 2:
+            sim_dist = torch.zeros((emb.size(0), model.proxies.size(1))).to(emb.device)
+            
+            for d in range(sim_dist.size(1)):
+                sim_dist[:, d] = 1 - torch.nn.functional.cosine_similarity(emb, model.proxies[:, d].unsqueeze(0))
+            
+            sim_preds = torch.argmin(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        if sum(correct_answer) > 0:
+            pos_y_hat = y_hat[correct_answer]
+            pos_y = y[correct_answer]
+            
+            pos_loss = loss_fn(pos_y_hat, pos_y)
+            proxy_loss = loss_fn(sim_dist[correct_answer], pos_y)
+        else:
+            pos_loss = 0
+            proxy_loss = 0
+        
+        if sum(wrong_answer) > 0:
+            neg_y_hat = y_hat[wrong_answer]
+            neg_y = y[wrong_answer]
+            
+            wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+            wrong_ids = torch.argsort(wrong_sim_dist)
+            
+            w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
+            neg_y_hat = neg_y_hat[wrong_ids]
+            neg_y = neg_y[wrong_ids]
+            
+            neg_loss = 0
+            for wi in range(len(w)):
+                neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+                
+            # neg_loss /= len(w)
+        else:
+            neg_loss = 0
+            
+        return (pos_loss + neg_loss) / 2. + proxy_loss
+    
+    def hem_cos_hard_sim2(self, model, x, y, loss_fn):
         emb, y_hat = model(x)
         sim_dist = emb @ model.proxies
         sim_preds = torch.argmax(sim_dist, -1)
@@ -323,13 +415,25 @@ class HEMHelper():
         pos_y_hat = y_hat[correct_answer]
         pos_y = y[correct_answer]
         
-        pos_loss = loss_fn(pos_y_hat, pos_y)
-        
         neg_y_hat = y_hat[wrong_answer]
         neg_y = y[wrong_answer]
         
+        proxy_loss = loss_fn(sim_dist[correct_answer], pos_y)
+        
+        correct_sim_dist = sim_dist[correct_answer, pos_y]
+        correct_ids = torch.argsort(correct_sim_dist)
+        
         wrong_sim_dist = sim_dist[wrong_answer, neg_y]
         wrong_ids = torch.argsort(wrong_sim_dist)
+        
+        ##################################################
+        w = torch.Tensor(np.array(list(range(1, len(correct_ids)+1))) / len(correct_ids)).cuda()
+        pos_y_hat = pos_y_hat[correct_ids]
+        pos_y = pos_y[correct_ids]
+        
+        pos_loss = 0
+        for wi in range(len(w)):
+            pos_loss += torch.nn.functional.cross_entropy(pos_y_hat[wi:wi+1, ], pos_y[wi:wi+1]) * w[wi:wi+1]
         
         w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
         neg_y_hat = neg_y_hat[wrong_ids]
@@ -338,6 +442,7 @@ class HEMHelper():
         neg_loss = 0
         for wi in range(len(w)):
             neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+        
             
-        return (pos_loss + neg_loss) / 2. + loss_fn(sim_dist[correct_answer], pos_y)
+        return (pos_loss + neg_loss) / 2. + proxy_loss
     

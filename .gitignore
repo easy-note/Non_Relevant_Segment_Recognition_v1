@@ -11,3 +11,4 @@ __pycache__
 
 # dataset check
 /get_dataset_results
+template/scripts/test.sh
