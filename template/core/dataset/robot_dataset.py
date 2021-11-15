@@ -115,8 +115,8 @@ class RobotDataset(Dataset):
 
         ## set meta/sub assets path
         assets_path = {
-            'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=30.csv'),
-            'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=30.csv'),
+            'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=5.csv'),
+            'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=5.csv'),
             'sub_ib':os.path.join(assets_root_path, 'oob_assets_inbody.csv'),
             'sub_oob':os.path.join(assets_root_path, 'oob_assets_outofbody.csv'),
         }
