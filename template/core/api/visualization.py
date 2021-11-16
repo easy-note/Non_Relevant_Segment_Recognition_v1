@@ -241,7 +241,7 @@ class VisualTool:
         colors = ['cadetblue', 'orange', 'royalblue', 'navy', 'darksalmon', 'firebrick']
         alpha_ratio = [0.3,0.3,1,1,1,1]
         edge_colors = ['cadetblue', 'orange', 'royalblue', 'navy', 'darksalmon', 'firebrick']
-        edge_linewidth = [0,0,2,2,2,2]
+        edge_linewidth = [0, 0, 0.1, 0.1, 0.1, 0.1]
         height = 0.5 # bar chart thic
 
         inference_interval = 1
@@ -334,6 +334,24 @@ class VisualTool:
         ax[0].set_axisbelow(True)
         ax[0].xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
 
+        # 11. write sampling count
+        unique, counts = np.unique(sampling_list, return_counts=True)
+        counts_dict = dict(zip(unique, counts))
+
+        neg_hard_sampling_count = counts_dict.get(self.NEG_HARD_CLASS, 0)
+        pos_hard_sampling_count = counts_dict.get(self.POS_HARD_CLASS, 0)
+        neg_vanila_sampling_count = counts_dict.get(self.NEG_VANILA_CLASS, 0)
+        pos_vanila_sampling_count = counts_dict.get(self.POS_VANILA_CLASS, 0)
+
+        rs_count = gt_list.count(self.RS_CLASS)
+        nrs_count = gt_list.count(self.NRS_CLASS)
+
+        total_sampling_count = neg_hard_sampling_count + pos_hard_sampling_count + neg_vanila_sampling_count + pos_vanila_sampling_count
+
+        text_bar = ax[0].barh(1, 0, height=height) # dummy data
+        text = '[GT_RS - {} GT_NRS - {}] || Total Sampling: {} | Neg Hard: {} | Pos Hard: {} | Neg Vanila: {} | Pos Vanila: {}'.format(rs_count, nrs_count, total_sampling_count, neg_hard_sampling_count, pos_hard_sampling_count, neg_vanila_sampling_count, pos_vanila_sampling_count)
+        self.present_text(ax[0], text_bar, text)
+
         # 10. draw subplot ax (section sampling count)
         sampling_per_section = self.visual_helper.calc_section_sampling(sampling_list, window_size, section_num)
         section_start_idx = np.array(sampling_per_section['start_idx']) * inference_interval
@@ -341,14 +359,6 @@ class VisualTool:
         
         hard_example_num = np.array(sampling_per_section['section_neg_hard_num']) + np.array(sampling_per_section['section_pos_hard_num'])
         vanila_example_num = np.array(sampling_per_section['section_neg_vanila_num']) + np.array(sampling_per_section['section_pos_vanila_num'])
-
-        total_example_num = hard_example_num + vanila_example_num
-        # total_example_num = total_example_num.tolist()
-
-        # 11. write sampling count
-        text_bar = ax[0].barh(1, 0, height=height) # dummy data
-        text = 'Total Sampling: {} | Neg Hard: {} | Pos Hard: {} | Neg Vanila: {} | Pos Vanila: {}'.format(np.sum(total_example_num), np.sum(sampling_per_section['section_neg_hard_num']), np.sum(sampling_per_section['section_pos_hard_num']), np.sum(sampling_per_section['section_neg_vanila_num']), np.sum(sampling_per_section['section_pos_vanila_num']))
-        self.present_text(ax[0], text_bar, text)
 
         # Stacked Bar Chart
         index = np.arange(len(section_start_idx)) # x axis
