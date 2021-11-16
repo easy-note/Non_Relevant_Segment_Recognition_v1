@@ -38,7 +38,7 @@ class VisualHelper:
         return converted_time
 
     def calc_section_sampling(self, sampling_list, window_size, section_num):
-
+    
         calc_section_sampling = {
             'start_idx':[],
             'end_idx':[],
@@ -68,9 +68,8 @@ class VisualHelper:
             calc_section_sampling['section_pos_hard_num'].append(counts_dict.get(self.POS_HARD_CLASS, 0))
             calc_section_sampling['section_neg_vanila_num'].append(counts_dict.get(self.NEG_VANILA_CLASS, 0))
             calc_section_sampling['section_pos_vanila_num'].append(counts_dict.get(self.POS_VANILA_CLASS, 0))
-        
         return calc_section_sampling
-    
+        
 
     def calc_section_metrics(self, gt_list, predict_list, window_size, section_num):
         metrics_per_section = {
