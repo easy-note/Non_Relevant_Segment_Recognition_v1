@@ -215,7 +215,7 @@ def parse_opts():
             help='Select train method, normal or hem method')
             
     parser.add_argument('--top_ratio', type=float,
-            default=7/100,
+            default=10/100,
             help='Select HEM top ratio')
     
     parser.add_argument('--sampling_type', type=int,
