@@ -82,9 +82,9 @@ def inference_main(args):
     from core.api.inference import InferenceDB # inference module
     from core.api.evaluation import Evaluator # evaluation module
     from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
-    from core.utils.logging import Report # report helper (for experiments reuslts and inference results)
+    from core.utils.logger import Report # report helper (for experiments reuslts and inference results)
 
-    from core.utils.visual import VisualTool # visual module
+    from core.api.visualization import VisualTool # visual module
     
     import os
     import pandas as pd
