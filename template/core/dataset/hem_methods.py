@@ -11,6 +11,8 @@ import json
 
 import os
 
+from torchsummary import summary
+
 class HEMHelper():
     """
         Help computation ids for Hard Example Mining.
@@ -133,9 +135,17 @@ class HEMHelper():
 
         # Function to enable the dropout layers during test-time
         def enable_dropout(model):
+            
+            ### 2. summary model
+            # print('\n\n==== MODEL SUMMARY ====\n\n')
+            # summary(model, (3,224,224))
+
+            dropout_layer = []
             for m in model.modules():
                 if m.__class__.__name__.startswith('Dropout'):
-                    m.train()
+                    dropout_layer.append(m)
+                
+            dropout_layer[-1].train() # only last layer to train
         
         # extract hem idx method
         def extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list):
@@ -271,7 +281,7 @@ class HEMHelper():
             # append hem idx - high mi & wrong answer
             hem_idx += np.intersect1d(wrong_idx, top_mi_index).tolist()
             # append hem idx - low mi
-            hem_idx += btm_mi_index.tolist()
+            # hem_idx += btm_mi_index.tolist()
             print('hem_idx')
             
             # 2. split hem/vanila 
