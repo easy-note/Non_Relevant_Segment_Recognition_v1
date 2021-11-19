@@ -1,4 +1,5 @@
-def visual_flow_for_sampling(final_assets_df, save_dir):
+def visual_flow_for_sampling(final_assets_df, model_name, save_dir, window_size=9000, section_num=2):
+    import os
     import pandas as pd
     import numpy as np
     from tqdm import tqdm
@@ -88,7 +89,7 @@ def visual_flow_for_sampling(final_assets_df, save_dir):
 
         # visual
         visual_tool = VisualTool(gt_list=patient_gt, patient_name=patient_no, save_path=os.path.join(sampling_visual_save_dir, 'sampling-{}.png'.format(patient_no)))
-        visual_tool.visual_sampling(split_assets['neg_hard_idx'], split_assets['pos_hard_idx'], split_assets['neg_vanila_idx'], split_assets['pos_vanila_idx'], model_name='mobiletnet', window_size=9000, section_num=2)
+        visual_tool.visual_sampling(split_assets['neg_hard_idx'], split_assets['pos_hard_idx'], split_assets['neg_vanila_idx'], split_assets['pos_vanila_idx'], model_name=model_name, window_size=window_size, section_num=section_num)
 
 def main():
     import pandas as pd
@@ -121,7 +122,7 @@ def main():
 
     hem_assets_df.to_csv(os.path.join(save_dir, 'hem_assets.csv'))    
 
-    visual_flow_for_sampling(hem_assets_df, save_dir)
+    visual_flow_for_sampling(hem_assets_df, 'mobilenet', save_dir)
 
 if __name__ == '__main__':
     
