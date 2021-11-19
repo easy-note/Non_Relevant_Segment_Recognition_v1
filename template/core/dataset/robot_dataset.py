@@ -254,7 +254,8 @@ class RobotDataset(Dataset):
 
         hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
         hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'hem_assets.csv')) # save hem csv
-        try:
+        
+        try: # 혹시, error날 경우 pass (plt warining 가능)
             visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
         except:
             pass
