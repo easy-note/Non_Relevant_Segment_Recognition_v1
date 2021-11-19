@@ -79,6 +79,8 @@ def visual_flow_for_sampling(final_assets_df, model_name, save_dir, window_size=
             is_video_no = patient_df['video_no'] == video_no
             patient_df.loc[is_video_no,'consensus_frame_idx'] = patient_df.loc[is_video_no,'frame_idx'] + video_start_idx
 
+        # sorting (저장 할때 편히보려고 sorting)
+        patient_df = patient_df.sort_values(by=['consensus_frame_idx'], axis=0)
         print(patient_df)
 
         # parsing hem/vanila assets info
@@ -122,7 +124,7 @@ def main():
 
     hem_assets_df.to_csv(os.path.join(save_dir, 'hem_assets.csv'))    
 
-    visual_flow_for_sampling(hem_assets_df, 'mobilenet', save_dir)
+    visual_flow_for_sampling(hem_assets_df, 'mobilenet', save_dir) # cols = ['img_path', 'class_idx', 'HEM'] 형태로 df만들어진 hem_assets_df 만 넘기면 돌아갑니다. // save_dir은 각 확자별 plt와 csv 결과를 저장할 parents directory입니다.
 
 if __name__ == '__main__':
     
