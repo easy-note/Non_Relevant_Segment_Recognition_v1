@@ -13,6 +13,7 @@ from core.config.data_info import data_transforms, theator_data_transforms
 from core.config.patients_info import train_videos, val_videos
 from core.utils.heuristic_sampling import HeuristicSampler
 
+from scripts.unit_test.test_visual_sampling import visual_flow_for_sampling
 
 class RobotDataset(Dataset):
     def __init__(self, args, state) :
@@ -248,9 +249,15 @@ class RobotDataset(Dataset):
             df = pd.read_csv(csv_file, names=cols)
             hem_df_list.append(df)
     
-        hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+        hem_assets_df_save_dir = os.path.join(self.restore_path, 'hem_assets') # static path
+        os.makedirs(os.path.join(hem_assets_df_save_dir), exist_ok=True)
 
-        hem_assets_df.to_csv(os.path.join(self.args.restore_path, 'hem_assets.csv'))
+        hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+        hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'hem_assets.csv')) # save hem csv
+        try:
+            visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+        except:
+            pass
 
         # select patient frame 
         print('==> \tPATIENT ({})'.format(len(self.patients_name)))
