@@ -379,6 +379,7 @@ class HEMHelper():
             
             pos_loss = loss_fn(pos_y_hat, pos_y)
             proxy_loss = loss_fn(sim_dist[correct_answer], pos_y)
+            # proxy_loss = loss_fn(sim_dist, y)
         else:
             pos_loss = 0
             proxy_loss = 0
@@ -395,14 +396,17 @@ class HEMHelper():
             neg_y = neg_y[wrong_ids]
             
             neg_loss = 0
+            # if len(w) > 1:
+            #     st = len(w) // 2
+            # for wi in range(st, len(w)):
             for wi in range(len(w)):
                 neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
-                
-            # neg_loss /= len(w)
+              
         else:
             neg_loss = 0
             
         return (pos_loss + neg_loss) / 2. + proxy_loss
+
     
     def hem_cos_hard_sim2(self, model, x, y, loss_fn):
         emb, y_hat = model(x)
