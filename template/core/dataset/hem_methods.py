@@ -249,10 +249,10 @@ class HEMHelper():
             # so in (hard example data selection?), if i'th data is high(relavence), non-indepandence, i'th data has similar so it's hard
 
             # sort mi index & extract top/btm sample index 
-            top_ratio = 30/100
+            top_ratio = self.args.top_ratio
             top_k = int(len(mutual_info) * top_ratio)
 
-            btm_ratio = 30/100
+            btm_ratio = self.args.top_ratio
             btm_k = int(len(mutual_info) * btm_ratio)
 
             sorted_mi_index = (-mutual_info).argsort() # desecnding index
