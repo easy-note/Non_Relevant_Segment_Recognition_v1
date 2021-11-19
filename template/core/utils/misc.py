@@ -87,6 +87,7 @@ def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
     inference_assets = inference_assets_helper.get_inference_assets() # dict (yaml)
 
     # save InferenceAssets: serialization from python object(dict) to YAML stream and save
+    os.makedirs(save_path, exist_ok=True)
     inference_assets_helper.save_dict_to_yaml(inference_assets, inference_assets_save_path)
     
     # load InferenceAssets: load saved inference assets yaml file // you can also load saved patients
