@@ -225,6 +225,10 @@ def parse_opts():
     parser.add_argument('--emb_type', type=int,
             default=1,
             help='?')
+    
+    parser.add_argument('--use_online_mcd',
+            action='store_true',
+            help='?')
 
     # -------------- etc --------------------
     parser.add_argument('--random_seed', type=int, default=10, help='dataset random seed')

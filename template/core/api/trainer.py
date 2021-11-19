@@ -56,7 +56,7 @@ class CAMIO(BaseTrainer):
         
         # hem-offline // hem_train, general_train 에서는 Hem 생성하지 않음.
         elif 'offline' in self.args.hem_extract_mode:
-            self.hem_helper.set_method(self.hem_extract_mode)            
+            self.hem_helper.set_method(self.hem_extract_mode)
             self.last_epoch = self.args.max_epoch - 1
 
     def setup(self, stage):

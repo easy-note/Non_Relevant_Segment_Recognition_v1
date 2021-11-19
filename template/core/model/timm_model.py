@@ -42,11 +42,25 @@ class TIMM(nn.Module):
             self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(model.num_features, 2))
         
+        if self.args.use_online_mcd:
+            self.dropout = nn.Dropout(0.3)
+        
         
     def forward(self, x):
         features = self.feature_module(x)
         if self.args.model == 'swin_large_patch4_window7_224':
             features = self.gap(features.permute(0, 2, 1))
+            
+        if self.args.use_online_mcd:
+            if self.training:
+                features = self.dropout(features)
+            else:
+                mcd_outputs = []
+                for _ in range(10):
+                    mcd_outputs.append(self.dropout(features).unsqueeze(0))
+                    
+                a = torch.vstack(mcd_outputs)
+                features = torch.mean(a, 0)
             
         output = self.classifier(features.view(x.size(0), -1))
         
