@@ -58,8 +58,8 @@ def train_main(args):
                             accelerator='ddp')
     else:
         trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=2,#0.01,
-                            # limit_val_batches=2,#0.01,
+                            limit_train_batches=2,#0.01,
+                            limit_val_batches=2,#0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -141,6 +141,7 @@ def inference_main(args):
         patient_video = patient['patient_video']
 
         videos_metrics_list = [] # save each videos metrics
+        
         patient_gt_list = [] # each patients gt list for visual
         patient_predict_list = [] # each patients predict list for visual
 
@@ -185,7 +186,9 @@ def inference_main(args):
                         })
             predict_df.to_csv(predict_csv_path)
 
-            # TO-DO: visulization
+            # for visulization per patients
+            patient_gt_list += gt_list
+            patient_predict_list += predict_list
 
             # metric per video
             video_metrics = evaluator.calc() # same return with metricHelper
@@ -207,9 +210,6 @@ def inference_main(args):
 
             # for calc patients metric
             videos_metrics_list.append(video_metrics)
-
-            patient_gt_list += gt_list
-            patient_predict_list += predict_list
         
         # calc each patients CR, OR
         patient_metrics = MetricHelper().aggregate_calc_metric(videos_metrics_list)
@@ -236,7 +236,7 @@ def inference_main(args):
         patient_predict_visual_path = os.path.join(each_patients_save_dir, 'predict-{}.png'.format(patient_no))
 
         visual_tool = VisualTool(patient_gt_list, patient_no, patient_predict_visual_path)
-        visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval)
+        visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval, window_size=300, section_num=2)
 
         # CLEAR PAGING CACHE
         clean_paging_chache()

@@ -2,21 +2,21 @@ import core.config.patients_info as patients_info
 import core.config.assets_info as assets_info
 from core.utils.parser import FileLoader, InfoParser
 
+from core.utils.misc import prepare_inference_aseets
+from core.utils.parser import AnnotationParser
+
 import os
 import glob
 import yaml
 import re
 import natsort
 
-
-
-
 class InferenceAssets():
     """
         for prepare inference assets
         case; ['ROBOT', 'LAPA']
         anno_ver; ['V1', 'V2', 'V3']
-        fold; ['1', '2', '3', '4', '5', 'free']
+        fold; ['1', '2', '3', '4', '5', 'all', 'free']
 
         # inference_assets
         patients: 
@@ -46,7 +46,7 @@ class InferenceAssets():
         sanity = False
         if self.case in ['ROBOT']:
             if self.anno_ver in ['3']:
-                if self.fold in ['1','2','3','4','5', 'free']: 
+                if self.fold in ['1','2','3','4','5', 'all', 'free']: 
                     sanity = True
         
         return sanity        
@@ -442,3 +442,72 @@ class OOBAssets():
         img_db_sheet = f_loader.load()
 
         return video_sheet, annotation_sheet, img_db_sheet
+
+class PatientsGT():
+    def __init__(self):
+        
+        self.patients_assets = {}
+        '''
+            self.patients_assets = {'R_100': [R_100_1.json, R_100_2.json ..], 'R_10':[R_10_1.json, ...]}
+        '''
+
+        # 1. load inference dataset
+        inference_assets = prepare_inference_aseets(case='ROBOT' , anno_ver='3', inference_fold='all', save_path='/OOB_RECOG/results')
+        patients = inference_assets['patients']
+        patients_count = len(patients)
+
+        # 2. set self.patints_assets
+        for idx in range(patients_count): # per patients
+            patient = patients[idx]
+            patient_no = patient['patient_no']
+            
+            self.patients_assets[patient_no] = []
+
+            for path_info in patient['path_info']: # get total annotation path
+                self.patients_assets[patient_no].append(path_info['annotation_path'])
+
+    def get_gt(self, patient_no):
+        patient_gt = []
+        annotation_path_list = self.patients_assets[patient_no]
+    
+        anno_parser = AnnotationParser(annotation_path_list[0]) # init annoParser
+
+        for annotation_path in annotation_path_list:
+            anno_parser.set_annotation_path(annotation_path)
+            patient_gt += anno_parser.get_event_sequence(extract_interval=1)
+        
+        return patient_gt
+    
+    def get_video_no(self, patient_no):
+        video_no = []
+        annotation_path_list = self.patients_assets[patient_no]
+
+        info_parser = InfoParser(parser_type='ROBOT_ANNOTATION')
+
+        for annotation_path in annotation_path_list:    
+            info_parser.write_file_name(annotation_path)
+            video_no.append(info_parser.get_video_name())
+
+        return video_no # already sorted
+
+    def get_start_idx(self, patient_no):
+        video_start_idx = []
+        annotation_path_list = self.patients_assets[patient_no]
+
+        anno_parser = AnnotationParser(annotation_path_list[0]) # init annoParser
+
+        patinet_len = 0
+        for annotation_path in annotation_path_list:
+            anno_parser.set_annotation_path(annotation_path)
+            
+            video_start_idx.append(patinet_len)
+
+            # [no.1 video] totalFrame:3000 => frame index:0~2999 // [no.2 video] start idx:3000
+            patinet_len += anno_parser.get_totalFrame()
+            
+        return video_start_idx
+
+
+
+        
+        
