@@ -233,6 +233,8 @@ class RobotDataset(Dataset):
             print(assets_df.head(20))
             print('\n\n')
 
+            assets_df['HEM'] = [0]*len(assets_df)
+
             os.makedirs(os.path.join(self.args.save_path, 'TRAIN_ASSETS'), exist_ok=True)
             assets_df.to_csv(os.path.join(self.args.save_path, 'TRAIN_ASSETS','STAGE={}-random_sampling.csv'.format(self.args.stage)))
 
