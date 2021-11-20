@@ -9,6 +9,7 @@ do
     nohup python visual_flow.py \
         --fold "1" \
         --trial 1 \
+        --wise_sampling_mode \
         --model "mobilenetv3_large_100" \
         --pretrained \
         --use_lightning_style_save \
