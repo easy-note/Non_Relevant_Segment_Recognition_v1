@@ -191,10 +191,18 @@ class RobotDataset(Dataset):
             hueristic_sampler = HeuristicSampler(assets_df, self.args)
             assets_df = hueristic_sampler.final_assets
 
-            assets_df['HEM'] = [0]*len(assets_df)
+            if self.state == 'train': # save plt only in trainset
+                assets_df['HEM'] = [0]*len(assets_df)
 
-            os.makedirs(os.path.join(self.args.save_path, 'TRAIN_ASSETS'), exist_ok=True)
-            assets_df.to_csv(os.path.join(self.args.save_path, 'TRAIN_ASSETS','STAGE={}-wise_sampling.csv'.format(self.args.stage)))
+                assets_df_save_dir = os.path.join(self.args.save_path, 'train_assets', '{}set_stage-{}'.format(self.state, self.args.stage))
+                os.makedirs(assets_df_save_dir, exist_ok=True)
+
+                assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-wise_sampling.csv'.format(self.args.stage)))
+
+                try: # 혹시, error날 경우 pass (plt warining 가능)
+                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                except:
+                    pass
 
         else:
             print('\n\n')
@@ -234,10 +242,18 @@ class RobotDataset(Dataset):
             print(assets_df.head(20))
             print('\n\n')
 
-            assets_df['HEM'] = [0]*len(assets_df)
+            if self.state == 'train': # save plt only in trainset
+                assets_df['HEM'] = [0]*len(assets_df)
 
-            os.makedirs(os.path.join(self.args.save_path, 'TRAIN_ASSETS'), exist_ok=True)
-            assets_df.to_csv(os.path.join(self.args.save_path, 'TRAIN_ASSETS','STAGE={}-random_sampling.csv'.format(self.args.stage)))
+                assets_df_save_dir = os.path.join(self.args.save_path, 'train_assets', '{}set_stage-{}'.format(self.state, self.args.stage))
+                os.makedirs(assets_df_save_dir, exist_ok=True)
+
+                assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-random_sampling.csv'.format(self.args.stage)))
+
+                try: # 혹시, error날 경우 pass (plt warining 가능)
+                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                except:
+                    pass
 
 
         # last processing
