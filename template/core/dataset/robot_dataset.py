@@ -57,6 +57,8 @@ class RobotDataset(Dataset):
                 # split to 60/20 from 80 case
                 self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='val') # args.fold's train dataset(80 case) to 20 case
                 assets_type='meta'
+
+                self.wise_sampling_mode = False
                 
             elif state == 'test':
                 pass
@@ -84,6 +86,8 @@ class RobotDataset(Dataset):
                 # 20 case
                 self.patients_name = val_videos[self.args.fold]
                 assets_type='sub'
+
+                self.wise_sampling_mode = False
 
             elif state == 'test':
                 pass
@@ -185,6 +189,11 @@ class RobotDataset(Dataset):
 
             hueristic_sampler = HeuristicSampler(assets_df, self.args)
             assets_df = hueristic_sampler.final_assets
+
+            assets_df['HEM'] = [0]*len(assets_df)
+
+            os.makedirs(os.path.join(self.args.save_path, 'HEM_ASSETS'), exist_ok=True)
+            assets_df.to_csv(os.path.join(self.args.save_path, 'HEM_ASSETS','STAGE={}-wise_sampling.csv'.format(self.args.stage)))
 
         else:
             print('\n\n')
