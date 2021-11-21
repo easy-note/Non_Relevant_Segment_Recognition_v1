@@ -61,7 +61,7 @@ psutil @ file:///tmp/build/80754af9/psutil_1612298023621/work
 ptyprocess @ file:///tmp/build/80754af9/ptyprocess_1609355006118/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pycm==3.1
+pycm==3.3
 pycosat==0.6.3
 pycparser @ file:///tmp/build/80754af9/pycparser_1594388511720/work
 pyDeprecate==0.3.0
@@ -86,6 +86,7 @@ soupsieve @ file:///tmp/build/80754af9/soupsieve_1614023247537/work
 tensorboard==2.4.1
 tensorboard-plugin-wit==1.8.0
 threadpoolctl==2.1.0
+timm==0.4.12
 torch==1.8.0
 torch-summary==1.4.4
 torchelastic==0.2.1

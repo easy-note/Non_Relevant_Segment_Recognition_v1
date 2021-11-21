@@ -30,7 +30,7 @@ def parse_opts():
             help='Select loss_fn to train/test')
 
     parser.add_argument('--batch_size',
-            default=128,
+            default=256,
             type=int,
             help='Training/Testing batch size')
 
@@ -55,7 +55,7 @@ def parse_opts():
             help='What device to use for training or validation model')
 
     parser.add_argument('--cuda_list',
-            default='4',
+            default='7',
             type=str,
             help='Name list of gpus that are used to train')
 
@@ -80,7 +80,7 @@ def parse_opts():
 
     # /OOB_RECOG/logs/project-1/TB_log/version_0
     parser.add_argument('--save_path', type=str, 
-                        default='/OOB_RECOG/logs/211109_heuristic_sampling', help='')
+                        default='/OOB_RECOG/logs/2111119', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',
@@ -158,7 +158,7 @@ def parse_opts():
             help='Data location')
 
     parser.add_argument('--fold',
-            default='2',
+            default='1',
             type=str,
             choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
@@ -178,6 +178,11 @@ def parse_opts():
     parser.add_argument('--IB_ratio',
             default=3,
             type=float,
+            help='')
+
+    parser.add_argument('--WS_ratio',
+            default=4,
+            type=int,
             help='')
 
     parser.add_argument('--num_workers',
@@ -215,7 +220,7 @@ def parse_opts():
             help='Select train method, normal or hem method')
             
     parser.add_argument('--top_ratio', type=float,
-            default=7/100,
+            default=10/100,
             help='Select HEM top ratio')
     
     parser.add_argument('--sampling_type', type=int,

@@ -75,10 +75,10 @@ def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
     from core.utils.parser import FileLoader # file load helper
     
     # OOBAssets
-    assets_sheet_dir = os.path.join(save_path, 'assets')
-    oob_assets = OOBAssets(assets_sheet_dir)
+    # assets_sheet_dir = os.path.join(save_path, 'assets')
+    # oob_assets = OOBAssets(assets_sheet_dir)
     # oob_assets.save_assets_sheet() # you can save assets sheet
-    video_sheet, annotation_sheet, img_db_sheet = oob_assets.get_assets_sheet() # you can only use assets although not saving
+    # video_sheet, annotation_sheet, img_db_sheet = oob_assets.get_assets_sheet() # you can only use assets although not saving
     # video_sheet, annotation_sheet, img_db_sheet = oob_assets.load_assets_sheet(assets_sheet_dir) # you can also load saved aseets
 
     # InferenceAssets
@@ -87,6 +87,7 @@ def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
     inference_assets = inference_assets_helper.get_inference_assets() # dict (yaml)
 
     # save InferenceAssets: serialization from python object(dict) to YAML stream and save
+    os.makedirs(save_path, exist_ok=True)
     inference_assets_helper.save_dict_to_yaml(inference_assets, inference_assets_save_path)
     
     # load InferenceAssets: load saved inference assets yaml file // you can also load saved patients

@@ -13,6 +13,7 @@ from core.config.data_info import data_transforms, theator_data_transforms
 from core.config.patients_info import train_videos, val_videos
 from core.utils.heuristic_sampling import HeuristicSampler
 
+from scripts.unit_test.test_visual_sampling import visual_flow_for_sampling
 
 class RobotDataset(Dataset):
     def __init__(self, args, state) :
@@ -57,6 +58,8 @@ class RobotDataset(Dataset):
                 # split to 60/20 from 80 case
                 self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='val') # args.fold's train dataset(80 case) to 20 case
                 assets_type='meta'
+
+                self.wise_sampling_mode = False
                 
             elif state == 'test':
                 pass
@@ -84,6 +87,8 @@ class RobotDataset(Dataset):
                 # 20 case
                 self.patients_name = val_videos[self.args.fold]
                 assets_type='sub'
+
+                self.wise_sampling_mode = False
 
             elif state == 'test':
                 pass
@@ -186,6 +191,19 @@ class RobotDataset(Dataset):
             hueristic_sampler = HeuristicSampler(assets_df, self.args)
             assets_df = hueristic_sampler.final_assets
 
+            if self.state == 'train': # save plt only in trainset
+                assets_df['HEM'] = [0]*len(assets_df)
+
+                assets_df_save_dir = os.path.join(self.args.save_path, 'train_assets', '{}set_stage-{}'.format(self.state, self.args.stage))
+                os.makedirs(assets_df_save_dir, exist_ok=True)
+
+                assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-wise_sampling.csv'.format(self.args.stage)))
+
+                try: # 혹시, error날 경우 pass (plt warining 가능)
+                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                except:
+                    pass
+
         else:
             print('\n\n')
             print('==> \tSORT INBODY_CSV')
@@ -224,6 +242,19 @@ class RobotDataset(Dataset):
             print(assets_df.head(20))
             print('\n\n')
 
+            if self.state == 'train': # save plt only in trainset
+                assets_df['HEM'] = [0]*len(assets_df)
+
+                assets_df_save_dir = os.path.join(self.args.save_path, 'train_assets', '{}set_stage-{}'.format(self.state, self.args.stage))
+                os.makedirs(assets_df_save_dir, exist_ok=True)
+
+                assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-random_sampling.csv'.format(self.args.stage)))
+
+                try: # 혹시, error날 경우 pass (plt warining 가능)
+                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                except:
+                    pass
+
 
         # last processing
         self.img_list = assets_df.img_path.tolist()
@@ -248,9 +279,16 @@ class RobotDataset(Dataset):
             df = pd.read_csv(csv_file, names=cols)
             hem_df_list.append(df)
     
-        hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+        hem_assets_df_save_dir = os.path.join(self.restore_path, 'hem_assets') # static path
+        os.makedirs(os.path.join(hem_assets_df_save_dir), exist_ok=True)
 
-        hem_assets_df.to_csv(os.path.join(self.args.restore_path, 'hem_assets.csv'))
+        hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+        hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'hem_assets.csv')) # save hem csv
+        
+        try: # 혹시, error날 경우 pass (plt warining 가능)
+            visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+        except:
+            pass
 
         # select patient frame 
         print('==> \tPATIENT ({})'.format(len(self.patients_name)))

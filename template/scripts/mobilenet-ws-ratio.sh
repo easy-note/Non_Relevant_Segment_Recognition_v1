@@ -1,5 +1,5 @@
-# 21.11.19 general random sampling IB ratio별 실험
-# [고정] general-random / random_seed:3829 / top_ratio:0.10
+# 21.11.19 general ws IB ratio별 실험
+# [고정] general-ws / random_seed:3829 / top_ratio:0.10
 # [변경] IB_ratio
 
 ratio_array=(1 3 4 5 7 10);
@@ -9,6 +9,7 @@ do
     nohup python visual_flow.py \
         --fold "1" \
         --trial 1 \
+        --use_wise_sample \
         --model "mobilenetv3_large_100" \
         --pretrained \
         --use_lightning_style_save \
@@ -24,6 +25,6 @@ do
         --top_ratio 0.10 \
         --stage "general_train" \
         --inference_fold "1" \
-        --experiments_sheet_dir "/OOB_RECOG/results/general_random-ratio-experiment" \
-        --save_path "/OOB_RECOG/logs/general_random-ratio-experiment" > /dev/null
+        --experiments_sheet_dir "/OOB_RECOG/results/general_ws-ratio-experiment" \
+        --save_path "/OOB_RECOG/logs/general_ws-ratio-experiment" > /dev/null
 done;

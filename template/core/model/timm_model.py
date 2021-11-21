@@ -21,7 +21,8 @@ class TIMM(nn.Module):
         arch_name = self.args.model
         
         model = timm.create_model(arch_name, pretrained=True)
-            
+        
+        # help documents - https://fastai.github.io/timmdocs/create_model (how to use feature_extractor in timm)
         if self.args.model == 'swin_large_patch4_window7_224':
             self.feature_module = nn.Sequential(
                 *list(model.children())[:-2],
@@ -42,17 +43,22 @@ class TIMM(nn.Module):
             self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(model.num_features, 2))
         
+        else : # off-line and genral
+            self.classifier = nn.Sequential(
+                nn.Dropout(p=0.3, inplace=True),
+                nn.Linear(model.num_features, 2)
+            )
+        
         if self.args.use_online_mcd:
             self.dropout = nn.Dropout(0.3)
-        
         
     def forward(self, x):
         features = self.feature_module(x)
         if self.args.model == 'swin_large_patch4_window7_224':
             features = self.gap(features.permute(0, 2, 1))
             
-        if self.args.use_online_mcd:
-            if self.training:
+        if self.args.use_online_mcd: #  해당 방식처럼 training에 따라서 forward 컨셉으로 offline도 구성하고 싶었는데.. 우선 online을 제외한 general. offline에서 classifier에 dropout을 추가하는 방향으로 임시 변경하였습니다.
+            if self.training: # 학습 중간에 넣나요? 보규님? 어떻게 접근하는지 궁금합니다!
                 features = self.dropout(features)
             else:
                 mcd_outputs = []
