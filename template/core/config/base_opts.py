@@ -215,9 +215,10 @@ def parse_opts():
             choices=['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train'])
 
     parser.add_argument('--hem_extract_mode', type=str,
-            default='hem-softmax-offline', 
-            choices=['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 
-                     'hem-emb-online', 'hem-focus-online'],
+            default='all-offline', 
+            choices=['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline',
+                     'all-offline',
+                     'hem-emb-online', 'hem-focus-online',],
             help='Select train method, normal or hem method')
             
     parser.add_argument('--top_ratio', type=float,

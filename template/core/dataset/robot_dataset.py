@@ -199,10 +199,10 @@ class RobotDataset(Dataset):
 
                 assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-wise_sampling.csv'.format(self.args.stage)))
 
-                try: # 혹시, error날 경우 pass (plt warining 가능)
-                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
-                except:
-                    pass
+                # try: # 혹시, error날 경우 pass (plt warining 가능)
+                #     # visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                # except:
+                #     pass
 
         else:
             print('\n\n')
@@ -250,45 +250,98 @@ class RobotDataset(Dataset):
 
                 assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-random_sampling.csv'.format(self.args.stage)))
 
-                try: # 혹시, error날 경우 pass (plt warining 가능)
-                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
-                except:
-                    pass
+                # try: # 혹시, error날 경우 pass (plt warining 가능)
+                #     # visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                # except:
+                #     pass
 
 
         # last processing
         self.img_list = assets_df.img_path.tolist()
         self.label_list = assets_df.class_idx.tolist()
 
+
     def load_data_from_hem_assets(self):
-        
-        # self.args.restore_path 에서 version0, 1, 2, 3 에 대한 hem.csv 읽고
-        self.restore_path = '/'.join(self.args.restore_path.split('/')[:-1])
-        
-        # csv_path 내부의 모든 hem.csv (fold2, fold3, fold4, fold5) ==> 하나로 합침
-        read_hem_csv = glob(os.path.join(self.restore_path, '*', '*-*-*.csv'))
 
-        read_hem_csv = natsort.natsorted(read_hem_csv)
-        
-        print(read_hem_csv)
-
-        hem_df_list = []
         cols = ['img_path', 'class_idx', 'HEM']
 
-        for csv_file in read_hem_csv:
-            df = pd.read_csv(csv_file, names=cols)
-            hem_df_list.append(df)
-    
+        # self.args.restore_path 에서 version0, 1, 2, 3 에 대한 hem.csv 읽고
+        self.restore_path = '/'.join(self.args.restore_path.split('/')[:-1])
+
         hem_assets_df_save_dir = os.path.join(self.restore_path, 'hem_assets') # static path
         os.makedirs(os.path.join(hem_assets_df_save_dir), exist_ok=True)
+       
 
-        hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-        hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'hem_assets.csv')) # save hem csv
+        if self.args.hem_extract_mode == 'all-offline':
+            
+            if 'version_3' in self.args.restore_path: # 사실은 self.args.restore_path = version_4 여야 함. 
+                
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'softmax_*-*-*.csv'))
+                read_hem_csv = natsort.natsorted(read_hem_csv)
+
+                print(read_hem_csv)
+                hem_df_list = []
+
+                for csv_file in read_hem_csv:
+                    df = pd.read_csv(csv_file, names=cols)
+                    hem_df_list.append(df)
+            
+                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'softmax_hem_assets.csv')) # save hem csv
+
+            elif 'version_4' in self.args.restore_path: # 사실은 self.args.restore_path = version_5 여야 함. 
+
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'voting_*-*-*.csv'))
+                read_hem_csv = natsort.natsorted(read_hem_csv)
+
+                print(read_hem_csv)
+
+                hem_df_list = []
+
+                for csv_file in read_hem_csv:
+                    df = pd.read_csv(csv_file, names=cols)
+                    hem_df_list.append(df)
+
+                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'voting_hem_assets.csv')) # save hem csv
+
+            elif 'version_5' in self.args.restore_path: # 사실은 self.args.restore_path = version_6 여야 함. 
+                
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'vi_*-*-*.csv'))
+                read_hem_csv = natsort.natsorted(read_hem_csv)
+
+                print(read_hem_csv)
+                hem_df_list = []
+
+                for csv_file in read_hem_csv:
+                    df = pd.read_csv(csv_file, names=cols)
+                    hem_df_list.append(df)
+
+                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'vi_hem_assets.csv')) # save hem csv
         
-        try: # 혹시, error날 경우 pass (plt warining 가능)
-            visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
-        except:
-            pass
+        elif 'offline' in self.args.hem_extract_mode:
+           
+        
+            # csv_path 내부의 모든 hem.csv (fold2, fold3, fold4, fold5) ==> 하나로 합침
+            read_hem_csv = glob(os.path.join(self.restore_path, '*', '*-*-*.csv'))
+            read_hem_csv = natsort.natsorted(read_hem_csv)
+        
+            print(read_hem_csv)
+
+            hem_df_list = []
+
+            for csv_file in read_hem_csv:
+                df = pd.read_csv(csv_file, names=cols)
+                hem_df_list.append(df)
+
+            hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+            hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'hem_assets.csv')) # save hem csv
+        
+        # try: # 혹시, error날 경우 pass (plt warining 가능)
+        #     visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+        # except:
+        #     pass
 
         # select patient frame 
         print('==> \tPATIENT ({})'.format(len(self.patients_name)))
