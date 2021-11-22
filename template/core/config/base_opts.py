@@ -16,7 +16,8 @@ def parse_opts():
                         'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 
                         'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
                         'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
-                        'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns'],
+                        'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns',
+                        'repvgg_b0', ],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -233,6 +234,16 @@ def parse_opts():
     
     parser.add_argument('--use_online_mcd',
             action='store_true',
+            help='?')
+    
+    parser.add_argument('--dropout_prob',
+            default=0.3,
+            type=float,
+            help='?')
+    
+    parser.add_argument('--n_dropout',
+            default=10,
+            type=int,
             help='?')
 
     # -------------- etc --------------------

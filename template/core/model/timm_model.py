@@ -12,6 +12,10 @@ def generate_timm_model(args):
 class TIMM(nn.Module):
     """
         SOTA model usage
+        1. resnet18
+        2. repvgg_b0
+        3. mobilenetv3_large_100
+        
     """
     def __init__(self, args):
         super().__init__()
@@ -45,15 +49,16 @@ class TIMM(nn.Module):
         
         else : # off-line and genral
             self.classifier = nn.Sequential(
-                nn.Dropout(p=0.3, inplace=True),
+                nn.Dropout(p=self.args.dropout_prob, inplace=True),
                 nn.Linear(model.num_features, 2)
             )
         
         if self.args.use_online_mcd:
-            self.dropout = nn.Dropout(0.3)
+            self.dropout = nn.Dropout(self.args.dropout_prob)
         
     def forward(self, x):
         features = self.feature_module(x)
+        
         if self.args.model == 'swin_large_patch4_window7_224':
             features = self.gap(features.permute(0, 2, 1))
             
@@ -62,7 +67,7 @@ class TIMM(nn.Module):
                 features = self.dropout(features)
             else:
                 mcd_outputs = []
-                for _ in range(10):
+                for _ in range(self.args.n_dropout):
                     mcd_outputs.append(self.dropout(features).unsqueeze(0))
                     
                 a = torch.vstack(mcd_outputs)
