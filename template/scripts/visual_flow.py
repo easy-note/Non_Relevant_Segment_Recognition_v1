@@ -333,7 +333,7 @@ def main():
                     experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
                     os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
-                    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+                    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path) 
 
 if __name__ == '__main__':
     if __package__ is None:
