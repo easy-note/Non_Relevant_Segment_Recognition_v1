@@ -388,8 +388,11 @@ class HEMHelper():
             pos_y = y[correct_answer]
             
             pos_loss = loss_fn(pos_y_hat, pos_y)
-            proxy_loss = loss_fn(sim_dist[correct_answer], pos_y)
-            # proxy_loss = loss_fn(sim_dist, y)
+            
+            if self.args.use_proxy_all:
+                proxy_loss = loss_fn(sim_dist, y)
+            else:
+                proxy_loss = loss_fn(sim_dist[correct_answer], pos_y)
         else:
             pos_loss = 0
             proxy_loss = 0
@@ -405,15 +408,22 @@ class HEMHelper():
             neg_y_hat = neg_y_hat[wrong_ids]
             neg_y = neg_y[wrong_ids]
             
-            neg_sim_dist = sim_dist[wrong_answer]
-            
             neg_loss = 0
-            # if len(w) > 1:
-            #     st = len(w) // 2
-            # for wi in range(st, len(w)):
-            for wi in range(len(w)):
-                neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
-                proxy_loss += torch.nn.functional.cross_entropy(neg_sim_dist[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+            
+            if self.args.use_half_neg:
+                if len(w) > 1:
+                    st = len(w) // 2
+                for wi in range(st, len(w)):
+                    neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+            else:
+                neg_sim_dist = sim_dist[wrong_ids]
+                
+                for wi in range(len(w)):
+                    neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+                    
+                    if self.args.use_neg_proxy:
+                        n_proxy = torch.nn.functional.cross_entropy(neg_sim_dist[wi:wi+1, ], neg_y[wi:wi+1])
+                        proxy_loss = proxy_loss + n_proxy * w[wi:wi+1]
               
         else:
             neg_loss = 0

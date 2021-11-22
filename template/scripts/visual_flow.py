@@ -12,8 +12,8 @@ def get_experiment_args():
     args.pretrained = True
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
-    # args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold) (이전에 사용하시던 셋팅입니다.)
-    args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
+    args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
+    # args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
     # args.experiments_sheet_dir = args.save_path
 
     ### dataset opts

@@ -236,6 +236,18 @@ def parse_opts():
             action='store_true',
             help='?')
     
+    parser.add_argument('--use_proxy_all',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_half_neg',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_neg_proxy',
+            action='store_true',
+            help='?')
+    
     parser.add_argument('--dropout_prob',
             default=0.3,
             type=float,
