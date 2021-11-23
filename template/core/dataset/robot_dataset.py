@@ -201,7 +201,7 @@ class RobotDataset(Dataset):
 
                 try: # 혹시, error날 경우 pass (plt warining 가능)
                     pass
-                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                    # visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
                 except:
                     pass
 
@@ -252,9 +252,10 @@ class RobotDataset(Dataset):
 
                 assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-random_sampling.csv'.format(self.args.stage)))
 
+
                 try: # 혹시, error날 경우 pass (plt warining 가능)
                     pass
-                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                    # visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
                 except:
                     pass
 
@@ -343,7 +344,7 @@ class RobotDataset(Dataset):
         
         try: # 혹시, error날 경우 pass (plt warining 가능)
             pass
-            visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+            # visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
         except:
             pass
 

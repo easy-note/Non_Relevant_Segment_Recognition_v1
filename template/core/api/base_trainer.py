@@ -6,9 +6,7 @@ from glob import glob
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
-
-# from ray.tune.integration.pytorch_lightning import TuneReportCallback, \
-#         TuneReportCheckpointCallback
+from core.accessory.RepVGG.repvgg import repvgg_model_convert
 
 
 class BaseTrainer(pl.LightningModule):
@@ -156,18 +154,8 @@ class BaseTrainer(pl.LightningModule):
 
         callbacks.append(lrMonitor)
         
-        if self.args.use_lightning_style_save:
-            # checkpoint = ModelCheckpoint(
-            #     # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
-            #     filename='{epoch}-{val_loss:.4f}-best',
-            #     save_top_k=self.args.save_top_n,
-            #     save_last=True,
-            #     verbose=True,
-            #     monitor='val_loss',
-            #     mode='min')
-            
+        if self.args.use_lightning_style_save:            
             checkpoint = ModelCheckpoint(
-                # dirpath=self.args.save_path, ## dirpath=save_path/lightning_logs/version_0/checkpoints/model.ckpt
                 filename='{epoch}-{Mean_metric:.4f}-best',
                 save_top_k=self.args.save_top_n,
                 save_last=True,
@@ -179,22 +167,14 @@ class BaseTrainer(pl.LightningModule):
         
             callbacks.append(checkpoint)
 
-        # ray_callback = TuneReportCallback({
-        #                 "loss": "Loss",
-        #                 "mean_metric": "Mean_metric"
-        #             }, on="validation_end")
-
-        # callbacks.append(ray_callback)
-
         print('[+] Callbacks are set ', callbacks)
         
         return callbacks
 
     # torch style save checkpoint
+    # repvgg use only
     def save_checkpoint(self):
-        os.makedirs(os.path.join(self.args.save_path), exist_ok=True)
-
-        saved_pt_list = glob(os.path.join(self.args.save_path, self.logger.log_dir, 'checkpoints', '*pt'))
+        saved_pt_list = glob(os.path.join(self.logger.log_dir, 'checkpoints', '*pt'))
 
         print('saved_pt_list ====> ', saved_pt_list)
 
@@ -204,16 +184,38 @@ class BaseTrainer(pl.LightningModule):
             for li in saved_pt_list[:-(self.args.save_top_n+1)]:
                 os.remove(li)
 
-        save_path = '{}/epoch:{}-loss_val:{:.4f}.pt'.format(
-                    os.path.join(self.args.save_path, self.logger.log_dir, 'checkpoints'),
+        save_path = '{}/epoch:{}-Mean_metric:{:.4f}.pt'.format(
+                    os.path.join(self.logger.log_dir, 'checkpoints'),
                     self.current_epoch,
-                    self.best_val_loss.item()
+                    self.best_mean_metric,
                 )
 
-        if self.args.num_gpus > 1:
-            torch.save(self.model.module.state_dict(), save_path)
-        else:
-            torch.save(self.model.state_dict(), save_path)
+        _ = repvgg_model_convert(self.model, save_path=save_path)        
 
         print('[+] save checkpoint(torch ver.) : ', save_path)
+        
+        # os.makedirs(os.path.join(self.args.save_path), exist_ok=True)
+
+        # saved_pt_list = glob(os.path.join(self.args.save_path, self.logger.log_dir, 'checkpoints', '*pt'))
+
+        # print('saved_pt_list ====> ', saved_pt_list)
+
+        # if len(saved_pt_list) > self.args.save_top_n:
+        #     saved_pt_list = natsort.natsorted(saved_pt_list)
+
+        #     for li in saved_pt_list[:-(self.args.save_top_n+1)]:
+        #         os.remove(li)
+
+        # save_path = '{}/epoch:{}-loss_val:{:.4f}.pt'.format(
+        #             os.path.join(self.args.save_path, self.logger.log_dir, 'checkpoints'),
+        #             self.current_epoch,
+        #             self.best_val_loss.item()
+        #         )
+
+        # if self.args.num_gpus > 1:
+        #     torch.save(self.model.module.state_dict(), save_path)
+        # else:
+        #     torch.save(self.model.state_dict(), save_path)
+
+        # print('[+] save checkpoint(torch ver.) : ', save_path)
 

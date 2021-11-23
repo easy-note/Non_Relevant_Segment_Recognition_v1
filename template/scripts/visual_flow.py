@@ -12,8 +12,8 @@ def get_experiment_args():
     args.pretrained = True
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
-    # args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold) (이전에 사용하시던 셋팅입니다.)
-    args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
+    args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
+    # args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
     # args.experiments_sheet_dir = args.save_path
 
     ### dataset opts
@@ -59,9 +59,17 @@ def train_main(args):
                             plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
                             accelerator='ddp')
     else:
-        trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=2,#0.01,
-                            # limit_val_batches=2,#0.01,
+        if args.use_test_batch:
+            trainer = pl.Trainer(gpus=args.num_gpus,
+                            # limit_train_batches=1,#0.01,
+                            # limit_val_batches=1,#0.01,
+                            max_epochs=args.max_epoch, 
+                            min_epochs=args.min_epoch,
+                            logger=tb_logger,)
+        else:    
+            trainer = pl.Trainer(gpus=args.num_gpus,
+                            # limit_train_batches=1,#0.01,
+                            # limit_val_batches=1,#0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -101,12 +109,18 @@ def inference_main(args):
     print('restore : ', args.restore_path)
 
     # from finetuning model
-    model_path = get_inference_model_path(args.restore_path)
-    
-    if args.experiment_type == 'theator':
-        model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-    elif args.experiment_type == 'ours':
-        model = CAMIO.load_from_checkpoint(model_path, args=args)
+    if 'repvgg' not in args.model:
+        model_path = get_inference_model_path(args.restore_path)
+        
+        if args.experiment_type == 'theator':
+            model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
+        elif args.experiment_type == 'ours':
+            model = CAMIO.load_from_checkpoint(model_path, args=args)
+    else:
+        if args.experiment_type == 'theator':
+            model = TheatorTrainer(args)
+        elif args.experiment_type == 'ours':
+            model = CAMIO(args)
         
     model = model.cuda()
 
@@ -350,6 +364,7 @@ if __name__ == '__main__':
         from os import path    
         base_path = path.dirname(path.dirname(path.abspath(__file__)))
         sys.path.append(base_path)
+        sys.path.append(base_path+'/core/accessory/RepVGG')
         print(base_path)
         
         from core.utils.misc import save_dict_to_csv, prepare_inference_aseets, get_inference_model_path, \

@@ -17,7 +17,7 @@ def parse_opts():
                         'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
                         'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
                         'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns',
-                        'repvgg_b0', ],
+                        'repvgg_b0', 'repvgg-a0'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -237,6 +237,18 @@ def parse_opts():
             action='store_true',
             help='?')
     
+    parser.add_argument('--use_proxy_all',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_half_neg',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_neg_proxy',
+            action='store_true',
+            help='?')
+    
     parser.add_argument('--dropout_prob',
             default=0.3,
             type=float,
@@ -270,6 +282,11 @@ def parse_opts():
     
     parser.add_argument('--trial', type=int,
             default=1,
+            help='?')
+    
+    
+    parser.add_argument('--use_test_batch',
+            action='store_true',
             help='?')
 
     return parser
