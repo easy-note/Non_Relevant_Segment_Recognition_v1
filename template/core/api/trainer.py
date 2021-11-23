@@ -246,6 +246,7 @@ class CAMIO(BaseTrainer):
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
                     
+            # repvgg는 별도로 torch style save
             elif 'repvgg' in self.args.model:
                 if self.best_mean_metric < metrics['Mean_metric']:
                     self.best_mean_metric = metrics['Mean_metric']
