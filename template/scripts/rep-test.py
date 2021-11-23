@@ -61,8 +61,8 @@ def train_main(args):
     else:
         if args.use_test_batch:
             trainer = pl.Trainer(gpus=args.num_gpus,
-                            limit_train_batches=1,#0.01,
-                            limit_val_batches=1,#0.01,
+                            limit_train_batches=0.01,
+                            limit_val_batches=0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -314,13 +314,13 @@ def main():
         args = train_main(args)
         
         # 3. inference
-        args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+        # args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-        # 4. save experiments summary
-        experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-        os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+        # # 4. save experiments summary
+        # experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+        # os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
-        save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+        # save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
     else: # online mode
         if check_hem_online_mode(args):
             args.mini_fold = 'general'
@@ -329,13 +329,13 @@ def main():
             args = train_main(args)
 
             # 3. inference
-            args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+            # args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-            # 4. save experiments summary
-            experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-            os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+            # # 4. save experiments summary
+            # experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+            # os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
-            save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+            # save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
         # offline mode
         else:
             for ids, stage in enumerate(STAGE_LIST):

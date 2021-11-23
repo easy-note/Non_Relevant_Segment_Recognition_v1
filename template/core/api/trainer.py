@@ -3,8 +3,6 @@ import math
 import numpy as np
 import csv
 import json
-
-import random
 import torch
 from torch.utils.data import DataLoader
 
@@ -21,16 +19,6 @@ class CAMIO(BaseTrainer):
  
         # TODO 필요한거 더 추가하기
         self.args = args
-
-        random.seed(self.args.random_seed)
-        np.random.seed(self.args.random_seed)
-        os.environ["PYTHONHASHSEED"]=str(self.args.random_seed)
-        torch.manual_seed(self.args.random_seed)
-        torch.cuda.manual_seed(self.args.random_seed)
-        torch.backends.cudnn.deterministic=True
-        torch.backends.cudnn.benchmark=True
-        
-        
         self.save_hyperparameters() # save with hparams
 
         self.model = get_model(self.args)
@@ -133,10 +121,7 @@ class CAMIO(BaseTrainer):
             elif 'hem-focus' in self.hem_extract_mode and self.training:
                 img_path, x, y = batch
                 
-                if self.args.emb_type == 3:
-                    loss = self.hem_helper.hem_cos_hard_sim2(self.model, x, y, self.loss_fn)
-                else:
-                    loss = self.hem_helper.hem_cos_hard_sim(self.model, x, y, self.loss_fn)
+                loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
             else:
                 img_path, x, y = batch
 
