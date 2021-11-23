@@ -199,10 +199,12 @@ class RobotDataset(Dataset):
 
                 assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-wise_sampling.csv'.format(self.args.stage)))
 
-                # try: # 혹시, error날 경우 pass (plt warining 가능)
-                #     # visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
-                # except:
-                #     pass
+                try: # 혹시, error날 경우 pass (plt warining 가능)
+                    pass
+                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                except:
+                    pass
+
 
         else:
             print('\n\n')
@@ -250,10 +252,11 @@ class RobotDataset(Dataset):
 
                 assets_df.to_csv(os.path.join(assets_df_save_dir, 'stage={}-random_sampling.csv'.format(self.args.stage)))
 
-                # try: # 혹시, error날 경우 pass (plt warining 가능)
-                #     # visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
-                # except:
-                #     pass
+                try: # 혹시, error날 경우 pass (plt warining 가능)
+                    pass
+                    visual_flow_for_sampling(assets_df, self.args.model, assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+                except:
+                    pass
 
 
         # last processing
@@ -338,10 +341,11 @@ class RobotDataset(Dataset):
             hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
             hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'hem_assets.csv')) # save hem csv
         
-        # try: # 혹시, error날 경우 pass (plt warining 가능)
-        #     visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
-        # except:
-        #     pass
+        try: # 혹시, error날 경우 pass (plt warining 가능)
+            pass
+            visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+        except:
+            pass
 
         # select patient frame 
         print('==> \tPATIENT ({})'.format(len(self.patients_name)))
