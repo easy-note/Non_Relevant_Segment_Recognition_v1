@@ -255,13 +255,21 @@ class CAMIO(BaseTrainer):
 
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
-                if self.args.stage not in ['hem_train', 'general_train'] and 'offline' in self.args.hem_extract_mode: 
+                if self.args.stage not in ['hem_train', 'general_train'] and self.args.hem_extract_mode == 'all-offline': 
 
+                    self.hem_helper.set_restore_path(self.restore_path)
+
+                    softmax_hem_df, voting_hem_df, vi_hem_df = self.hem_helper.compute_hem(self.model, outputs)
+                    
+                    softmax_hem_df.to_csv(os.path.join(self.restore_path, 'softmax_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+                    voting_hem_df.to_csv(os.path.join(self.restore_path, 'voting_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+                    vi_hem_df.to_csv(os.path.join(self.restore_path, 'vi_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+
+                elif self.args.stage not in ['hem_train', 'general_train'] and 'offline' in self.args.hem_extract_mode: 
                     self.hem_helper.set_restore_path(self.restore_path)
 
                     hem_df = self.hem_helper.compute_hem(self.model, outputs)
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-
 
 
     def test_step(self, batch, batch_idx):
