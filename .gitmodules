@@ -1,0 +1,3 @@
+[submodule "template/core/accessory/RepVGG"]
+	path = template/core/accessory/RepVGG
+	url = https://github.com/DingXiaoH/RepVGG
