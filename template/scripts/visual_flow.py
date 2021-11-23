@@ -1,5 +1,5 @@
 # STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
-STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
+STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
 
 def get_experiment_args():
     from core.config.base_opts import parse_opts
@@ -12,8 +12,8 @@ def get_experiment_args():
     args.pretrained = True
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
-    args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
-    # args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
+    # args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
+    args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
     # args.experiments_sheet_dir = args.save_path
 
     ### dataset opts
@@ -68,8 +68,8 @@ def train_main(args):
                             logger=tb_logger,)
         else:    
             trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=1,#0.01,
-                            # limit_val_batches=1,#0.01,
+                            # limit_train_batches=2,#0.01,
+                            # limit_val_batches=2,#0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
@@ -342,11 +342,17 @@ def main():
                 if ids > 3:
                     # 3. inference
                     if ids == 4: # version 4
-                        args.hem_extract_mode = 'hem-softmax-offline'
+                        args.hem_extract_mode = 'hem-softmax-small_diff-offline'
                     elif ids == 5: # version 5
-                        args.hem_extract_mode = 'hem-voting-offline'
+                        args.hem_extract_mode = 'hem-softmax-large_diff-offline'
+
                     elif ids == 6: # version 6
-                        args.hem_extract_mode = 'hem-vi-offline'
+                        args.hem_extract_mode = 'hem-voting-offline'
+
+                    elif ids == 7: # version 7
+                        args.hem_extract_mode = 'hem-vi_small-offline'
+                    elif ids == 8: # version 8
+                        args.hem_extract_mode = 'hem-vi_large-offline'
                 
                     args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
@@ -356,7 +362,7 @@ def main():
 
                     save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
                     
-                    args.hem_extract_mode == 'all-offline'
+                    args.hem_extract_mode = 'all-offline'
 
 if __name__ == '__main__':
     if __package__ is None:

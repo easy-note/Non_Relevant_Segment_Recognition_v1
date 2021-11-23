@@ -280,7 +280,7 @@ class RobotDataset(Dataset):
             
             if 'version_3' in self.args.restore_path: # 사실은 self.args.restore_path = version_4 여야 함. 
                 
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'softmax_*-*-*.csv'))
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'softmax_diff_small_*-*-*.csv'))
                 read_hem_csv = natsort.natsorted(read_hem_csv)
 
                 print(read_hem_csv)
@@ -291,15 +291,30 @@ class RobotDataset(Dataset):
                     hem_df_list.append(df)
             
                 hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'softmax_hem_assets.csv')) # save hem csv
+                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'softmax_diff_small_hem_assets.csv')) # save hem csv
 
             elif 'version_4' in self.args.restore_path: # 사실은 self.args.restore_path = version_5 여야 함. 
 
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'voting_*-*-*.csv'))
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'softmax_diff_large_*-*-*.csv'))
                 read_hem_csv = natsort.natsorted(read_hem_csv)
 
                 print(read_hem_csv)
 
+                hem_df_list = []
+
+                for csv_file in read_hem_csv:
+                    df = pd.read_csv(csv_file, names=cols)
+                    hem_df_list.append(df)
+
+                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'softmax_diff_large_hem_assets.csv')) # save hem csv
+
+            elif 'version_5' in self.args.restore_path: # 사실은 self.args.restore_path = version_6 여야 함. 
+                
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'voting_*-*-*.csv'))
+                read_hem_csv = natsort.natsorted(read_hem_csv)
+
+                print(read_hem_csv)
                 hem_df_list = []
 
                 for csv_file in read_hem_csv:
@@ -309,9 +324,25 @@ class RobotDataset(Dataset):
                 hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
                 hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'voting_hem_assets.csv')) # save hem csv
 
-            elif 'version_5' in self.args.restore_path: # 사실은 self.args.restore_path = version_6 여야 함. 
+            elif 'version_6' in self.args.restore_path: # 사실은 self.args.restore_path = version_7 여야 함. 
+
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'vi_small_*-*-*.csv'))
+                read_hem_csv = natsort.natsorted(read_hem_csv)
+
+                print(read_hem_csv)
+
+                hem_df_list = []
+
+                for csv_file in read_hem_csv:
+                    df = pd.read_csv(csv_file, names=cols)
+                    hem_df_list.append(df)
+
+                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'vi_small_hem_assets.csv')) # save hem csv
+
+            elif 'version_7' in self.args.restore_path: # 사실은 self.args.restore_path = version_8 여야 함. 
                 
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'vi_*-*-*.csv'))
+                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'vi_large_*-*-*.csv'))
                 read_hem_csv = natsort.natsorted(read_hem_csv)
 
                 print(read_hem_csv)
@@ -322,11 +353,11 @@ class RobotDataset(Dataset):
                     hem_df_list.append(df)
 
                 hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'vi_hem_assets.csv')) # save hem csv
-        
+                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'vi_large_hem_assets.csv')) # save hem csv
+
+
         elif 'offline' in self.args.hem_extract_mode:
            
-        
             # csv_path 내부의 모든 hem.csv (fold2, fold3, fold4, fold5) ==> 하나로 합침
             read_hem_csv = glob(os.path.join(self.restore_path, '*', '*-*-*.csv'))
             read_hem_csv = natsort.natsorted(read_hem_csv)
