@@ -255,7 +255,7 @@ def parse_opts():
             help='?')
     
     parser.add_argument('--n_dropout',
-            default=10,
+            default=1,
             type=int,
             help='?')
 
