@@ -1,5 +1,5 @@
 # STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
-STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train'] # general 완성전까지 hem_train까지만 진행
+STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
 
 def get_experiment_args():
     from core.config.base_opts import parse_opts
@@ -61,18 +61,18 @@ def train_main(args):
     else:
         if args.use_test_batch:
             trainer = pl.Trainer(gpus=args.num_gpus,
-                            limit_train_batches=1,#0.01,
-                            limit_val_batches=1,#0.01,
+                            # limit_train_batches=1,#0.01,
+                            # limit_val_batches=1,#0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
         else:    
             trainer = pl.Trainer(gpus=args.num_gpus,
-                                # limit_train_batches=1,#0.01,
-                                # limit_val_batches=1,#0.01,
-                                max_epochs=args.max_epoch, 
-                                min_epochs=args.min_epoch,
-                                logger=tb_logger,)
+                            # limit_train_batches=1,#0.01,
+                            # limit_val_batches=1,#0.01,
+                            max_epochs=args.max_epoch, 
+                            min_epochs=args.min_epoch,
+                            logger=tb_logger,)
     
     trainer.fit(x)
 
@@ -351,6 +351,13 @@ def main():
 
                 if ids > 3:
                     # 3. inference
+                    if ids == 4: # version 4
+                        args.hem_extract_mode = 'hem-softmax-offline'
+                    elif ids == 5: # version 5
+                        args.hem_extract_mode = 'hem-voting-offline'
+                    elif ids == 6: # version 6
+                        args.hem_extract_mode = 'hem-vi-offline'
+                
                     args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
                     # 4. save experiments summary
@@ -358,6 +365,8 @@ def main():
                     os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
                     save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+                    
+                    args.hem_extract_mode == 'all-offline'
 
 if __name__ == '__main__':
     if __package__ is None:

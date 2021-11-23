@@ -139,12 +139,12 @@ class HeuristicSampler():
 
         patient_df['wise_rs'] = final_wise_rs_idx
 
-        print('==================== FINAL self.assets_df ====================')
-        print(patient_df, '\n\n')
+        # print('==================== FINAL self.assets_df ====================')
+        # print(patient_df, '\n\n')
 
-        # pd.set_option('display.max_row', None)
-        print('==================== Wise RS ====================')
-        print(patient_df[patient_df['wise_rs'] == True], '\n\n')
+        # # pd.set_option('display.max_row', None)
+        # print('==================== Wise RS ====================')
+        # print(patient_df[patient_df['wise_rs'] == True], '\n\n')
 
         return patient_df
 

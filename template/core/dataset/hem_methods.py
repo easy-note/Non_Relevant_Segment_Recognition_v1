@@ -27,7 +27,7 @@ class HEMHelper():
         self.cnt = 0
 
     def set_method(self, method):
-        if method in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline']:
+        if method in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 'all-offline']:
             self.method = 'hem-vi'
         else:
             self.method = method
@@ -356,11 +356,20 @@ class HEMHelper():
         
         elif self.args.hem_extract_mode == 'hem-vi-offline':
             print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list)
+
+        elif self.args.hem_extract_mode == 'all-offline':
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
+            softmax_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
+            voting_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list)   
+            vi_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+
+            return softmax_hem_final_df, voting_hem_final_df, vi_hem_final_df
         
-
-        hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
         return hem_final_df
     
