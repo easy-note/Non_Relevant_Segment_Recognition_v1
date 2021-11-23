@@ -171,8 +171,6 @@ class CAMIO(BaseTrainer):
             with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
                 json.dump(save_data, f, indent=2)
 
-       
-
     def validation_step(self, batch, batch_idx): # val - every batch
         img_path, x, y = batch
         y_hat = self.forward(x)
@@ -184,11 +182,11 @@ class CAMIO(BaseTrainer):
 
         return {
             'val_loss': loss,
-            'img_path': img_path,
-            'x': x.detach().cpu(),
-            'y': y.detach().cpu(),
-            'y_hat': y_hat.argmax(dim=1).detach().cpu(),
-            'logit': y_hat.detach().cpu()
+            # 'img_path': img_path,
+            # 'x': x.detach().cpu(),
+            # 'y': y.detach().cpu(),
+            # 'y_hat': y_hat.argmax(dim=1).detach().cpu(),
+            # 'logit': y_hat.detach().cpu()
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
@@ -244,7 +242,8 @@ class CAMIO(BaseTrainer):
 
                     self.hem_helper.set_restore_path(self.restore_path)
 
-                    softmax_hem_df, voting_hem_df, vi_hem_df = self.hem_helper.compute_hem(self.model, outputs)
+                    # softmax_hem_df, voting_hem_df, vi_hem_df = self.hem_helper.compute_hem(self.model, outputs)
+                    softmax_hem_df, voting_hem_df, vi_hem_df = self.hem_helper.compute_hem(self.model, self.valset)
                     
                     softmax_hem_df.to_csv(os.path.join(self.restore_path, 'softmax_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
                     voting_hem_df.to_csv(os.path.join(self.restore_path, 'voting_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
@@ -253,7 +252,8 @@ class CAMIO(BaseTrainer):
                 elif self.args.stage not in ['hem_train', 'general_train'] and 'offline' in self.args.hem_extract_mode: 
                     self.hem_helper.set_restore_path(self.restore_path)
 
-                    hem_df = self.hem_helper.compute_hem(self.model, outputs)
+                    # hem_df = self.hem_helper.compute_hem(self.model, outputs)
+                    hem_df = self.hem_helper.compute_hem(self.model, self.valset)
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
 
 

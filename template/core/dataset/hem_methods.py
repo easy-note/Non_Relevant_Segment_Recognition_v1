@@ -237,7 +237,6 @@ class HEMHelper():
 
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
-
         def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list):
             hem_idx = []
 
@@ -316,9 +315,21 @@ class HEMHelper():
         img_path_list = []
         gt_list = []
 
-        for data in dataset:
-            img_path_list += list(data['img_path'])
-            gt_list += data['y'].tolist()
+        d_loader = DataLoader(
+            dataset,
+            batch_size=self.args.batch_size,
+            shuffle=False,
+            drop_last=False,
+            num_workers=self.args.num_workers,
+        )
+
+        img_path_list = dataset.img_list
+        gt_list = dataset.label_list
+
+
+        # for data in dataset:
+        #     img_path_list += list(data['img_path'])
+        #     gt_list += data['y'].tolist()
         
         ### 0. MC paramter setting
         n_classes = 2
@@ -333,10 +344,17 @@ class HEMHelper():
             predictions = np.empty((0, n_classes))
             model.eval()
             enable_dropout(model)
-            for data in dataset:
+            
+            print('{}th MC FORWARDING ...'.format(cnt+1))
+            
+            for data in tqdm(d_loader, desc='processing...'):
                 with torch.no_grad():
-                    y_hat = model(data['x'].cuda())
+                    y_hat = model(data[1].cuda())
                     y_hat = softmax(y_hat)
+            # for data in dataset:
+            #     with torch.no_grad():
+            #         y_hat = model(data['x'].cuda())
+            #         y_hat = softmax(y_hat)
 
                 predictions = np.vstack((predictions, y_hat.cpu().numpy()))
 
