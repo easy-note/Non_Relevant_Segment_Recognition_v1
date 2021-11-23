@@ -40,6 +40,7 @@ class CAMIO(BaseTrainer):
         self.hem_helper = HEMHelper(self.args)
 
         self.best_val_loss = math.inf
+        self.best_mean_metric = -2 # repvgg use only
 
         self.sanity_check = True
         self.restore_path = None # inference module args / save path of hem df 
@@ -244,6 +245,12 @@ class CAMIO(BaseTrainer):
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
+                    
+            elif 'repvgg' in self.args.model:
+                if self.best_mean_metric < metrics['Mean_metric']:
+                    self.best_mean_metric = metrics['Mean_metric']
+                    self.save_checkpoint()
+                
 
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:

@@ -59,12 +59,20 @@ def train_main(args):
                             plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
                             accelerator='ddp')
     else:
-        trainer = pl.Trainer(gpus=args.num_gpus,
-                            # limit_train_batches=1,#0.01,
-                            # limit_val_batches=1,#0.01,
+        if args.use_test_batch:
+            trainer = pl.Trainer(gpus=args.num_gpus,
+                            limit_train_batches=1,#0.01,
+                            limit_val_batches=1,#0.01,
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)
+        else:    
+            trainer = pl.Trainer(gpus=args.num_gpus,
+                                # limit_train_batches=1,#0.01,
+                                # limit_val_batches=1,#0.01,
+                                max_epochs=args.max_epoch, 
+                                min_epochs=args.min_epoch,
+                                logger=tb_logger,)
     
     trainer.fit(x)
 
@@ -101,12 +109,18 @@ def inference_main(args):
     print('restore : ', args.restore_path)
 
     # from finetuning model
-    model_path = get_inference_model_path(args.restore_path)
-    
-    if args.experiment_type == 'theator':
-        model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-    elif args.experiment_type == 'ours':
-        model = CAMIO.load_from_checkpoint(model_path, args=args)
+    if 'repvgg' not in args.model:
+        model_path = get_inference_model_path(args.restore_path)
+        
+        if args.experiment_type == 'theator':
+            model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
+        elif args.experiment_type == 'ours':
+            model = CAMIO.load_from_checkpoint(model_path, args=args)
+    else:
+        if args.experiment_type == 'theator':
+            model = TheatorTrainer(args)
+        elif args.experiment_type == 'ours':
+            model = CAMIO(args)
         
     model = model.cuda()
 
@@ -341,6 +355,7 @@ if __name__ == '__main__':
         from os import path    
         base_path = path.dirname(path.dirname(path.abspath(__file__)))
         sys.path.append(base_path)
+        sys.path.append(base_path+'/core/accessory/RepVGG')
         print(base_path)
         
         from core.utils.misc import save_dict_to_csv, prepare_inference_aseets, get_inference_model_path, \

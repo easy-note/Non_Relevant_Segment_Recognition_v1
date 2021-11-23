@@ -2,6 +2,7 @@ from core.model.mobilenet import generate_mobilenet
 from core.model.efficientnet import generate_efficientnet
 from core.model.resnet import generate_resnet
 from core.model.timm_model import generate_timm_model
+from core.model.repvgg import generate_repvgg
 
 
 name_to_model = {
@@ -22,6 +23,7 @@ name_to_model = {
     # 'mobilenetv3_large_100_miil': generate_timm_model,
     'ig_resnext101_32x48d': generate_timm_model, 
     'swin_large_patch4_window7_224': generate_timm_model, 
+    'repvgg-a0': generate_repvgg
 }
 
 
