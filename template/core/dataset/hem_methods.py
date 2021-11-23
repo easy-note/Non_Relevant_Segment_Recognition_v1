@@ -144,8 +144,10 @@ class HEMHelper():
             for m in model.modules():
                 if m.__class__.__name__.startswith('Dropout'):
                     dropout_layer.append(m)
-                
-            dropout_layer[-1].train() # only last layer to train
+            
+            if self.args.n_dropout != 1 :
+                dropout_layer[-1].train() # only last layer to train
+            
         
         # extract hem idx method
         def extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list):
@@ -180,7 +182,7 @@ class HEMHelper():
 
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
         
-        def extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list):
+        def extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list, diff):
             hem_idx = []
             
             cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
@@ -202,43 +204,54 @@ class HEMHelper():
             top_ratio = self.args.top_ratio # 30/100
             top_k = int(len(vanila_df) * top_ratio)
 
-            hard_df_lower_idx = dropout_predictions_mean_abs_diff.argsort()[:top_k].tolist()
-
-            '''
             # softmax hem 추출 시, lower_idx, upper_idx 따로 실험 :) 
+            if diff == 'diff_small': # lower
+                hard_df_lower_idx = dropout_predictions_mean_abs_diff.argsort()[:top_k].tolist() # 올림차순
+                hard_idx = hard_df_lower_idx
 
-            hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist()
+                vanila_idx = []
 
-            hard_idx = []
-            for i, gt in enumerate(gt_list):
-                if (i in hard_df_upper_idx) and gt==INCORRECT:
-                    hard_idx.append(i)
+                for i in range(len(vanila_df)):
+                    if (i not in hard_idx):
+                        vanila_idx.append(i)
 
-            hard_idx = hard_idx + hard_df_lower_idx
-            '''
+                hard_df = vanila_df.loc[hard_idx, :]
+                vanila_df = vanila_df.loc[vanila_idx, :]
 
-            hard_idx = hard_df_lower_idx
+                hard_neg_df = hard_df[hard_df['GT']==IB_CLASS]
+                hard_pos_df = hard_df[hard_df['GT']==OOB_CLASS]
 
-            vanila_idx = []
-            for i in range(len(vanila_df)):
-                if (i not in hard_idx):
-                    vanila_idx.append(i)
+                vanila_neg_df = vanila_df[vanila_df['GT']==IB_CLASS]
+                vanila_pos_df = vanila_df[vanila_df['GT']==OOB_CLASS]
 
-            hard_df = vanila_df.loc[hard_idx, :]
-            vanila_df = vanila_df.loc[vanila_idx, :]
+                return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
-            hard_neg_df = hard_df[hard_df['GT']==IB_CLASS]
-            hard_pos_df = hard_df[hard_df['GT']==OOB_CLASS]
+            elif diff == 'diff_large': # higher
+                hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist() # 내림차순
 
-            vanila_neg_df = vanila_df[vanila_df['GT']==IB_CLASS]
-            vanila_pos_df = vanila_df[vanila_df['GT']==OOB_CLASS]
+                hard_idx = []
+                for i, gt in enumerate(gt_list):
+                    if (i in hard_df_upper_idx) and gt==INCORRECT:
+                        hard_idx.append(i)
+
+                vanila_idx = []
+                for i in range(len(vanila_df)):
+                    if (i not in hard_idx):
+                        vanila_idx.append(i)
+
+                hard_df = vanila_df.loc[hard_idx, :]
+                vanila_df = vanila_df.loc[vanila_idx, :]
+
+                hard_neg_df = hard_df[hard_df['GT']==IB_CLASS]
+                hard_pos_df = hard_df[hard_df['GT']==OOB_CLASS]
+
+                vanila_neg_df = vanila_df[vanila_df['GT']==IB_CLASS]
+                vanila_pos_df = vanila_df[vanila_df['GT']==OOB_CLASS]
+
+                return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
 
-
-            return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
-
-
-        def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list):
+        def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list, location):
             hem_idx = []
 
             # 1. extract hem index
@@ -278,10 +291,15 @@ class HEMHelper():
             wrong_idx = np.where(answer == False) # wrong example
             wrong_idx = wrong_idx[0].tolist() # remove return turple
 
+
             # append hem idx - high mi & wrong answer
-            hem_idx += np.intersect1d(wrong_idx, top_mi_index).tolist()
+            if location == 'large':
+                hem_idx += np.intersect1d(wrong_idx, top_mi_index).tolist()
+            
             # append hem idx - low mi
-            # hem_idx += btm_mi_index.tolist()
+            elif location == 'small':
+                hem_idx += btm_mi_index.tolist()
+            
             print('hem_idx')
             
             # 2. split hem/vanila 
@@ -322,7 +340,7 @@ class HEMHelper():
         
         ### 0. MC paramter setting
         n_classes = 2
-        forward_passes = 5
+        forward_passes = self.args.n_dropout
         n_samples = len(img_path_list)
         
         dropout_predictions = np.empty((0, n_samples, n_classes)) 
@@ -359,16 +377,22 @@ class HEMHelper():
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list)
 
         elif self.args.hem_extract_mode == 'all-offline':
-            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
-            softmax_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list, 'diff_small')
+            softmax_diff_small_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list, 'diff_large')
+            softmax_diff_large_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list)
             voting_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
-            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list)   
-            vi_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list, 'small')   
+            vi_small_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
-            return softmax_hem_final_df, voting_hem_final_df, vi_hem_final_df
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list, 'large')   
+            vi_large_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+
+            return softmax_diff_small_hem_final_df, softmax_diff_large_hem_final_df, voting_hem_final_df, vi_small_hem_final_df, vi_large_hem_final_df
         
 
         return hem_final_df
