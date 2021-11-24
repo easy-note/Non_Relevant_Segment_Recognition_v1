@@ -11,7 +11,7 @@ from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
 
-
+from core.utils.misc import clean_paging_chache
 
 class CAMIO(BaseTrainer):
     def __init__(self, args):
@@ -260,7 +260,8 @@ class CAMIO(BaseTrainer):
 
                     hem_df = self.hem_helper.compute_hem(self.model, outputs)
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-
+        
+        clean_paging_chache()
 
     def test_step(self, batch, batch_idx):
         img_path, x, y = batch
