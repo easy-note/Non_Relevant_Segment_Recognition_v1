@@ -277,84 +277,31 @@ class RobotDataset(Dataset):
        
 
         if self.args.hem_extract_mode == 'all-offline':
+            version_dict = {
+                '3': ['softmax_diff_small_*-*-*.csv', 'softmax_diff_small_hem_assets.csv'],
+                '4': ['softmax_diff_large_*-*-*.csv', 'softmax_diff_large_hem_assets.csv'],
+                '5': ['voting_*-*-*.csv', 'voting_hem_assets.csv'],
+                '6': ['vi_small_*-*-*.csv', 'vi_small_hem_assets.csv'],
+                '7': ['vi_large_*-*-*.csv', 'vi_large_hem_assets.csv'],
+            }
             
-            if 'version_3' in self.args.restore_path: # 사실은 self.args.restore_path = version_4 여야 함. 
-                
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'softmax_diff_small_*-*-*.csv'))
-                read_hem_csv = natsort.natsorted(read_hem_csv)
-
-                print(read_hem_csv)
-                hem_df_list = []
-
-                for csv_file in read_hem_csv:
-                    df = pd.read_csv(csv_file, names=cols)
-                    hem_df_list.append(df)
+            num = self.args.restore_path.split('_')[-1]
             
-                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'softmax_diff_small_hem_assets.csv')) # save hem csv
+            load_f_path, save_f_path = version_dict[num]
+            
+            
+            read_hem_csv = glob(os.path.join(self.restore_path, '*', load_f_path))
+            read_hem_csv = natsort.natsorted(read_hem_csv)
 
-            elif 'version_4' in self.args.restore_path: # 사실은 self.args.restore_path = version_5 여야 함. 
+            print(read_hem_csv)
+            hem_df_list = []
 
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'softmax_diff_large_*-*-*.csv'))
-                read_hem_csv = natsort.natsorted(read_hem_csv)
+            for csv_file in read_hem_csv:
+                df = pd.read_csv(csv_file, names=cols)
+                hem_df_list.append(df)
 
-                print(read_hem_csv)
-
-                hem_df_list = []
-
-                for csv_file in read_hem_csv:
-                    df = pd.read_csv(csv_file, names=cols)
-                    hem_df_list.append(df)
-
-                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'softmax_diff_large_hem_assets.csv')) # save hem csv
-
-            elif 'version_5' in self.args.restore_path: # 사실은 self.args.restore_path = version_6 여야 함. 
-                
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'voting_*-*-*.csv'))
-                read_hem_csv = natsort.natsorted(read_hem_csv)
-
-                print(read_hem_csv)
-                hem_df_list = []
-
-                for csv_file in read_hem_csv:
-                    df = pd.read_csv(csv_file, names=cols)
-                    hem_df_list.append(df)
-
-                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'voting_hem_assets.csv')) # save hem csv
-
-            elif 'version_6' in self.args.restore_path: # 사실은 self.args.restore_path = version_7 여야 함. 
-
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'vi_small_*-*-*.csv'))
-                read_hem_csv = natsort.natsorted(read_hem_csv)
-
-                print(read_hem_csv)
-
-                hem_df_list = []
-
-                for csv_file in read_hem_csv:
-                    df = pd.read_csv(csv_file, names=cols)
-                    hem_df_list.append(df)
-
-                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'vi_small_hem_assets.csv')) # save hem csv
-
-            elif 'version_7' in self.args.restore_path: # 사실은 self.args.restore_path = version_8 여야 함. 
-                
-                read_hem_csv = glob(os.path.join(self.restore_path, '*', 'vi_large_*-*-*.csv'))
-                read_hem_csv = natsort.natsorted(read_hem_csv)
-
-                print(read_hem_csv)
-                hem_df_list = []
-
-                for csv_file in read_hem_csv:
-                    df = pd.read_csv(csv_file, names=cols)
-                    hem_df_list.append(df)
-
-                hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
-                hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, 'vi_large_hem_assets.csv')) # save hem csv
-
+            hem_assets_df = pd.concat(hem_df_list, ignore_index=True).reset_index(drop=True)
+            hem_assets_df.to_csv(os.path.join(hem_assets_df_save_dir, save_f_path)) # save hem csv
 
         elif 'offline' in self.args.hem_extract_mode:
            
