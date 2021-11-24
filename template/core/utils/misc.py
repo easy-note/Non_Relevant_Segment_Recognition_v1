@@ -44,7 +44,8 @@ def set_args_per_stage(args, ids, stage):
     args.stage = stage
 
     if ids > 3:
-        args.mini_fold = 'general'        
+        args.mini_fold = 'general'  
+        args.max_epoch = 100     
     else:
         args.mini_fold = str(ids)
 

@@ -151,6 +151,7 @@ class HEMHelper():
         
         # extract hem idx method
         def extract_hem_idx_from_voting(dropout_predictions, gt_list, img_path_list):
+            print('\nExtract HEM idx using voting\n')
             hem_idx = []
             
             # 1. extract hem index
@@ -183,6 +184,7 @@ class HEMHelper():
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
         
         def extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list, diff):
+            print('\nExtract HEM idx using soffmax_diff\n')
             hem_idx = []
             
             cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
@@ -251,6 +253,7 @@ class HEMHelper():
                 return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
         def extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list, location):
+            print('\nExtract HEM idx using mutual info\n')
 
             hem_idx = []
 
