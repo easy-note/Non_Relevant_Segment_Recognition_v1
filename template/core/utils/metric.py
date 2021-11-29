@@ -163,3 +163,5 @@ class MetricHelper():
         
         plt.legend(['Train', 'Val'], fontsize=20)
         plt.savefig(save_path + '/loss.png')
+
+        plt.close(fig)
