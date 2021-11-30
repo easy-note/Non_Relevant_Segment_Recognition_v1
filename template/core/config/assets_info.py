@@ -30,3 +30,7 @@ oob_assets_save_path = {
 
     'theator-oob_assets_v3_robot_save_path': '/raid/img_db/oob_assets/V3/theator-ROBOT'
 }
+
+mc_assets_save_path = {
+    'robot': '/data2/Public/OOB_Recog/offline/models',
+}

@@ -194,6 +194,10 @@ def parse_opts():
     parser.add_argument('--use_wise_sample',
             action='store_true',
             help='If true, Only testing')
+
+    parser.add_argument('--use_all_sample',
+            action='store_true',
+            help='If true, Only testing')
     
     parser.add_argument('--use_meta',
             action='store_true',
