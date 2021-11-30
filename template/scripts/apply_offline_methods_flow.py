@@ -1,5 +1,5 @@
 # STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
-STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
+STAGE_LIST=['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
 
 def get_experiment_args():
     from core.config.base_opts import parse_opts
@@ -290,6 +290,111 @@ def inference_main(args):
     # return mCR, mOR, OR, CR of experiment
     return args, experiment_summary, patients_CR, patients_OR
 
+def apply_offline_methods_main(args):
+    import glob
+    import os
+    import json
+
+    from core.api.trainer import CAMIO
+    from core.dataset.robot_dataset import RobotDataset
+    from core.config.assets_info import mc_assets_save_path
+    from core.dataset.hem_methods import HEMHelper
+
+    logger_path = os.path.join(args.save_path, 'TB_log') # tb_logger path
+
+    restore_path = {
+        'mini_fold_stage_0':os.path.join(logger_path, 'version_0'),
+        'mini_fold_stage_1':os.path.join(logger_path, 'version_1'),
+        'mini_fold_stage_2':os.path.join(logger_path, 'version_2'),
+        'mini_fold_stage_3':os.path.join(logger_path, 'version_3'),
+    }
+
+    args.restore_path = restore_path[args.stage] # set restore_path
+    os.makedirs(args.restore_path, exist_ok=True) # for saveing version 0,1,2,3
+
+    stage_to_minifold = {
+        'mini_fold_stage_0':'minifold=0',
+        'mini_fold_stage_1':'minifold=1',
+        'mini_fold_stage_2':'minifold=2',
+        'mini_fold_stage_3':'minifold=3',
+    }
+
+    # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/minifold=0/last/n_dropout=5
+    # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/minifold=0
+    model_dir = os.path.join(mc_assets_save_path['robot'], args.model, 'WS={}-IB={}-seed={}'.format(args.WS_ratio, int(args.IB_ratio), args.random_seed), stage_to_minifold[args.stage])
+
+    # 1-1. model 불러오기
+    if 'repvgg' not in args.model:
+        model_path = get_inference_model_path(model_dir) # best, last 결정
+        
+        if args.experiment_type == 'theator':
+            model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
+        elif args.experiment_type == 'ours':
+            model = CAMIO.load_from_checkpoint(model_path, args=args)
+    else:
+        if args.experiment_type == 'theator':
+            model = TheatorTrainer(args)
+        elif args.experiment_type == 'ours':
+            model = CAMIO(args)
+        
+    model = model.cuda()
+    # model.eval() # 어차피 mc dropout 에서 처리
+
+    
+    # 1-2. train/validation set 불러오기 // train set 불러오는 이유는 hem extract 할때 얼마나 뽑을지 정해주는 DATASET_COUNT.json을 저장하기 위해
+    trainset = RobotDataset(args, state='train') # train dataset setting
+    
+    args.use_all_sample = True
+    valset = RobotDataset(args, state='val') # val dataset setting
+
+    rs_count, nrs_count = trainset.number_of_rs_nrs()
+            
+    save_data = {
+        'train_dataset': {
+            'rs': rs_count,
+            'nrs': nrs_count 
+        },
+        'target_hem_count': {
+            'rs': rs_count // 3,
+            'nrs': nrs_count // 3
+        }
+    }
+
+    with open(os.path.join(args.restore_path, 'DATASET_COUNT.json'), 'w') as f:
+        json.dump(save_data, f, indent=2)
+
+    # 2. hem_methods 적용
+    hem_helper = HEMHelper(args)
+    hem_helper.set_method(args.hem_extract_mode) # 'all-offline'
+    hem_helper.set_restore_path(args.restore_path)
+    softmax_diff_small_hem_df, softmax_diff_large_hem_df, voting_hem_df, vi_small_hem_df, vi_large_hem_df = hem_helper.compute_hem(model, valset)
+
+    # 3. hem_df.to_csv
+    softmax_diff_small_hem_df.to_csv(os.path.join(args.restore_path, 'softmax_diff_small_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+    softmax_diff_large_hem_df.to_csv(os.path.join(args.restore_path, 'softmax_diff_large_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+
+    voting_hem_df.to_csv(os.path.join(args.restore_path, 'voting_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+            
+    vi_small_hem_df.to_csv(os.path.join(args.restore_path, 'vi_small_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+    vi_large_hem_df.to_csv(os.path.join(args.restore_path, 'vi_large_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+
+    '''
+    if self.args.hem_extract_mode == 'all-offline':
+    version_dict = {
+        '3': ['softmax_diff_small_*-*-*.csv', 'softmax_diff_small_hem_assets.csv'],
+        '4': ['softmax_diff_large_*-*-*.csv', 'softmax_diff_large_hem_assets.csv'],
+        '5': ['voting_*-*-*.csv', 'voting_hem_assets.csv'],
+        '6': ['vi_small_*-*-*.csv', 'vi_small_hem_assets.csv'],
+        '7': ['vi_large_*-*-*.csv', 'vi_large_hem_assets.csv'],
+    }
+    num = self.args.restore_path.split('_')[-1]
+            
+    load_f_path, save_f_path = version_dict[num]
+    '''
+
+    return args
+
+
 def main():    
     # 0. set each experiment args 
     import os, torch, random
@@ -347,7 +452,11 @@ def main():
 
                 print(args)
 
-                args = train_main(args)
+                if ids > 3:
+                    args = train_main(args)
+                else:
+                    args = apply_offline_methods_main(args)
+                    
 
                 if ids > 3:
                     # 3. inference

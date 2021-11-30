@@ -36,6 +36,7 @@ class RobotDataset(Dataset):
         ### ### ###
 
         self.wise_sampling_mode = self.args.use_wise_sample
+        self.all_sampling_mode = self.args.use_all_sample # default False
 
         if self.args.experiment_type == 'ours':
             d_transforms = data_transforms
@@ -147,6 +148,7 @@ class RobotDataset(Dataset):
         # TODO load dataset ver. 1 나중에 민국님과 회의 때, 논문에 사용하는지 여쭤보고 -> 필요하면 작업. 
         pass
 
+
     def load_data_from_assets(self, ib_assets_csv_path, oob_assets_csv_path):
 
         print('IB_ASSETS_PATH: {}'.format(ib_assets_csv_path))
@@ -215,14 +217,18 @@ class RobotDataset(Dataset):
             print(oob_assets_df)
             print('\n\n')
 
-            # random_sampling and setting IB:OOB data ratio
-            # HG 21.11.08 error fix, ratio로 구성 불가능 할 경우 전체 set 모두 사용
-            max_ib_count, target_ib_count = len(ib_assets_df), int(len(oob_assets_df)*self.IB_ratio)
-            sampling_ib_count = max_ib_count if max_ib_count < target_ib_count else target_ib_count
-            print('Random sampling from {} to {}'.format(max_ib_count, sampling_ib_count))
+            
+            
+            # HG 21.11.30 all sampling mode = True 라면 IB ratio적용 x => 모두 사용
+            if not self.all_sampling_mode: # default = False
+                # random_sampling and setting IB:OOB data ratio
+                # HG 21.11.08 error fix, ratio로 구성 불가능 할 경우 전체 set 모두 사용
+                max_ib_count, target_ib_count = len(ib_assets_df), int(len(oob_assets_df)*self.IB_ratio)
+                sampling_ib_count = max_ib_count if max_ib_count < target_ib_count else target_ib_count
+                print('Random sampling from {} to {}'.format(max_ib_count, sampling_ib_count))
 
-            ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-            oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
+                ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+                oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
 
             print('\n\n')
             print('==> \tRANDOM SAMPLING INBODY_CSV')
@@ -361,7 +367,6 @@ class RobotDataset(Dataset):
         # last processing
         self.img_list = assets_df.img_path.tolist()
         self.label_list = assets_df.class_idx.tolist()
-
 
     def number_of_rs_nrs(self):
         return self.label_list.count(0) ,self.label_list.count(1)

@@ -154,7 +154,7 @@ class HEMHelper():
         img_path_list = []
         gt_list = []
 
-        d_loader = DataLoader(
+        d_loader = DataLoader( # validation
             dataset,
             batch_size=self.args.batch_size,
             shuffle=False,
@@ -207,6 +207,7 @@ class HEMHelper():
 
         elif self.args.hem_extract_mode == 'all-offline':
 
+            '''
             #### mc assets 저장 start
             mc_assets_save_dir = os.path.join(self.restore_path, 'mc_assets')
             os.makedirs(mc_assets_save_dir, exist_ok=True)
@@ -223,6 +224,67 @@ class HEMHelper():
             with open(img_path_list_save_path, 'wb') as f:
                 pickle.dump(img_path_list, f)            
             #### mc assets 저장 end
+            '''
+
+            def get_patient_no(img_db_path):
+                cleand_file_name = os.path.splitext(os.path.basename(img_db_path))[0]
+                file_info, frame_idx = cleand_file_name.split('-')
+                
+                hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no = file_info.split('_')
+                patient_no = '_'.join([op_method, patient_idx])
+
+                return patient_no
+
+            ### 환자별 mc assets split
+            mc_assets = {
+                'img_path': img_path_list,
+                'gt':gt_list,
+            }
+
+            mc_df = pd.DataFrame(mc_assets)
+
+            mc_df['patinet_no'] = mc_df['img_path'].apply(get_patient_no) # extract patinet_no from image db path
+
+            patients_grouped = mc_df.groupby('patinet_no') # grouping by patinets no
+
+            # per patients
+            for patient_no, patient_df in tqdm(patients_grouped, desc='Extracting Hem Assets per Patients'): # per each patient
+                
+                print('Patient:{} - Sampling: {}'.format(patient_no, len(patient_df)))
+                
+                # patient_df = patient_df.reset_index(drop=True) # (should) reset index
+                patient_index = patient_df.index # becuase mc_assets 과 행 index가 동일
+                patient_index = patient_index.tolist()
+
+                print('patient_df')
+                print(patient_df)
+
+                print('patient_index')
+                print(patient_index)
+
+                patient_img_path_list = patient_df['img_path'].tolist()
+                patient_gt_list = patient_df['gt'].tolist()
+
+                print('patient_img_path_list')
+                print('patient_gt_list')
+                print(patient_img_path_list)
+                print(patient_gt_list)
+
+                # dropout predictions - shape (forward_passes, n_samples, n_classes)
+                patient_dropout_predictions = dropout_predictions[:, patient_index, :] # indexing from mc_df
+
+                print('patient_dropout_pred')
+                print(patient_dropout_predictions)
+                print(patient_dropout_predictions.shape)
+
+                hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_small')
+                softmax_diff_small_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+
+                print('softmax_diff_small_hem_final_df')
+                print(softmax_diff_small_hem_final_df)
+
+                exit(0)
+
 
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list, 'diff_small')
             softmax_diff_small_hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
