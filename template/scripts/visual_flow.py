@@ -110,7 +110,7 @@ def inference_main(args):
 
     # from finetuning model
     if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(args.restore_path)
+        model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
         
         if args.experiment_type == 'theator':
             model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
