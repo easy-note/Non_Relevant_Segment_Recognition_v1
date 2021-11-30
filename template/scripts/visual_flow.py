@@ -61,8 +61,13 @@ def train_main(args):
     else:
         if args.use_test_batch:
             trainer = pl.Trainer(gpus=args.num_gpus,
+<<<<<<< HEAD
                             limit_train_batches=1,
                             limit_val_batches=1,
+=======
+                            limit_train_batches=2,
+                            limit_val_batches=2,
+>>>>>>> 2b4a738501cd0f76f95b03b088e6765a1f391de1
                             max_epochs=args.max_epoch, 
                             min_epochs=args.min_epoch,
                             logger=tb_logger,)

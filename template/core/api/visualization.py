@@ -228,6 +228,8 @@ class VisualTool:
 
         plt.show()
         plt.savefig(self.save_path, format='png', dpi=500)
+
+        plt.close(fig)
     
     def visual_sampling(self, neg_hard_idx, pos_hard_idx, neg_vanila_idx, pos_vanila_idx, model_name, window_size=9000, section_num=2):
         # visualization for hard example mining
@@ -386,3 +388,5 @@ class VisualTool:
 
         plt.show()
         plt.savefig(self.save_path, format='png', dpi=500)
+
+        plt.close(fig)
