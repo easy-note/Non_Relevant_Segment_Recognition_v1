@@ -27,6 +27,6 @@ do
         --n_dropout 1 \
         --stage "hem_train" \
         --inference_fold "1" \
-        --experiments_sheet_dir "/OOB_RECOG/results/all-offline-MC=1-top_ratio=0.20-WS=4-experiment" \
-        --save_path "/OOB_RECOG/logs/all-offline-MC=1-top_ratio=0.20-WS=4-experiment"
+        --experiments_sheet_dir "/OOB_RECOG/results/211124-all-offline-MC=1-top_ratio=0.20-WS=4-experiment" \
+        --save_path "/OOB_RECOG/logs/211124-all-offline-MC=1-top_ratio=0.20-WS=4-experiment"
 done;

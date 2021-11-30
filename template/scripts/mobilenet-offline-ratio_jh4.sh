@@ -19,7 +19,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "3" \
+        --cuda_list "4" \
         --random_seed 3829 \
         --IB_ratio 3 \
         --hem_extract_mode "all-offline" \
@@ -27,6 +27,6 @@ do
         --n_dropout 1 \
         --stage "hem_train" \
         --inference_fold "1" \
-        --experiments_sheet_dir "/OOB_RECOG/results/all-offline-MC=1-top_ratio=0.07-WS=3-experiment" \
-        --save_path "/OOB_RECOG/logs/all-offline-MC=1-top_ratio=0.07-WS=3-experiment"
+        --experiments_sheet_dir "/OOB_RECOG/results/211124-all-offline-MC=1-top_ratio=0.07-WS=3-experiment" \
+        --save_path "/OOB_RECOG/logs/211124-all-offline-MC=1-top_ratio=0.07-WS=3-experiment"
 done;
