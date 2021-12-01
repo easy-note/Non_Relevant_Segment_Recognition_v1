@@ -337,7 +337,7 @@ def apply_offline_methods_main(args):
     # 1-2. train/validation set 불러오기 // train set 불러오는 이유는 hem extract 할때 얼마나 뽑을지 정해주는 DATASET_COUNT.json을 저장하기 위해
     trainset = RobotDataset(args, state='train') # train dataset setting
     
-    args.use_all_sample = False
+    args.use_all_sample = True
     valset = RobotDataset(args, state='val') # val dataset setting
     args.use_all_sample = False
 

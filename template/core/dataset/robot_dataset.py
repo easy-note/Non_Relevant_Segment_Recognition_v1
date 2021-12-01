@@ -227,10 +227,10 @@ class RobotDataset(Dataset):
                 sampling_ib_count = max_ib_count if max_ib_count < target_ib_count else target_ib_count
                 print('Random sampling from {} to {}'.format(max_ib_count, sampling_ib_count))
 
-                # ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-                # oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
-                ib_assets_df = ib_assets_df.sample(n=5000, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-                oob_assets_df = oob_assets_df.sample(n=5000, replace=False, random_state=self.random_seed)
+                ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+                oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
+                # ib_assets_df = ib_assets_df.sample(n=5000, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+                # oob_assets_df = oob_assets_df.sample(n=5000, replace=False, random_state=self.random_seed)
 
             print('\n\n')
             print('==> \tRANDOM SAMPLING INBODY_CSV')
