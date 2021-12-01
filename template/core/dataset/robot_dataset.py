@@ -227,10 +227,10 @@ class RobotDataset(Dataset):
                 sampling_ib_count = max_ib_count if max_ib_count < target_ib_count else target_ib_count
                 print('Random sampling from {} to {}'.format(max_ib_count, sampling_ib_count))
 
-                # ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-                # oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
-                ib_assets_df = ib_assets_df.sample(n=5000, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-                oob_assets_df = oob_assets_df.sample(n=5000, replace=False, random_state=self.random_seed)
+                ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+                oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
+                # ib_assets_df = ib_assets_df.sample(n=5000, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+                # oob_assets_df = oob_assets_df.sample(n=5000, replace=False, random_state=self.random_seed)
 
             print('\n\n')
             print('==> \tRANDOM SAMPLING INBODY_CSV')
@@ -374,7 +374,52 @@ class RobotDataset(Dataset):
 
     def number_of_rs_nrs(self):
         return self.label_list.count(0) ,self.label_list.count(1)
+
+    # valset 에서만 사용됨.     
+    def number_of_patient_rs_nrs(self):
+        patient_per_dic = {}
+
+        val_assets_df = self.assets_df
+
+        val_assets_df['patient'] = val_assets_df.img_path.str.split('/').str[4]
+
+        total_rs_count = len(val_assets_df[val_assets_df['class_idx']==0])
+        total_nrs_count = len(val_assets_df[val_assets_df['class_idx']==1])
+
+        patients_list = list(set(val_assets_df['patient']))
+        patients_list = natsort.natsorted(patients_list)
+
+        for patient in patients_list:
+            patient_df = val_assets_df[val_assets_df['patient']==patient]
+            print(patient_df)
+
+            patient_rs_count = len(patient_df[patient_df['class_idx']==0])
+            patient_nrs_count = len(patient_df[patient_df['class_idx']==1])
+
+            print(patient_rs_count, patient_nrs_count)
+
+            patient_per_dic.update(
+                {
+                    patient : {
+                    'rs': patient_rs_count,
+                    'nrs': patient_nrs_count,
+                    'rs_ratio': patient_rs_count/total_rs_count,
+                    'nrs_ratio': patient_nrs_count/total_nrs_count
+                    } 
+                }
+            )
+
+        return patient_per_dic
+
+
+
+
+
+
         
+
+
+        # return self.assets_df
 
 
     def __len__(self):

@@ -28,6 +28,8 @@ class HEMHelper():
         self.bsz = self.args.batch_size
         self.cnt = 0
 
+        self.method_idx = 0
+
     def set_method(self, method):
         if method in ['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 'all-offline']:
             self.method = 'hem-vi'
@@ -48,9 +50,32 @@ class HEMHelper():
                 print('Parsing Fail, Error: {}'.format(e))
                 return None
 
-    def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df):
-
+    def get_target_patient_hem_count(self, patient_no): # rule for target count of each patients
+        # hem
+        patient_rs_count, patient_nrs_count = 0,0
+        patient_rs_ratio, patient_nrs_ratio = 0,0
         target_rs_cnt, target_nrs_cnt = self.get_target_hem_count()
+        
+        with open(os.path.join(self.restore_path, 'PATIENTS_DATASET_COUNT.json')) as file:
+            try:
+                json_data = json.load(file)
+                patient_rs_ratio, patient_nrs_ratio = json_data[patient_no]['rs_ratio'], json_data[patient_no]['nrs_ratio']
+
+            except ValueError as e:
+                print('Parsing Fail, Error: {}'.format(e))
+                return None
+
+            patient_rs_count = int(target_nrs_cnt * patient_nrs_ratio)
+            patient_nrs_count = int(patient_rs_count * self.args.IB_ratio)
+
+        return patient_rs_count, patient_nrs_count
+
+    def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient_no=None):
+        
+        if patient_no :
+            target_rs_cnt, target_nrs_cnt = self.get_target_patient_hem_count(patient_no)
+        else : # if patinet_no = None
+            target_rs_cnt, target_nrs_cnt = self.get_target_hem_count()
 
         # df 정렬
         hard_neg_df = hard_neg_df.sort_values(by='Img_path')
@@ -85,8 +110,10 @@ class HEMHelper():
         except:
             vanila_neg_df = vanila_neg_df.sample(frac=1, replace=False, random_state=self.args.random_seed)
 
+        method = ['softmax_diff_small', 'softmax_diff_large', 'voting', 'mi_small', 'mi_large']  
+        
         save_data = {
-            "FINAL_HEM_DATASET": {
+            method[self.method_idx]: {
                 "rs": {
                     "hem": len(hard_neg_df),
                     "vanila": len(vanila_neg_df)
@@ -98,12 +125,26 @@ class HEMHelper():
             }
         }
 
+        save_data.update(save_data)
+
+        print('save_data', save_data)
+
+        self.method_idx += 1
+
+
         with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'r+') as f:
             data = json.load(f)
-            data.update(save_data)
+            if patient_no not in data :
+                data[patient_no] = save_data
+            else : 
+                data[patient_no].update(save_data)
 
-        with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
+            f.seek(0)
             json.dump(data, f, indent=2)
+            # data.update(save_data)
+
+        # with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
+        #     json.dump(data, f, indent=2)
 
 
         final_pos_assets_df = pd.concat([hard_pos_df, vanila_pos_df])[['Img_path', 'GT', 'HEM']]
@@ -226,14 +267,28 @@ class HEMHelper():
             patients_list = list(set(assets_df['patient']))
             patients_list = natsort.natsorted(patients_list)
 
+            '''
             softmax_diff_small_dic = defaultdict(list)
             softmax_diff_large_dic = defaultdict(list)
             vointing_dic = defaultdict(list)
             mi_small_dic = defaultdict(list)
             mi_large_dic = defaultdict(list)
+            '''
+
+            # it's final df of hem assets per methods (create init df) 
+            hem_final_df_columns = ['img_path', 'class_idx', 'HEM'] # same columns of return set_ratio's df
+            softmax_diff_small_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
+            softmax_diff_large_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
+            voting_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
+            vi_small_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
+            vi_large_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
 
 
-            for patient in patients_list:
+            for patient in tqdm(patients_list, desc='Extract HEM Assets per patients ...'):
+                print('Patinet : {}'.format(patient))
+
+                self.method_idx = 0 
+
                 patient_idx = assets_df.index[assets_df['patient'] == patient].tolist()
                 
                 patient_img_path_list = assets_df['img_path'].iloc[patient_idx].tolist()  
@@ -245,65 +300,86 @@ class HEMHelper():
                 # extracting hem, apply hem extract mode
                 if self.args.hem_extract_mode == 'hem-softmax-offline':
                     print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
+                    
+                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list) # diff_small
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    softmax_diff_small_hem_final_df.append(hem_final_df, ignore_index=True)
 
-                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list)
-                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
                 elif self.args.hem_extract_mode == 'hem-voting-offline':
                     print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
-                    
+
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_voting(patient_dropout_predictions, patient_gt_list, patient_img_path_list)
-                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    voting_hem_final_df.append(hem_final_df, ignore_index=True)
+
 
                 elif self.args.hem_extract_mode == 'hem-vi-offline':
                     print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
-                    
-                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list)
-                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
+
+                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list) # large
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    mi_large_dic_final_df.append(hem_final_df, ignore_index=True)
 
                 elif self.args.hem_extract_mode == 'all-offline':
-                    
+
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_small')
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    softmax_diff_small_hem_final_df = softmax_diff_small_hem_final_df.append(hem_final_df, ignore_index=True) # append per patients
+                    '''
                     softmax_diff_small_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     softmax_diff_small_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
                     softmax_diff_small_dic['vanila_neg_df'].append(vanila_neg_df) # //20개 환자
                     softmax_diff_small_dic['vanila_pos_df'].append(vanila_pos_df) # //20개 환자
-
+                    '''
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_large')
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    softmax_diff_large_hem_final_df = softmax_diff_large_hem_final_df.append(hem_final_df, ignore_index=True) # append per patients
+                    '''
                     softmax_diff_large_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     softmax_diff_large_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
                     softmax_diff_large_dic['vanila_neg_df'].append(vanila_neg_df) # //20개 환자
                     softmax_diff_large_dic['vanila_pos_df'].append(vanila_pos_df) # //20개 환자
-
+                    '''
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_voting(patient_dropout_predictions, patient_gt_list, patient_img_path_list)
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    voting_hem_final_df = voting_hem_final_df.append(hem_final_df, ignore_index=True) # append per patients
+                    '''
                     vointing_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     vointing_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
                     vointing_dic['vanila_neg_df'].append(vanila_neg_df) # //20개 환자
                     vointing_dic['vanila_pos_df'].append(vanila_pos_df) # //20개 환자
-
+                    '''
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'small')   
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    vi_small_hem_final_df = vi_small_hem_final_df.append(hem_final_df, ignore_index=True) # append per patients
+                    '''
                     mi_small_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     mi_small_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
                     mi_small_dic['vanila_neg_df'].append(vanila_neg_df) # //20개 환자
                     mi_small_dic['vanila_pos_df'].append(vanila_pos_df) # //20개 환자
-
+                    '''
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'large')   
+                    hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
+                    vi_large_hem_final_df = vi_large_hem_final_df.append(hem_final_df, ignore_index=True) # append per patients
+                    '''
                     mi_large_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     mi_large_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
                     mi_large_dic['vanila_neg_df'].append(vanila_neg_df) # //20개 환자
                     mi_large_dic['vanila_pos_df'].append(vanila_pos_df) # //20개 환자
-
-
+                    '''
+            '''
             softmax_diff_small_hem_final_df = self.set_ratio(pd.concat(softmax_diff_small_dic['hard_neg_df']), pd.concat(softmax_diff_small_dic['hard_pos_df']), pd.concat(softmax_diff_small_dic['vanila_neg_df']), pd.concat(softmax_diff_small_dic['vanila_pos_df']))
             softmax_diff_large_hem_final_df = self.set_ratio(pd.concat(softmax_diff_large_dic['hard_neg_df']), pd.concat(softmax_diff_large_dic['hard_pos_df']), pd.concat(softmax_diff_large_dic['vanila_neg_df']), pd.concat(softmax_diff_large_dic['vanila_pos_df']))
             voting_hem_final_df = self.set_ratio(pd.concat(vointing_dic['hard_neg_df']), pd.concat(vointing_dic['hard_pos_df']), pd.concat(vointing_dic['vanila_neg_df']), pd.concat(vointing_dic['vanila_pos_df']))
             vi_small_hem_final_df = self.set_ratio(pd.concat(mi_small_dic['hard_neg_df']), pd.concat(mi_small_dic['hard_pos_df']), pd.concat(mi_small_dic['vanila_neg_df']), pd.concat(mi_small_dic['vanila_pos_df']))
             vi_large_hem_final_df = self.set_ratio(pd.concat(mi_large_dic['hard_neg_df']), pd.concat(mi_large_dic['hard_pos_df']), pd.concat(mi_large_dic['vanila_neg_df']), pd.concat(mi_large_dic['vanila_pos_df']))
-
+            '''
+            
             print('\nsoftmax_diff_small_hem_final_df\n', softmax_diff_small_hem_final_df)
             print('\n\nsoftmax_diff_large_hem_final_df\n', softmax_diff_large_hem_final_df)
             print('\n\nvoting_hem_final_df\n', voting_hem_final_df)
@@ -312,15 +388,23 @@ class HEMHelper():
 
             if self.args.hem_extract_mode == 'all-offline':
                 return softmax_diff_small_hem_final_df, softmax_diff_large_hem_final_df, voting_hem_final_df, vi_small_hem_final_df, vi_large_hem_final_df
+            
+            elif self.args.hem_extract_mode == 'hem-softmax-offline':
+                return softmax_diff_small_hem_final_df
+            
+            elif self.args.hem_extract_mode == 'hem-voting-offline':
+                return voting_hem_final_df
+            
+            elif self.args.hem_extract_mode == 'hem-vi-offline':
+                return vi_large_hem_final_df
 
-            else:
-                return hem_final_df
-
+            else :
+                return # 다른 메소드 일 경우 처리~
 
         # extracting hem, apply hem extract mode
         if self.args.hem_extract_mode == 'hem-softmax-offline':
             print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
-            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list)
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list) # diff_small
             hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
         elif self.args.hem_extract_mode == 'hem-voting-offline':
@@ -330,7 +414,7 @@ class HEMHelper():
         
         elif self.args.hem_extract_mode == 'hem-vi-offline':
             print('\ngenerate hem mode : {}\n'.format(self.args.hem_extract_mode))
-            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list)
+            hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(dropout_predictions, gt_list, img_path_list) # large
             hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df)
 
         elif self.args.hem_extract_mode == 'all-offline':
@@ -387,7 +471,7 @@ class HEMHelper():
 
         return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
     
-    def extract_hem_idx_from_softmax_diff(self, dropout_predictions, gt_list, img_path_list, diff):
+    def extract_hem_idx_from_softmax_diff(self, dropout_predictions, gt_list, img_path_list, diff='diff_small'):
         hem_idx = []
         
         cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
@@ -455,7 +539,7 @@ class HEMHelper():
 
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
-    def extract_hem_idx_from_mutual_info(self, dropout_predictions, gt_list, img_path_list, location):
+    def extract_hem_idx_from_mutual_info(self, dropout_predictions, gt_list, img_path_list, location='large'):
 
         hem_idx = []
 
