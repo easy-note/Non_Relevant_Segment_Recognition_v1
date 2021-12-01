@@ -63,13 +63,13 @@ class HEMHelper():
                 print('Parsing Fail, Error: {}'.format(e))
                 return None
 
-            patient_rs_count = target_nrs_cnt * patient_nrs_ratio
-            patient_nrs_count = patient_rs_count * self.args.IB_ratio
+            patient_rs_count = int(target_nrs_cnt * patient_nrs_ratio)
+            patient_nrs_count = int(patient_rs_count * self.args.IB_ratio)
 
         return patient_rs_count, patient_nrs_count
 
     def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient_no=None):
-        if patinet_no :
+        if patient_no :
             target_rs_cnt, target_nrs_cnt = self.get_target_patient_hem_count(patient_no)
         else : # if patinet_no = None
             target_rs_cnt, target_nrs_cnt = self.get_target_hem_count()
@@ -108,7 +108,7 @@ class HEMHelper():
             vanila_neg_df = vanila_neg_df.sample(frac=1, replace=False, random_state=self.args.random_seed)
 
         save_data = {
-            "FINAL_HEM_DATASET": {
+            "FINAL_HEM_DATASET-{}".format(patient_no): {
                 "rs": {
                     "hem": len(hard_neg_df),
                     "vanila": len(vanila_neg_df)
@@ -261,11 +261,13 @@ class HEMHelper():
             softmax_diff_small_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
             softmax_diff_large_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
             voting_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
-            mi_small_dic_final_df = pd.DataFrame(columns=hem_final_df_columns)
-            mi_large_dic_final_df = pd.DataFrame(columns=hem_final_df_columns)
+            vi_small_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
+            vi_large_hem_final_df = pd.DataFrame(columns=hem_final_df_columns)
 
 
-            for patient in patients_list:
+            for patient in tqdm(patients_list, desc='Extract HEM Assets per patients ...'):
+                print('Patinet : {}'.format(patient))
+                
                 patient_idx = assets_df.index[assets_df['patient'] == patient].tolist()
                 
                 patient_img_path_list = assets_df['img_path'].iloc[patient_idx].tolist()  
@@ -334,7 +336,7 @@ class HEMHelper():
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'small')   
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
-                    mi_small_dic_final_df.append(hem_final_df) # append per patients
+                    vi_small_hem_final_df.append(hem_final_df) # append per patients
                     '''
                     mi_small_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     mi_small_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
@@ -345,7 +347,7 @@ class HEMHelper():
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'large')   
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
-                    mi_large_dic_final_df.append(hem_final_df) # append per patients
+                    vi_large_hem_final_df.append(hem_final_df) # append per patients
                     '''
                     mi_large_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     mi_large_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자

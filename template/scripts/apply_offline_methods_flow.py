@@ -341,8 +341,6 @@ def apply_offline_methods_main(args):
     valset = RobotDataset(args, state='val') # val dataset setting
     args.use_all_sample = False
 
-    print('vvvvv')
-
     transet_rs_count, trainset_nrs_count = trainset.number_of_rs_nrs()
     valset_rs_count, valset_nrs_count = valset.number_of_rs_nrs()
             
