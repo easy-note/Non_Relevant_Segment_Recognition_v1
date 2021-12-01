@@ -38,7 +38,6 @@ class HEMHelper():
         self.restore_path = restore_path
 
     def get_target_hem_count(self):
-
         with open(os.path.join(self.restore_path, 'DATASET_COUNT.json')) as file:
             try:
                 json_data = json.load(file)
@@ -47,10 +46,32 @@ class HEMHelper():
             except ValueError as e:
                 print('Parsing Fail, Error: {}'.format(e))
                 return None
-
-    def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df):
-
+    
+    def get_target_patient_hem_count(self, patient_no): # rule for target count of each patients
+        # hem
+        patient_rs_count, patient_nrs_count = 0,0
+        patient_rs_ratio, patient_nrs_ratio = 0,0
         target_rs_cnt, target_nrs_cnt = self.get_target_hem_count()
+        
+        with open(os.path.join(self.restore_path, 'PATIENTS_DATASET_COUNT.json')) as file:
+            try:
+                json_data = json.load(file)
+                patient_rs_ratio, patient_nrs_ratio = json_data['target_hem_count'][patient_no]['rs_ratio'], json_data['target_hem_count'][patient_no]['nrs_ratio']
+
+            except ValueError as e:
+                print('Parsing Fail, Error: {}'.format(e))
+                return None
+
+            patient_rs_count = target_nrs_cnt * patient_nrs_ratio
+            patient_nrs_count = patient_rs_count * self.args.IB_ratio
+
+        return patient_rs_count, patient_nrs_count
+
+    def set_ratio(self, hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient_no=None):
+        if patinet_no :
+            target_rs_cnt, target_nrs_cnt = self.get_target_patient_hem_count(patient_no)
+        else : # if patinet_no = None
+            target_rs_cnt, target_nrs_cnt = self.get_target_hem_count()
 
         # df 정렬
         hard_neg_df = hard_neg_df.sort_values(by='Img_path')
@@ -226,6 +247,7 @@ class HEMHelper():
             #### mc assets 저장 end
             '''
 
+            '''
             def get_patient_no(img_db_path):
                 cleand_file_name = os.path.splitext(os.path.basename(img_db_path))[0]
                 file_info, frame_idx = cleand_file_name.split('-')
@@ -284,6 +306,7 @@ class HEMHelper():
                 print(softmax_diff_small_hem_final_df)
 
                 exit(0)
+                '''
 
 
             hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(dropout_predictions, gt_list, img_path_list, 'diff_small')
