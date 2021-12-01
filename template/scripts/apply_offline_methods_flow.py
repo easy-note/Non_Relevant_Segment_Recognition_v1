@@ -312,16 +312,10 @@ def apply_offline_methods_main(args):
     args.restore_path = restore_path[args.stage] # set restore_path
     os.makedirs(args.restore_path, exist_ok=True) # for saveing version 0,1,2,3
 
-    stage_to_minifold = {
-        'mini_fold_stage_0':'minifold=0',
-        'mini_fold_stage_1':'minifold=1',
-        'mini_fold_stage_2':'minifold=2',
-        'mini_fold_stage_3':'minifold=3',
-    }
 
-    # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/minifold=0/last/n_dropout=5
-    # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/minifold=0
-    model_dir = os.path.join(mc_assets_save_path['robot'], args.model, 'WS={}-IB={}-seed={}'.format(args.WS_ratio, int(args.IB_ratio), args.random_seed), stage_to_minifold[args.stage])
+    # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/mini_fold_stage_0/last/n_dropout=5
+    # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/mini_fold_stage_0
+    model_dir = os.path.join(mc_assets_save_path['robot'], args.model, 'WS={}-IB={}-seed={}'.format(args.WS_ratio, int(args.IB_ratio), args.random_seed), args.stage)
 
     # 1-1. model 불러오기
     if 'repvgg' not in args.model:
@@ -340,28 +334,63 @@ def apply_offline_methods_main(args):
     model = model.cuda()
     # model.eval() # 어차피 mc dropout 에서 처리
 
-    
     # 1-2. train/validation set 불러오기 // train set 불러오는 이유는 hem extract 할때 얼마나 뽑을지 정해주는 DATASET_COUNT.json을 저장하기 위해
     trainset = RobotDataset(args, state='train') # train dataset setting
     
     args.use_all_sample = True
     valset = RobotDataset(args, state='val') # val dataset setting
+    args.use_all_sample = False
 
-    rs_count, nrs_count = trainset.number_of_rs_nrs()
+    exit(0)
+
+    # args.use_all_sample = True
+    # valset_IB_ratio = RobotDataset(args, state='val') # val d₩ataset setting
+    # args.use_all_sample = False
+
+    # valset_IB_ratio // 여기서 각 환자별로 oob ratio 를 구해서, json 에 저장?
+
+    transet_rs_count, trainset_nrs_count = trainset.number_of_rs_nrs()
+    valset_rs_count, valset_nrs_count = valset.number_of_rs_nrs()
             
-    save_data = {
+    train_save_data = {
         'train_dataset': {
-            'rs': rs_count,
-            'nrs': nrs_count 
+            'rs': transet_rs_count,
+            'nrs': trainset_nrs_count 
         },
         'target_hem_count': {
-            'rs': rs_count // 3,
-            'nrs': nrs_count // 3
+            'rs': transet_rs_count // 3,
+            'nrs': trainset_nrs_count // 3
         }
     }
 
+    val_save_data = {
+        'val_dataset': {
+            'rs': valset_rs_count,
+            'nrs': valset_nrs_count 
+        },
+        'target_hem_count': {
+            'R_1':{
+                'rs': 
+                'nrs': nrs_count
+                'rs_ratio': rs_ratio
+                'nrs_ratio': nrs_ratio
+            },
+            'R_2':{
+                'rs': rs_count
+                'nrs': nrs_count
+                'rs_ratio': rs_ratio
+                'nrs_ratio': nrs_ratio
+            },
+            ...
+        }
+
+    }
+
     with open(os.path.join(args.restore_path, 'DATASET_COUNT.json'), 'w') as f:
-        json.dump(save_data, f, indent=2)
+        json.dump(train_save_data, f, indent=2)
+
+    with open(os.path.join(args.restore_path, 'PATIENTS_DATASET_COUNT.json'), 'w') as f:
+        json.dump(val_save_data, f, indent=2)
 
     # 2. hem_methods 적용
     hem_helper = HEMHelper(args)
