@@ -207,6 +207,10 @@ def parse_opts():
             default=6,
             help='If true, Only testing')
 
+    parser.add_argument('--hem_per_patient',
+            action='store_true',
+            help='If true, Only testing')
+
     # -------------- Train Methods --------------------
     parser.add_argument('--experiment_type', 
             default='ours', 
