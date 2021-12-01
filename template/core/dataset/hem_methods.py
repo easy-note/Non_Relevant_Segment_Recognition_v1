@@ -57,7 +57,7 @@ class HEMHelper():
         with open(os.path.join(self.restore_path, 'PATIENTS_DATASET_COUNT.json')) as file:
             try:
                 json_data = json.load(file)
-                patient_rs_ratio, patient_nrs_ratio = json_data['target_hem_count'][patient_no]['rs_ratio'], json_data['target_hem_count'][patient_no]['nrs_ratio']
+                patient_rs_ratio, patient_nrs_ratio = json_data[patient_no]['rs_ratio'], json_data[patient_no]['nrs_ratio']
 
             except ValueError as e:
                 print('Parsing Fail, Error: {}'.format(e))
