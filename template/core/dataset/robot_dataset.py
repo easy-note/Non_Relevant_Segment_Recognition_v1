@@ -374,7 +374,52 @@ class RobotDataset(Dataset):
 
     def number_of_rs_nrs(self):
         return self.label_list.count(0) ,self.label_list.count(1)
+
+    # valset 에서만 사용됨.     
+    def number_of_patient_rs_nrs(self):
+        patient_per_dic = {}
+
+        val_assets_df = self.assets_df
+
+        val_assets_df['patient'] = val_assets_df.img_path.str.split('/').str[4]
+
+        total_rs_count = len(val_assets_df[val_assets_df['class_idx']==0])
+        total_nrs_count = len(val_assets_df[val_assets_df['class_idx']==1])
+
+        patients_list = list(set(val_assets_df['patient']))
+        patients_list = natsort.natsorted(patients_list)
+
+        for patient in patients_list:
+            patient_df = val_assets_df[val_assets_df['patient']==patient]
+            print(patient_df)
+
+            patient_rs_count = len(patient_df[patient_df['class_idx']==0])
+            patient_nrs_count = len(patient_df[patient_df['class_idx']==1])
+
+            print(patient_rs_count, patient_nrs_count)
+
+            patient_per_dic.update(
+                {
+                    patient : {
+                    'rs': patient_rs_count,
+                    'nrs': patient_nrs_count,
+                    'rs_ratio': patient_rs_count/total_rs_count,
+                    'nrs_ratio': patient_nrs_count/total_nrs_count
+                    } 
+                }
+            )
+
+        return patient_per_dic
+
+
+
+
+
+
         
+
+
+        # return self.assets_df
 
 
     def __len__(self):

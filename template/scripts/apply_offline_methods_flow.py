@@ -341,13 +341,7 @@ def apply_offline_methods_main(args):
     valset = RobotDataset(args, state='val') # val dataset setting
     args.use_all_sample = False
 
-    exit(0)
-
-    # args.use_all_sample = True
-    # valset_IB_ratio = RobotDataset(args, state='val') # val d₩ataset setting
-    # args.use_all_sample = False
-
-    # valset_IB_ratio // 여기서 각 환자별로 oob ratio 를 구해서, json 에 저장?
+    print('vvvvv')
 
     transet_rs_count, trainset_nrs_count = trainset.number_of_rs_nrs()
     valset_rs_count, valset_nrs_count = valset.number_of_rs_nrs()
@@ -368,29 +362,20 @@ def apply_offline_methods_main(args):
             'rs': valset_rs_count,
             'nrs': valset_nrs_count 
         },
-        'target_hem_count': {
-            'R_1':{
-                'rs': 
-                'nrs': nrs_count
-                'rs_ratio': rs_ratio
-                'nrs_ratio': nrs_ratio
-            },
-            'R_2':{
-                'rs': rs_count
-                'nrs': nrs_count
-                'rs_ratio': rs_ratio
-                'nrs_ratio': nrs_ratio
-            },
-            ...
-        }
-
     }
+
+    patient_per_dic = valset.number_of_patient_rs_nrs()
+
+    val_save_data.update(patient_per_dic)
 
     with open(os.path.join(args.restore_path, 'DATASET_COUNT.json'), 'w') as f:
         json.dump(train_save_data, f, indent=2)
 
     with open(os.path.join(args.restore_path, 'PATIENTS_DATASET_COUNT.json'), 'w') as f:
         json.dump(val_save_data, f, indent=2)
+
+    exit(0)
+
 
     # 2. hem_methods 적용
     hem_helper = HEMHelper(args)
