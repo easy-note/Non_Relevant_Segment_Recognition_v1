@@ -267,7 +267,7 @@ class HEMHelper():
 
             for patient in tqdm(patients_list, desc='Extract HEM Assets per patients ...'):
                 print('Patinet : {}'.format(patient))
-                
+
                 patient_idx = assets_df.index[assets_df['patient'] == patient].tolist()
                 
                 patient_img_path_list = assets_df['img_path'].iloc[patient_idx].tolist()  
@@ -302,7 +302,7 @@ class HEMHelper():
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_small')
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
-                    softmax_diff_small_hem_final_df.append(hem_final_df) # append per patients
+                    softmax_diff_small_hem_final_df = softmax_diff_small_hem_final_df.append(hem_final_df) # append per patients
                     '''
                     softmax_diff_small_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     softmax_diff_small_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
@@ -313,7 +313,7 @@ class HEMHelper():
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_large')
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
-                    softmax_diff_large_hem_final_df.append(hem_final_df) # append per patients
+                    softmax_diff_large_hem_final_df = softmax_diff_large_hem_final_df.append(hem_final_df) # append per patients
                     '''
                     softmax_diff_large_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     softmax_diff_large_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
@@ -325,7 +325,7 @@ class HEMHelper():
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_voting(patient_dropout_predictions, patient_gt_list, patient_img_path_list)
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
-                    voting_hem_final_df.append(hem_final_df) # append per patients
+                    voting_hem_final_df = voting_hem_final_df.append(hem_final_df) # append per patients
                     '''
                     vointing_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     vointing_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
@@ -336,7 +336,7 @@ class HEMHelper():
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'small')   
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
-                    vi_small_hem_final_df.append(hem_final_df) # append per patients
+                    vi_small_hem_final_df = vi_small_hem_final_df.append(hem_final_df) # append per patients
                     '''
                     mi_small_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     mi_small_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
@@ -347,7 +347,7 @@ class HEMHelper():
 
                     hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_mutual_info(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'large')   
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
-                    vi_large_hem_final_df.append(hem_final_df) # append per patients
+                    vi_large_hem_final_df = vi_large_hem_final_df.append(hem_final_df) # append per patients
                     '''
                     mi_large_dic['hard_neg_df'].append(hard_neg_df) # //20개 환자
                     mi_large_dic['hard_pos_df'].append(hard_pos_df) # //20개 환자
