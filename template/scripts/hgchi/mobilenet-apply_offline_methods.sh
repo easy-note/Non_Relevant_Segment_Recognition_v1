@@ -23,7 +23,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "4" \
+        --cuda_list "7" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --hem_extract_mode "all-offline" \

@@ -370,6 +370,10 @@ class RobotDataset(Dataset):
 
     def number_of_rs_nrs(self):
         return self.label_list.count(0) ,self.label_list.count(1)
+
+    def number_of_patient_rs_nrs(self):
+        # 사용한 robot dataset의 patinets별 rs nrs ratio & count
+        pass
         
 
     def __len__(self):
