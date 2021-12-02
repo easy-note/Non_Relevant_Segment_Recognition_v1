@@ -299,6 +299,9 @@ class RobotDataset(Dataset):
             
             load_f_path, save_f_path = version_dict[num]
             
+            hem_assets_df_save_dir = os.path.join(hem_assets_df_save_dir, os.path.splitext(save_f_path)[0]) # re-define save_path
+            os.makedirs(os.path.join(hem_assets_df_save_dir), exist_ok=True)
+            
             
             read_hem_csv = glob(os.path.join(self.restore_path, '*', load_f_path))
             read_hem_csv = natsort.natsorted(read_hem_csv)
@@ -332,7 +335,7 @@ class RobotDataset(Dataset):
         
         try: # 혹시, error날 경우 pass (plt warining 가능)
             pass
-            # visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
+            visual_flow_for_sampling(hem_assets_df, self.args.model, hem_assets_df_save_dir, window_size=9000, section_num=2) # sampling visalization
         except:
             pass
 
