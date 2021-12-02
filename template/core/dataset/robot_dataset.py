@@ -299,6 +299,9 @@ class RobotDataset(Dataset):
             
             load_f_path, save_f_path = version_dict[num]
             
+            hem_assets_df_save_dir = os.path.join(hem_assets_df_save_dir, os.path.splitext(save_f_path)[0]) # re-define save_path
+            os.makedirs(os.path.join(hem_assets_df_save_dir), exist_ok=True)
+            
             
             read_hem_csv = glob(os.path.join(self.restore_path, '*', load_f_path))
             read_hem_csv = natsort.natsorted(read_hem_csv)
