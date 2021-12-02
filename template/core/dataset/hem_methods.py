@@ -65,8 +65,8 @@ class HEMHelper():
                 print('Parsing Fail, Error: {}'.format(e))
                 return None
 
-            patient_rs_count = int(target_nrs_cnt * patient_nrs_ratio)
-            patient_nrs_count = int(patient_rs_count * self.args.IB_ratio)
+            patient_nrs_count = int(target_nrs_cnt * patient_nrs_ratio)
+            patient_rs_count = int(patient_nrs_count * self.args.IB_ratio)
 
         return patient_rs_count, patient_nrs_count
 

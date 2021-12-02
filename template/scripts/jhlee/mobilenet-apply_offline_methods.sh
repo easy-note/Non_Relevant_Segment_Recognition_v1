@@ -29,7 +29,7 @@ do
         --top_ratio ${ratio} \
         --n_dropout ${n_dropout} \
         --stage "hem_train" \
-        --inference_fold "free" \
+        --inference_fold "1" \
         --hem_per_patient \
         --experiments_sheet_dir "/OOB_RECOG/results/apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
         --save_path "/OOB_RECOG/logs/apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment"
