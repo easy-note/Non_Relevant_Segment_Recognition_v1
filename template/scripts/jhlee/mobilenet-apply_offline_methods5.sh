@@ -1,9 +1,9 @@
 # 21.11.26 off-line mc assets 뽑기
 # [고정] hem_extract_mode:all-offline / random_seed:3829 / IB_ratio:3 / WS_ratio:2 / mc:5
 
-top_ratio=(0.10);
+top_ratio=(0.20);
 
-WS_ratio=4;
+WS_ratio=3;
 n_dropout=1;
 IB_ratio=3;
 
@@ -22,7 +22,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "0" \
+        --cuda_list "2" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --hem_extract_mode "all-offline" \
