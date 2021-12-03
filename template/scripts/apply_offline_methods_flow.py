@@ -456,7 +456,7 @@ def main():
         else:
             for ids, stage in enumerate(STAGE_LIST):
 
-                if idx == 5:
+                if ids == 5:
                     exit(0)
 
                 args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
