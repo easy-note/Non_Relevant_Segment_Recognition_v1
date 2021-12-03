@@ -4,6 +4,7 @@ import numpy as np
 import csv
 import json
 import torch
+from tqdm import tqdm
 from torch.utils.data import DataLoader
 
 from core.api import BaseTrainer
@@ -31,11 +32,9 @@ class CAMIO(BaseTrainer):
         self.best_mean_metric = -2 # repvgg use only
 
         self.sanity_check = True
-        self.restore_path = None # inference module args / save path of hem df 
+        self.restore_path = self.args.restore_path # inference module args / save path of hem df 
         
         self.cur_step = 0
-        self.max_steps = 62200
-        self.skip_training = False
         self.last_epoch = -1
         self.hem_extract_mode = self.args.hem_extract_mode
 
@@ -47,6 +46,36 @@ class CAMIO(BaseTrainer):
         elif 'offline' in self.args.hem_extract_mode:
             self.hem_helper.set_method(self.hem_extract_mode)
             self.last_epoch = self.args.max_epoch - 1
+
+        self.emb_only = self.args.use_emb_only
+
+    def on_epoch_start(self):
+        if hasattr(self, 'cur_stage'):
+            print('restore path : ', self.restore_path)
+            if self.cur_stage > 1 and self.restore_path is not None and self.current_epoch == 0:
+                d_loader = DataLoader(self.trainset, 
+                                    batch_size=self.args.batch_size, 
+                                    shuffle=False, 
+                                    num_workers=self.args.num_workers)
+                
+                change_list = []
+                
+                self.model.eval()
+                with torch.no_grad():
+                    for _, img, lbs in tqdm(d_loader):
+                        img = img.cuda()
+                        outputs = self.model(img)
+                        ids = list(torch.argmax(outputs, -1).cpu().data.numpy())
+                        change_list += ids
+
+                self.trainset.label_list = change_list
+                self.args.restore_path = None
+                self.model = get_model(self.args)
+                
+        if 'multi' in self.args.model:
+            if self.current_epoch == 0 and not self.sanity_check:
+                self.model.change_deploy_mode()
+        
 
     def setup(self, stage):
         '''
@@ -77,6 +106,14 @@ class CAMIO(BaseTrainer):
                 num_workers=self.args.num_workers,
                 sampler=FocusSampler(self.trainset.label_list,
                                      self.args)
+            )
+        elif self.args.experiment_type == 'theator':
+            return DataLoader(
+                self.trainset,
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                sampler=MPerClassSampler(self.trainset.label_list, 
+                                        self.args.batch_size//2, self.args.batch_size)
             )
         else:
             return DataLoader(
@@ -110,31 +147,33 @@ class CAMIO(BaseTrainer):
         """
             forward data
         """
-        return self.model(x)
+        if self.emb_only:
+            emb = self.model(x)
+            
+            sim_dist = torch.zeros((emb.size(0), self.model.proxies.size(1))).to(emb.device)
+        
+            for d in range(sim_dist.size(1)):
+                sim_dist[:, d] = 1 - torch.nn.functional.cosine_similarity(emb, self.model.proxies[:, d].unsqueeze(0))
+                
+            return sim_dist
+        else:
+            return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        if not self.skip_training:
-            if 'hem-emb' in self.hem_extract_mode and self.training:
-                img_path, x, y = batch
-                loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
-                
-            elif 'hem-focus' in self.hem_extract_mode and self.training:
-                img_path, x, y = batch
-                
-                loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
-            else:
-                img_path, x, y = batch
-
-                y_hat = self.forward(x)
-                loss = self.loss_fn(y_hat, y)
+        if 'hem-emb' in self.hem_extract_mode and self.training:
+            img_path, x, y = batch
+            loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
             
-            if self.args.use_meta:
-                self.cur_step += 1
-                if self.cur_step == self.max_steps:
-                    self.skip_training = True
+        elif 'hem-focus' in self.hem_extract_mode and self.training:
+            img_path, x, y = batch
+            
+            loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
         else:
-            loss = torch.Tensor(np.array([0] * self.args.batch_size)).cuda()
+            img_path, x, y = batch
 
+            y_hat = self.forward(x)
+            loss = self.loss_fn(y_hat, y)
+        
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True)
 
         return  {
@@ -182,11 +221,6 @@ class CAMIO(BaseTrainer):
 
         return {
             'val_loss': loss,
-            # 'img_path': img_path,
-            # 'x': x.detach().cpu(),
-            # 'y': y.detach().cpu(),
-            # 'y_hat': y_hat.argmax(dim=1).detach().cpu(),
-            # 'logit': y_hat.detach().cpu()
         }
 
     def validation_epoch_end(self, outputs): # val - every epoch
@@ -234,8 +268,12 @@ class CAMIO(BaseTrainer):
                 if self.best_mean_metric < metrics['Mean_metric']:
                     self.best_mean_metric = metrics['Mean_metric']
                     self.save_checkpoint()
-                
-            '''
+            
+            elif 'multi' in self.args.model:
+                if self.best_mean_metric < metrics['Mean_metric']:
+                    self.best_mean_metric = metrics['Mean_metric']
+                    self.save_checkpoint_multi()
+            
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
                 if self.args.stage not in ['hem_train', 'general_train'] and self.args.hem_extract_mode == 'all-offline': 
@@ -261,9 +299,8 @@ class CAMIO(BaseTrainer):
                     # hem_df = self.hem_helper.compute_hem(self.model, outputs)
                     hem_df = self.hem_helper.compute_hem(self.model, self.valset)
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-            '''
             
-
+            
     def test_step(self, batch, batch_idx):
         img_path, x, y = batch
         y_hat = self.forward(x)

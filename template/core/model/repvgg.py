@@ -9,11 +9,20 @@ def generate_repvgg(args):
     if args.restore_path is not None:
         import os, glob, natsort
 
-        ckpoint_path = os.path.join(args.restore_path, 'checkpoints', '*.pt')
-        ckpts = glob.glob(ckpoint_path)
-        ckpts = natsort.natsorted(ckpts)
+        ver = int(args.restore_path.split('/')[-1].split('_')[-1])
         
-        model.load_state_dict(torch.load(ckpts[-1]))
+        if ver > 0:
+            ver -= 1
+
+        t_path = os.path.join(*args.restore_path.split('/')[:-1])
+        ckpoint_path = glob.glob(t_path + '/TB_log/version_{}/checkpoints/*.pt'.format(ver))
+        
+        if len(ckpoint_path) > 0:
+            print(ckpoint_path)
+            ckpts = glob.glob(ckpoint_path)
+            ckpts = natsort.natsorted(ckpts)
+            
+            model.load_state_dict(torch.load(ckpts[-1]))
             
     return model
 
@@ -28,6 +37,7 @@ class CustomRepVGG(nn.Module):
         super(CustomRepVGG, self).__init__()
         
         self.args = args
+        self.use_emb = False
         
         # repvgg는 원래 dropout 없음
         if 'repvgg-a0' in self.args.model:

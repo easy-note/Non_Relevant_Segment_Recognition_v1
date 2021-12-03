@@ -22,6 +22,8 @@ class TIMM(nn.Module):
         
         self.args = args
         self.use_emb = False
+        self.emb_only = args.use_emb_only
+        
         arch_name = self.args.model
         
         model = timm.create_model(arch_name, pretrained=True)
@@ -62,8 +64,8 @@ class TIMM(nn.Module):
         if self.args.model == 'swin_large_patch4_window7_224':
             features = self.gap(features.permute(0, 2, 1))
             
-        if self.args.use_online_mcd: #  해당 방식처럼 training에 따라서 forward 컨셉으로 offline도 구성하고 싶었는데.. 우선 online을 제외한 general. offline에서 classifier에 dropout을 추가하는 방향으로 임시 변경하였습니다.
-            if self.training: # 학습 중간에 넣나요? 보규님? 어떻게 접근하는지 궁금합니다!
+        if self.args.use_online_mcd: 
+            if self.training: 
                 features = self.dropout(features)
             else:
                 mcd_outputs = []
@@ -72,10 +74,15 @@ class TIMM(nn.Module):
                     
                 a = torch.vstack(mcd_outputs)
                 features = torch.mean(a, 0)
+
+        if self.emb_only:
+            features = torch.nn.functional.normalize(features, p=2, dim=-1)
             
-        output = self.classifier(features.view(x.size(0), -1))
-        
-        if self.use_emb and self.training:
-            return features, output
-        else:
-            return output
+            return features
+        else:    
+            output = self.classifier(features.view(x.size(0), -1))
+            
+            if self.use_emb and self.training:
+                return features, output
+            else:
+                return output

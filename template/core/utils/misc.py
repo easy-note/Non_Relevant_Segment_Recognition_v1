@@ -60,10 +60,11 @@ def check_hem_online_mode(args):
 def get_inference_model_path(restore_path):
     # from finetuning model
     import glob
+    import os
 
     ckpoint_path = os.path.join(restore_path, '*.ckpt')
     ckpts = glob.glob(ckpoint_path)
-
+    
     for f_name in ckpts :
         if f_name.find('best') != -1 :
             return f_name
