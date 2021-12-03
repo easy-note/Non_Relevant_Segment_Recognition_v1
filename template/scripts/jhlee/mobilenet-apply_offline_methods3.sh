@@ -9,7 +9,7 @@ IB_ratio=3;
 
 for ratio in "${top_ratio[@]}";
 do
-    python ../apply_offline_methods_flow.py \
+    nohup python ../apply_offline_methods_flow.py \
         --fold "1" \
         --trial 1 \
         --use_wise_sample \
@@ -32,5 +32,5 @@ do
         --inference_fold "1" \
         --hem_per_patient \
         --experiments_sheet_dir "/OOB_RECOG/results/1202-apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
-        --save_path "/OOB_RECOG/logs/1202-apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment"
+        --save_path "/OOB_RECOG/logs/1202-apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" > /dev/null
 done;
