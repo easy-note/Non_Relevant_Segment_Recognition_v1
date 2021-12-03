@@ -349,6 +349,10 @@ def main():
 
                 args = train_main(args)
 
+                if idx > 3:
+                    exit(0)
+
+                '''
                 if ids > 3:
                     # 3. inference
                     if ids == 4: # version 4
@@ -373,7 +377,8 @@ def main():
                     save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
                     
                     args.hem_extract_mode = 'all-offline'
-
+                '''
+                
 if __name__ == '__main__':
     if __package__ is None:
         import sys

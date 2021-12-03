@@ -235,7 +235,7 @@ class CAMIO(BaseTrainer):
                     self.best_mean_metric = metrics['Mean_metric']
                     self.save_checkpoint()
                 
-
+            '''
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
                 if self.args.stage not in ['hem_train', 'general_train'] and self.args.hem_extract_mode == 'all-offline': 
@@ -261,7 +261,8 @@ class CAMIO(BaseTrainer):
                     # hem_df = self.hem_helper.compute_hem(self.model, outputs)
                     hem_df = self.hem_helper.compute_hem(self.model, self.valset)
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-
+            '''
+            
 
     def test_step(self, batch, batch_idx):
         img_path, x, y = batch
