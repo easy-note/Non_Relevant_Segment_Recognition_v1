@@ -1,4 +1,5 @@
 # STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
+# STAGE_LIST=['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
 STAGE_LIST=['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
 
 def get_experiment_args():
@@ -376,16 +377,17 @@ def apply_offline_methods_main(args):
     hem_helper = HEMHelper(args)
     hem_helper.set_method(args.hem_extract_mode) # 'all-offline'
     hem_helper.set_restore_path(args.restore_path)
-    softmax_diff_small_hem_df, softmax_diff_large_hem_df, voting_hem_df, vi_small_hem_df, vi_large_hem_df = hem_helper.compute_hem(model, valset)
+    # softmax_diff_small_hem_df, softmax_diff_large_hem_df, voting_hem_df, vi_small_hem_df, vi_large_hem_df = hem_helper.compute_hem(model, valset)
+    softmax_diff_large_hem_df = hem_helper.compute_hem(model, valset)
 
     # 3. hem_df.to_csv
-    softmax_diff_small_hem_df.to_csv(os.path.join(args.restore_path, 'softmax_diff_small_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+    # softmax_diff_small_hem_df.to_csv(os.path.join(args.restore_path, 'softmax_diff_small_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
     softmax_diff_large_hem_df.to_csv(os.path.join(args.restore_path, 'softmax_diff_large_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
 
-    voting_hem_df.to_csv(os.path.join(args.restore_path, 'voting_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+    # voting_hem_df.to_csv(os.path.join(args.restore_path, 'voting_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
             
-    vi_small_hem_df.to_csv(os.path.join(args.restore_path, 'vi_small_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-    vi_large_hem_df.to_csv(os.path.join(args.restore_path, 'vi_large_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+    # vi_small_hem_df.to_csv(os.path.join(args.restore_path, 'vi_small_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+    # vi_large_hem_df.to_csv(os.path.join(args.restore_path, 'vi_large_{}-{}-{}.csv'.format(args.model, args.hem_extract_mode, args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
 
     '''
     if self.args.hem_extract_mode == 'all-offline':
@@ -453,6 +455,10 @@ def main():
         # offline mode
         else:
             for ids, stage in enumerate(STAGE_LIST):
+
+                if idx == 5:
+                    exit(0)
+
                 args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
 
                 print('\n\n')
@@ -466,11 +472,11 @@ def main():
                 else:
                     args = apply_offline_methods_main(args)
                     
-
                 if ids > 3:
                     # 3. inference
                     if ids == 4: # version 4
-                        args.hem_extract_mode = 'hem-softmax-small_diff-offline'
+                        # args.hem_extract_mode = 'hem-softmax-small_diff-offline'
+                        args.hem_extract_mode = 'hem-softmax-large_diff-offline'
                     elif ids == 5: # version 5
                         args.hem_extract_mode = 'hem-softmax-large_diff-offline'
 

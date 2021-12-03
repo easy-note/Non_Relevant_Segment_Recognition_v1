@@ -349,7 +349,7 @@ def main():
 
                 args = train_main(args)
 
-                if idx > 3:
+                if ids > 3:
                     exit(0)
 
                 '''

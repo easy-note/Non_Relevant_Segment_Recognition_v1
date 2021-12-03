@@ -5,7 +5,7 @@
 IB_ratio=3;
 
 top_ratio=(0.10);
-WS_ratio=3;
+WS_ratio=2;
 n_dropout=1;
 
 

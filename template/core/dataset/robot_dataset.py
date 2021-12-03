@@ -288,7 +288,7 @@ class RobotDataset(Dataset):
 
         if self.args.hem_extract_mode == 'all-offline':
             version_dict = {
-                '3': ['softmax_diff_small_*-*-*.csv', 'softmax_diff_small_hem_assets.csv'],
+                '3': ['softmax_diff_large_*-*-*.csv', 'softmax_diff_large_hem_assets.csv'], #['softmax_diff_small_*-*-*.csv', 'softmax_diff_small_hem_assets.csv'],
                 '4': ['softmax_diff_large_*-*-*.csv', 'softmax_diff_large_hem_assets.csv'],
                 '5': ['voting_*-*-*.csv', 'voting_hem_assets.csv'],
                 '6': ['vi_small_*-*-*.csv', 'vi_small_hem_assets.csv'],

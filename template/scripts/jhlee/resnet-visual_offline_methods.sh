@@ -3,15 +3,15 @@
 
 
 IB_ratio=3;
+WS_ratio=4;
 
 top_ratio=(0.10);
-WS_ratio=4;
 n_dropout=1;
 
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../visual_flow.py \
+    python ../visual_flow.py \
         --fold "1" \
         --trial 1 \
         --use_wise_sample \
@@ -24,7 +24,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "0" \
+        --cuda_list "4" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --inference_fold "1" \
@@ -34,5 +34,5 @@ do
         --hem_per_patient \
         --hem_extract_mode "all-offline" \
         --experiments_sheet_dir "/OOB_RECOG/results/1203-generate-RESNET-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-experiment" \
-        --save_path "/OOB_RECOG/logs/1203-generate-RESNET-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-experiment" > /dev/null
+        --save_path "/OOB_RECOG/logs/1203-generate-RESNET-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-experiment"
 done;
