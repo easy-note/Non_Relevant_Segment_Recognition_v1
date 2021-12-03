@@ -255,7 +255,7 @@ def inference_main(args):
         visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval, window_size=300, section_num=2)
 
         # CLEAR PAGING CACHE
-        clean_paging_chache()
+        # clean_paging_chache()
 
     # for calc total patients CR, OR + (mCR, mOR)
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)

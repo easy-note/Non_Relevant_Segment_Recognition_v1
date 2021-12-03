@@ -65,8 +65,8 @@ class HEMHelper():
                 print('Parsing Fail, Error: {}'.format(e))
                 return None
 
-            patient_rs_count = int(target_nrs_cnt * patient_nrs_ratio)
-            patient_nrs_count = int(patient_rs_count * self.args.IB_ratio)
+            patient_nrs_count = int(target_nrs_cnt * patient_nrs_ratio)
+            patient_rs_count = int(patient_nrs_count * self.args.IB_ratio)
 
         return patient_rs_count, patient_nrs_count
 
@@ -519,8 +519,8 @@ class HEMHelper():
             hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist() # 내림차순
 
             hard_idx = []
-            for i, gt in enumerate(gt_list):
-                if (i in hard_df_upper_idx) and gt==INCORRECT:
+            for i, answer in enumerate(consensus_list): # consensus_list
+                if (i in hard_df_upper_idx) and answer==INCORRECT:
                     hard_idx.append(i)
 
             vanila_idx = []
@@ -571,7 +571,7 @@ class HEMHelper():
         top_mi_index = sorted_mi_index[:top_k] # highest 
         btm_mi_index = sorted_mi_index[len(mutual_info) - btm_k:] # lowest
 
-        # extract wrong anwer from mean softmax 
+        # extract wrong anwer from mean softmax // you can also change like voting methods for extracting predict class
         predict_np = np.argmax(mean, axis=1)
         predict_list = predict_np.tolist() # to list
 
