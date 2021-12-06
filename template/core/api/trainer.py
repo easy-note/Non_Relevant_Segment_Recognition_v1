@@ -267,15 +267,15 @@ class CAMIO(BaseTrainer):
                     
             # repvgg는 별도로 torch style save
             elif 'repvgg' in self.args.model:
-                if self.best_mean_metric < metrics['Mean_metric']:
-                    self.best_mean_metric = metrics['Mean_metric']
+                if self.best_mean_metric < metrics['Mean_metric']: # 기존 best mean metric 보다 현재 epoch 의 mean metric 이 더 크다면, 
+                    self.best_mean_metric = metrics['Mean_metric'] # best mean metric = 현재 mean metric.
                     self.save_checkpoint()
             
             elif 'multi' in self.args.model:
                 if self.best_mean_metric < metrics['Mean_metric']:
                     self.best_mean_metric = metrics['Mean_metric']
                     self.save_checkpoint_multi()
-            
+                      
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
                 if self.args.stage not in ['hem_train', 'general_train'] and self.args.hem_extract_mode == 'all-offline': 

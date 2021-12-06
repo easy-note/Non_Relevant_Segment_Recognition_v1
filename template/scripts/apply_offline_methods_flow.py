@@ -121,7 +121,9 @@ def inference_main(args):
             model = TheatorTrainer(args)
         elif args.experiment_type == 'ours':
             model = CAMIO(args)
-        
+    
+    model.change_deploy_mode() # repvgg 가 저장된 형태인 inference 모드로 불러옴.  
+
     model = model.cuda()
 
     # inference block
@@ -317,20 +319,31 @@ def apply_offline_methods_main(args):
     # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/mini_fold_stage_0
     model_dir = os.path.join(mc_assets_save_path['robot'], args.model, 'WS={}-IB={}-seed={}'.format(args.WS_ratio, int(args.IB_ratio), args.random_seed), args.stage)
 
+    # # 1-1. model 불러오기
+    # if 'repvgg' not in args.model:
+    #     model_path = get_inference_model_path(model_dir) # best, last 결정
+        
+    #     if args.experiment_type == 'theator':
+    #         model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
+    #     elif args.experiment_type == 'ours':
+    #         model = CAMIO.load_from_checkpoint(model_path, args=args)
+    # else: # repvgg?
+    #     if args.experiment_type == 'theator':
+    #         model = TheatorTrainer(args)
+    #     elif args.experiment_type == 'ours':
+    #         model = CAMIO(args)
+
     # 1-1. model 불러오기
-    if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(model_dir) # best, last 결정
-        
-        if args.experiment_type == 'theator':
-            model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-        elif args.experiment_type == 'ours':
-            model = CAMIO.load_from_checkpoint(model_path, args=args)
-    else:
-        if args.experiment_type == 'theator':
-            model = TheatorTrainer(args)
-        elif args.experiment_type == 'ours':
-            model = CAMIO(args)
-        
+    model_path = get_inference_model_path(model_dir)       
+
+    if 'repvgg' not in args.model: 
+        # model_path = get_inference_model_path(model_dir)        
+        model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
+    else: # repvgg .pt
+        model = CAMIO(args)
+    
+    model.change_deploy_mode()
+    
     model = model.cuda()
     # model.eval() # 어차피 mc dropout 에서 처리
 

@@ -106,11 +106,12 @@ def inference_main(args):
     # from finetuning model
     if 'repvgg' not in args.model:
         model_path = get_inference_model_path(args.restore_path)        
-        model = CAMIO.load_from_checkpoint(model_path, args=args)
+        model = CAMIO.load_from_checkpoint(model_path, args=args) # ckpt
+
     else:
-        model = CAMIO(args)
+        model = CAMIO(args) # pt -> ? 이게 뭘 하는거지? 모델 생성?
         
-    model.change_deploy_mode()
+    model.change_deploy_mode() # 이거는 repvgg 만 적용돼서 infer model 로 변경. 
         
     model = model.cuda()
 

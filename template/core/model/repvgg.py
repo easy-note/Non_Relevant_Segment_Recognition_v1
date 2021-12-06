@@ -29,16 +29,22 @@ class CustomRepVGG(nn.Module):
                 
         self.feature_module = nn.Sequential(*list(_model.children())[:-1])
         self.classifier = nn.Linear(n_features, 2, bias=True)
-        
+
         if 'hem-emb' in self.args.hem_extract_mode or 'hem-focus' in self.args.hem_extract_mode:
             self.use_emb = True
             self.proxies = nn.Parameter(torch.randn(n_features, 2))
-            
+
+        else:
+            self.classifier = nn.Sequential(
+                nn.Dropout(p=self.args.dropout_prob, inplace=True),
+                nn.Linear(n_features, 2)
+            )
+
         if self.args.use_online_mcd:
             self.dropout = nn.Dropout(self.args.dropout_prob)
             
     def forward(self, x):
-        features = self.feature_module(x).view(x.size(0), -1)
+        features = self.feature_module(x).view(x.size(0), -1) # view(): tensor 모양 변경 [x.size(0), -1]
         
         if self.args.use_online_mcd: 
             if self.training: 

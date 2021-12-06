@@ -194,6 +194,9 @@ class HEMHelper():
             if self.args.n_dropout != 1 :
                 dropout_layer[-1].train() # only last layer to train
 
+            # print('==== dropout_layer ====')
+            # print(dropout_layer)
+
         # init for parameter for hem methods
         img_path_list = []
         gt_list = []
