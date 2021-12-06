@@ -133,3 +133,17 @@ nohup python inference_only.py --fold '1' --trial 1 --model "multi-model" --max_
 --use_wise_sample \
 --restore_path '/code/OOB_Recog/logs/multi-model-test-trial:1-fold:1/TB_log/version_0' \
 --sampling_type 1 --emb_type 2 --save_path '/code/OOB_Recog/logs/multi-model-test' > /dev/null &
+
+
+
+
+
+nohup python visual_flow.py --fold '1' --trial 1 --model "resnet18" --max_epoch 1 \
+--batch_size 256 --lr_scheduler "step_lr" --lr_scheduler_step 5 --lr_scheduler_factor 0.9 --cuda_list '6' \
+--IB_ratio 3 --random_seed 3829 --stage 'general_train' --inference_fold '1' \
+--WS_ratio 3 \
+--use_test_batch \
+--multi_stage \
+--n_stage 5 \
+--experiment_type 'theator' \
+--sampling_type 1 --emb_type 2 --save_path '/code/OOB_Recog/logs-theator/theator-our-test' > /dev/null &

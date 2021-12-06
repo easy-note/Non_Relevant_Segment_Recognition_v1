@@ -62,7 +62,7 @@ def get_inference_model_path(restore_path):
     import glob
     import os
 
-    ckpoint_path = os.path.join(restore_path, '*.ckpt')
+    ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
     ckpts = glob.glob(ckpoint_path)
     
     for f_name in ckpts :

@@ -62,6 +62,7 @@ class MultiModel(nn.Module):
         ckpts = natsort.natsorted(ckpts)
         state = torch.load(ckpts[-1])
         self.repvgg_feature.load_state_dict(state)
+        self.repvgg_feature = self.repvgg_feature.cuda()
     
         
     def forward(self, x):

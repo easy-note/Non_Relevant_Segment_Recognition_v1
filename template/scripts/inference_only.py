@@ -133,6 +133,13 @@ def inference_main(args):
 
             # save predict list to csv
             predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
+            
+            if len(target_frame_idx_list) > len(gt_list):
+                target_frame_idx_list = target_frame_idx_list[:len(gt_list)]
+            
+            if len(target_img_list) > len(gt_list):
+                target_img_list = target_img_list[:len(gt_list)]
+            
             predict_df = pd.DataFrame({
                             'frame_idx': target_frame_idx_list,
                             'predict': predict_list,
@@ -450,8 +457,9 @@ def main():
     # 0. set each experiment args 
     args = get_experiment_args()
     # 3. inference
-    # args, experiment_summary, patients_CR, patients_OR = inference_main(args)
-    args, experiment_summary, patients_CR, patients_OR = inference_main_multi(args)
+    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+    if 'multi' in args.model:
+        args, experiment_summary, patients_CR, patients_OR = inference_main_multi(args)
 
     # 4. save experiments summary
     experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))

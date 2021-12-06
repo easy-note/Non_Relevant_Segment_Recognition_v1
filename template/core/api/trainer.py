@@ -71,11 +71,13 @@ class CAMIO(BaseTrainer):
                 self.trainset.label_list = change_list
                 self.args.restore_path = None
                 self.model = get_model(self.args)
+        
+    def change_deploy_mode(self):
+        if 'repvgg' in self.args.model:
+            self.model.change_deploy_mode()
                 
         if 'multi' in self.args.model:
-            if self.current_epoch == 0 and not self.sanity_check:
-                self.model.change_deploy_mode()
-        
+            self.model.change_deploy_mode()
 
     def setup(self, stage):
         '''

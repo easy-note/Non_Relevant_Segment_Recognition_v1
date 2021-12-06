@@ -190,7 +190,7 @@ class BaseTrainer(pl.LightningModule):
                     self.best_mean_metric,
                 )
 
-        _ = repvgg_model_convert(self.model, save_path=save_path)        
+        _ = repvgg_model_convert(self.model.feature_module, save_path=save_path)        
 
         print('[+] save checkpoint(torch ver.) : ', save_path)
         

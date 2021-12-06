@@ -110,6 +110,8 @@ def inference_main(args):
     else:
         model = CAMIO(args)
         
+    model.change_deploy_mode()
+        
     model = model.cuda()
 
     # inference block
