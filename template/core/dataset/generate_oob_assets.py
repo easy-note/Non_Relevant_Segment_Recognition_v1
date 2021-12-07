@@ -43,7 +43,7 @@ def save_log(save_path, log_txt):
     
 # annotation_version_base_path, Device (ROBOT, LAPA)
 def make_oob_csv(anno_base_path, img_base_path, save_path, device):
-    set_fps = 1
+    set_fps = 5
     cal = 30 // set_fps
     
     print('\n\n', '==='*10)

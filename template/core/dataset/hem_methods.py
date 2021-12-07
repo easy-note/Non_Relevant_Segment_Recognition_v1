@@ -328,8 +328,8 @@ class HEMHelper():
                     mi_large_dic_final_df.append(hem_final_df, ignore_index=True)
 
                 elif self.args.hem_extract_mode == 'all-offline':
-
-                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_small')
+                    print('==> ver_1')
+                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_small', ver='ver_1')
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
                     softmax_diff_small_hem_final_df = softmax_diff_small_hem_final_df.append(hem_final_df, ignore_index=True) # append per patients
                     '''
@@ -339,7 +339,7 @@ class HEMHelper():
                     softmax_diff_small_dic['vanila_pos_df'].append(vanila_pos_df) # //20개 환자
                     '''
 
-                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_large')
+                    hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.extract_hem_idx_from_softmax_diff(patient_dropout_predictions, patient_gt_list, patient_img_path_list, 'diff_large', ver='ver_1')
                     hem_final_df = self.set_ratio(hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df, patient)
                     softmax_diff_large_hem_final_df = softmax_diff_large_hem_final_df.append(hem_final_df, ignore_index=True) # append per patients
                     '''
@@ -477,23 +477,60 @@ class HEMHelper():
 
         return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
     
-    def extract_hem_idx_from_softmax_diff(self, dropout_predictions, gt_list, img_path_list, diff='diff_small'):
+
+    def get_answer(self, dropout_predictions, gt_list):
+        predict_table = np.argmax(dropout_predictions, axis=2) # (forward_passes, n_samples)
+        predict_ratio = np.mean(predict_table, axis=0) # (n_samples)
+
+        predict_np = np.around(predict_ratio) # threshold == 0.5, if predict_ratio >= 0.5, predict_class == OOB(1)
+        predict_np = np.int8(predict_np) # casting float to int
+        predict_list = predict_np.tolist() # to list
+
+        answer = predict_np == np.array(gt_list) # compare with gt list
+
+        return answer
+
+    def extract_hem_idx_from_softmax_diff(self, dropout_predictions, gt_list, img_path_list, diff='diff_small', ver='ver_1'):
+        # dropout predictions - shape (forward_passes, n_samples, n_classes)
+        
         hem_idx = []
         
-        cols = ['Img_path', 'GT', 'Predict', 'Logit', 'Diff', 'Consensus']
-        CORRECT, INCORRECT = (0,1)
+        cols = ['Img_path', 'GT']
+        CORRECT, INCORRECT = (True, False)
         IB_CLASS, OOB_CLASS = (0,1)
 
-        dropout_predictions_mean = np.mean(dropout_predictions, axis=0) # shape (n_samples, n_classes)
-        dropout_predictions_mean_argmax = np.argmax(dropout_predictions_mean, axis=1) # shape (n_samples,)
-        dropout_predictions_mean_abs_diff = np.squeeze(np.abs(np.diff(dropout_predictions_mean, axis=1)))# shape (n_samples,)
+        if ver == 'ver_0':
+            predict_mean = np.mean(dropout_predictions, axis=0) # shape (n_samples, n_classes) //(550, 2)
+            predict_diff = np.diff(predict_mean, axis=1) # shape (n_samples, 1) // (550, 1)
+            predict_abs = np.abs(predict_diff) # shape (n_samples, 1) // (550, 1)
 
-        logit_list = dropout_predictions_mean.tolist()
-        predict_list = dropout_predictions_mean_argmax.tolist()
-        diff_list = dropout_predictions_mean_abs_diff.tolist()
-        consensus_list = [CORRECT if y==y_hat else INCORRECT for y, y_hat in zip(gt_list, predict_list)]
+            '''
+            print('\n\npredict_mean {}\n'.format(predict_mean.shape), predict_mean)
+            print('\n\npredict_diff {}\n'.format(predict_diff.shape), predict_diff)
+            print('\n\npredict_abs {}\n'.format(predict_abs.shape), predict_abs)
+            '''
 
-        vanila_df = pd.DataFrame([x for x in zip(img_path_list, gt_list, predict_list, logit_list, diff_list, consensus_list)],
+            predict_table = np.squeeze(predict_abs) # shape (n_samples, ) // (550, )
+
+            # 맞았는지, 틀렸는지 (answer) - 평균 취해서 정답 확인. 
+            predict_np = np.argmax(predict_mean, axis=1) # 예측값
+            answer = predict_np == np.array(gt_list) # 예측값 & 정답 비교. 
+            answer_list = answer.tolist()
+
+  
+        elif ver == 'ver_1':
+            predict_diff = np.diff(dropout_predictions, axis=2) # shape (forward_passes, n_samples, 1) // (3, 550, 1) 
+            predict_abs = np.abs(predict_diff) # shape (forward_passes, n_samples, 1) // (3, 550, 1) 
+            predict_mean = np.mean(predict_abs, axis=0) # shape (n_samples, 1) // (550, 1) 
+
+            predict_table = np.squeeze(predict_mean) # shape (n_samples, ) // (550, )
+
+            # 맞았는지, 틀렸는지 (answer) - voting 방식.
+            answer = self.get_answer(dropout_predictions, gt_list)
+            answer_list = answer.tolist()
+
+
+        vanila_df = pd.DataFrame([x for x in zip(img_path_list, gt_list)],
                 columns=cols)
 
         top_ratio = self.args.top_ratio # 30/100
@@ -501,7 +538,7 @@ class HEMHelper():
 
         # softmax hem 추출 시, lower_idx, upper_idx 따로 실험 :) 
         if diff == 'diff_small': # lower
-            hard_df_lower_idx = dropout_predictions_mean_abs_diff.argsort()[:top_k].tolist() # 올림차순
+            hard_df_lower_idx = predict_table.argsort()[:top_k].tolist() # 올림차순
             hard_idx = hard_df_lower_idx
 
             vanila_idx = []
@@ -522,10 +559,10 @@ class HEMHelper():
             return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
         elif diff == 'diff_large': # higher
-            hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist() # 내림차순
+            hard_df_upper_idx = (-predict_table).argsort()[:top_k].tolist() # 내림차순
 
             hard_idx = []
-            for i, answer in enumerate(consensus_list): # consensus_list
+            for i, answer in enumerate(answer_list): # answer_list
                 if (i in hard_df_upper_idx) and answer==INCORRECT:
                     hard_idx.append(i)
 
@@ -562,7 +599,7 @@ class HEMHelper():
         ## calc mutual information
         # (https://www.edwith.org/medical-20200327/lecture/63144/)
         mutual_info = entropy - np.mean(np.sum(-dropout_predictions*np.log(dropout_predictions + epsilon),
-                                                                                    axis=-1), axis=0) # shape (n_samples,)
+                                                                                    axis=-1), axis=0) # shape (n_samples,) // (550, 1)
         # if mutual info is high = relavence // low = non-relavence
         # so in (hard example data selection?), if i'th data is high(relavence), non-indepandence, i'th data has similar so it's hard
 
@@ -577,11 +614,12 @@ class HEMHelper():
         top_mi_index = sorted_mi_index[:top_k] # highest 
         btm_mi_index = sorted_mi_index[len(mutual_info) - btm_k:] # lowest
 
-        # extract wrong anwer from mean softmax // you can also change like voting methods for extracting predict class
-        predict_np = np.argmax(mean, axis=1)
-        predict_list = predict_np.tolist() # to list
+        # # extract wrong anwer from mean softmax // you can also change like voting methods for extracting predict class
+        # predict_np = np.argmax(mean, axis=1)
+        # predict_list = predict_np.tolist() # to list
 
-        answer = predict_np == np.array(gt_list) # compare with gt list
+        # answer = predict_np == np.array(gt_list) # compare with gt list
+        answer = self.get_answer(dropout_predictions, gt_list)
 
         wrong_idx = np.where(answer == False) # wrong example
         wrong_idx = wrong_idx[0].tolist() # remove return turple
