@@ -43,8 +43,13 @@ def save_log(save_path, log_txt):
     
 # annotation_version_base_path, Device (ROBOT, LAPA)
 def make_oob_csv(anno_base_path, img_base_path, save_path, device):
-    set_fps = 6
-
+    set_fps = 1
+    cal = 30 // set_fps
+    
+    print('\n\n', '==='*10)
+    print('\tCAL ===> {}'.format(cal))
+    print('==='*10, '\n\n')
+    
     total_annotation_list = glob.glob(anno_base_path + '/*')
 
     if device.lower() == 'robot':
@@ -110,7 +115,7 @@ def make_oob_csv(anno_base_path, img_base_path, save_path, device):
             
             # if int(target_img_idx) % 30 == 0: # fps = 1
             ## fps = 30
-            if int(target_img_idx) % 6 == 0: # fps = 5
+            if int(target_img_idx) % cal == 0: # fps = 5
                 if target_img_idx in oob_list:
                     outbody_list.append([target_img, 1])
 
