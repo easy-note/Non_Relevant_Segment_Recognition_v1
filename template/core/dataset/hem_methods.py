@@ -488,7 +488,7 @@ class HEMHelper():
 
         answer = predict_np == np.array(gt_list) # compare with gt list
 
-        return answer
+        return answer, predict_np
 
     def extract_hem_idx_from_softmax_diff(self, dropout_predictions, gt_list, img_path_list, diff='diff_small', ver='ver_1'):
         # dropout predictions - shape (forward_passes, n_samples, n_classes)
@@ -526,7 +526,7 @@ class HEMHelper():
             predict_table = np.squeeze(predict_mean) # shape (n_samples, ) // (550, )
 
             # 맞았는지, 틀렸는지 (answer) - voting 방식.
-            answer = self.get_answer(dropout_predictions, gt_list)
+            answer, _ = self.get_answer(dropout_predictions, gt_list)
             answer_list = answer.tolist()
 
 
@@ -619,7 +619,8 @@ class HEMHelper():
         # predict_list = predict_np.tolist() # to list
 
         # answer = predict_np == np.array(gt_list) # compare with gt list
-        answer = self.get_answer(dropout_predictions, gt_list)
+        answer, predict_np = self.get_answer(dropout_predictions, gt_list)
+        predict_list = predict_np.tolist()
 
         wrong_idx = np.where(answer == False) # wrong example
         wrong_idx = wrong_idx[0].tolist() # remove return turple
