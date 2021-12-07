@@ -12,9 +12,9 @@ def get_experiment_args():
     args.pretrained = True
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
-    # args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
-    args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
-    # args.experiments_sheet_dir = args.save_path
+    args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
+    # args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
+    args.experiments_sheet_dir = args.save_path
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
@@ -37,7 +37,6 @@ def train_main(args):
 
     from core.model import get_model, get_loss
     from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
 
     from torchsummary import summary
 
@@ -46,10 +45,7 @@ def train_main(args):
         name='TB_log',
         default_hp_metric=False)
 
-    if args.experiment_type == 'theator':
-        x = TheatorTrainer(args)
-    elif args.experiment_type == 'ours':
-        x = CAMIO(args)
+    x = CAMIO(args)
     
     if args.num_gpus > 1:
         trainer = pl.Trainer(gpus=args.num_gpus, 
@@ -88,7 +84,6 @@ def inference_main(args):
     
     ### test inference module
     from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
     from core.api.inference import InferenceDB # inference module
     from core.api.evaluation import Evaluator # evaluation module
     from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
@@ -110,17 +105,13 @@ def inference_main(args):
 
     # from finetuning model
     if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
-        
-        if args.experiment_type == 'theator':
-            model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-        elif args.experiment_type == 'ours':
-            model = CAMIO.load_from_checkpoint(model_path, args=args)
+        model_path = get_inference_model_path(args.restore_path)        
+        model = CAMIO.load_from_checkpoint(model_path, args=args) # ckpt
+
     else:
-        if args.experiment_type == 'theator':
-            model = TheatorTrainer(args)
-        elif args.experiment_type == 'ours':
-            model = CAMIO(args)
+        model = CAMIO(args) # pt -> ? 이게 뭘 하는거지? 모델 생성?
+        
+    model.change_deploy_mode() # 이거는 repvgg 만 적용돼서 infer model 로 변경. 
         
     model = model.cuda()
 
@@ -307,7 +298,6 @@ def main():
     torch.backends.cudnn.deterministic=True
     torch.backends.cudnn.benchmark=True
 
-
     # general mode
     if args.stage == 'general_train':
         args.mini_fold = 'general'
@@ -326,16 +316,31 @@ def main():
             args.mini_fold = 'general'
             args.stage = 'hem_train'
 
-            args = train_main(args)
+            if args.multi_stage:
+                print('Go Multi Stage!')
+                for N in range(args.n_stage):
+                    args.cur_stage = N+1
+                    args = train_main(args)
 
-            # 3. inference
-            args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+                    # 3. inference
+                    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-            # 4. save experiments summary
-            experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-            os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+                    # 4. save experiments summary
+                    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+                    os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
-            save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+                    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+            else:
+                args = train_main(args)
+
+                # 3. inference
+                args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+
+                # 4. save experiments summary
+                experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+                os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+
+                save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
         # offline mode
         else:
             for ids, stage in enumerate(STAGE_LIST):

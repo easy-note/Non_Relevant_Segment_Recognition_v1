@@ -60,15 +60,27 @@ def check_hem_online_mode(args):
 def get_inference_model_path(restore_path):
     # from finetuning model
     import glob
+    import os
+    
+    model_path = None
 
-    ckpoint_path = os.path.join(restore_path, '*.ckpt')
-    ckpts = glob.glob(ckpoint_path)
+    pt_path = glob.glob(os.path.join(restore_path, 'checkpoints/*.pt'))
+    
+    if pt_path : # non blank list
+        model_path = pt_path[-1]
+    else : 
+        ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
+        ckpts = glob.glob(ckpoint_path)
 
-    for f_name in ckpts :
-        if f_name.find('best') != -1 :
-            return f_name
-        # if f_name.find('last') != -1 :
-        #     return f_name
+        for f_name in ckpts :
+            if f_name.find('best') != -1 :
+                model_path = f_name
+            '''
+            if f_name.find('last') != -1 :
+                model_path = f_name
+            '''
+    return model_path
+        
 
 def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
     from core.utils.prepare import InferenceAssets # inference assets helper (for prepare inference assets)

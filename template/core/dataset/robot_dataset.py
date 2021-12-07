@@ -164,11 +164,11 @@ class RobotDataset(Dataset):
         '''
         
         print('==> \tInbody_READ_CSV')
-        print(read_ib_assets_df)
+        # print(read_ib_assets_df)
         print('\n\n')
 
         print('==> \tOutofbody_READ_CSV')
-        print(read_oob_assets_df)
+        # print(read_oob_assets_df)
         print('\n\n')
 
         # select patient frame 
@@ -211,10 +211,10 @@ class RobotDataset(Dataset):
         else:
             print('\n\n')
             print('==> \tSORT INBODY_CSV')
-            print(ib_assets_df)
+            # print(ib_assets_df)
             print('\t'* 4)
             print('==> \tSORT OUTBODY_CSV')
-            print(oob_assets_df)
+            # print(oob_assets_df)
             print('\n\n')
 
             
@@ -234,22 +234,22 @@ class RobotDataset(Dataset):
 
             print('\n\n')
             print('==> \tRANDOM SAMPLING INBODY_CSV')
-            print(ib_assets_df)
+            # print(ib_assets_df)
             print('\t'* 4)
             print('==> \tRANDOM SAMPLING OUTBODY_CSV')
-            print(oob_assets_df)
+            # print(oob_assets_df)
             print('\n\n')
 
             # suffle 0,1
             assets_df = pd.concat([ib_assets_df, oob_assets_df]).sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
             print('\n\n')
             print('==> \tFINAL ASSETS ({})'.format(len(assets_df)))
-            print(assets_df)
+            # print(assets_df)
             print('\n\n')
 
             print('\n\n')
             print('==> \tFINAL HEAD')
-            print(assets_df.head(20))
+            # print(assets_df.head(20))
             print('\n\n')
 
             if self.state == 'train': # save plt only in trainset
@@ -306,7 +306,7 @@ class RobotDataset(Dataset):
             read_hem_csv = glob(os.path.join(self.restore_path, '*', load_f_path))
             read_hem_csv = natsort.natsorted(read_hem_csv)
 
-            print(read_hem_csv)
+            # print(read_hem_csv)
             hem_df_list = []
 
             for csv_file in read_hem_csv:
@@ -322,7 +322,7 @@ class RobotDataset(Dataset):
             read_hem_csv = glob(os.path.join(self.restore_path, '*', '*-*-*.csv'))
             read_hem_csv = natsort.natsorted(read_hem_csv)
         
-            print(read_hem_csv)
+            # print(read_hem_csv)
 
             hem_df_list = []
 
@@ -357,13 +357,13 @@ class RobotDataset(Dataset):
 
         print('\n\n')
         print('==> \tSORT HEM_CSV')
-        print(hem_assets_df)
+        # print(hem_assets_df)
 
         # suffle 0,1
         assets_df = hem_assets_df.sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
         print('\n\n')
         print('==> \tFINAL SUFFLE ASSETS ({})'.format(len(assets_df)))
-        print(assets_df)
+        # print(assets_df)
         print('\n\n')
 
         print('\n\n')
@@ -394,7 +394,7 @@ class RobotDataset(Dataset):
 
         for patient in patients_list:
             patient_df = val_assets_df[val_assets_df['patient']==patient]
-            print(patient_df)
+            # print(patient_df)
 
             patient_rs_count = len(patient_df[patient_df['class_idx']==0])
             patient_nrs_count = len(patient_df[patient_df['class_idx']==1])
