@@ -90,4 +90,14 @@ class CustomRepVGG(nn.Module):
                 self.feature_module.load_state_dict(torch.load(ckpts[-1]))
                 
         self.feature_module = self.feature_module.cuda()
+    
+    def load_feature_module(self, pt_path):
+
+        model = RepVGG(num_blocks=[2, 4, 14, 1], num_classes=2,
+                        width_multiplier=[0.75, 0.75, 0.75, 2.5], override_groups_map=None, deploy=True)
         
+        self.feature_module = nn.Sequential(*list(model.children())[:-1])
+
+        self.feature_module.load_state_dict(torch.load(pt_path)) # load from pt_path
+                
+        self.feature_module = self.feature_module.cuda()

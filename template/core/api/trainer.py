@@ -72,10 +72,13 @@ class CAMIO(BaseTrainer):
                 self.args.restore_path = None
                 self.model = get_model(self.args)
         
-    def change_deploy_mode(self):
+    def change_deploy_mode(self, pt_path=None):
         if 'repvgg' in self.args.model:
-            self.model.change_deploy_mode()
-                
+            if pt_path: # load from pt path
+                self.model.load_feature_module(pt_path)
+            else: # load from rule of online (restore)
+                self.model.change_deploy_mode()
+
         if 'multi' in self.args.model:
             self.model.change_deploy_mode()
 
@@ -196,21 +199,36 @@ class CAMIO(BaseTrainer):
 
         # save number of train dataset (rs, nrs)
         if self.current_epoch == self.last_epoch:
-            rs_count, nrs_count = self.trainset.number_of_rs_nrs()
+            transet_rs_count, trainset_nrs_count = self.trainset.number_of_rs_nrs()
+            valset_rs_count, valset_nrs_count = self.valset.number_of_rs_nrs()
             
             save_data = {
                 'train_dataset': {
-                    'rs': rs_count,
-                    'nrs': nrs_count 
+                    'rs': transet_rs_count,
+                    'nrs': trainset_nrs_count 
                 },
                 'target_hem_count': {
-                    'rs': rs_count // 3,
-                    'nrs': nrs_count // 3
+                    'rs': transet_rs_count // 3,
+                    'nrs': trainset_nrs_count // 3
                 }
             }
 
+            val_save_data = {
+                'val_dataset': {
+                    'rs': valset_rs_count,
+                    'nrs': valset_nrs_count 
+                },
+            }
+
+            patient_per_dic = self.valset.number_of_patient_rs_nrs()
+            
+            val_save_data.update(patient_per_dic)
+
             with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
                 json.dump(save_data, f, indent=2)
+            
+            with open(os.path.join(self.restore_path, 'PATIENTS_DATASET_COUNT.json'), 'w') as f:
+                json.dump(val_save_data, f, indent=2)
 
     def validation_step(self, batch, batch_idx): # val - every batch
         img_path, x, y = batch
@@ -276,6 +294,7 @@ class CAMIO(BaseTrainer):
                     self.best_mean_metric = metrics['Mean_metric']
                     self.save_checkpoint_multi()
                       
+            '''
             # Hard Example Mining (Offline)
             if self.current_epoch == self.last_epoch:
                 if self.args.stage not in ['hem_train', 'general_train'] and self.args.hem_extract_mode == 'all-offline': 
@@ -301,6 +320,7 @@ class CAMIO(BaseTrainer):
                     # hem_df = self.hem_helper.compute_hem(self.model, outputs)
                     hem_df = self.hem_helper.compute_hem(self.model, self.valset)
                     hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
+            '''
             
             
     def test_step(self, batch, batch_idx):
