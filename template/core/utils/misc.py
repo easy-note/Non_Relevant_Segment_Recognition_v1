@@ -62,24 +62,30 @@ def get_inference_model_path(restore_path):
     import glob
     import os
     
-    model_path = None
-
-    pt_path = glob.glob(os.path.join(restore_path, 'checkpoints/*.pt'))
+    ckpoint_path = os.path.join(restore_path, '*.ckpt')
+    # ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
     
-    if pt_path : # non blank list
-        model_path = pt_path[-1]
-    else : 
-        # ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
-        ckpoint_path = os.path.join(restore_path, '*.ckpt') # 21.12.07 JH 변경 -> nas model 가져와야 함. 
-        ckpts = glob.glob(ckpoint_path)
+    ckpts = glob.glob(ckpoint_path)
 
-        for f_name in ckpts :
-            if f_name.find('best') != -1 :
-                model_path = f_name
-            '''
-            if f_name.find('last') != -1 :
-                model_path = f_name
-            '''
+    for f_name in ckpts :
+        if f_name.find('best') != -1 :
+            model_path = f_name
+        '''
+        if f_name.find('last') != -1 :
+            model_path = f_name
+        '''
+    return model_path
+
+def get_pt_path(restore_path):
+    import glob
+    import os
+    
+    model_path = None
+    pt_dir = os.path.join(restore_path, '*.pt')
+    pts = glob.glob(pt_dir)
+
+    model_path = pts[-1] # load last pt
+
     return model_path
         
 

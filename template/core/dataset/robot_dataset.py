@@ -216,8 +216,6 @@ class RobotDataset(Dataset):
             print('==> \tSORT OUTBODY_CSV')
             # print(oob_assets_df)
             print('\n\n')
-
-            
             
             # HG 21.11.30 all sampling mode = True 라면 IB ratio적용 x => 모두 사용
             if not self.all_sampling_mode: # default = False
@@ -229,8 +227,10 @@ class RobotDataset(Dataset):
 
                 ib_assets_df = ib_assets_df.sample(n=sampling_ib_count, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
                 oob_assets_df = oob_assets_df.sample(frac=1, replace=False, random_state=self.random_seed)
-                # ib_assets_df = ib_assets_df.sample(n=5000, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
-                # oob_assets_df = oob_assets_df.sample(n=5000, replace=False, random_state=self.random_seed)
+            
+            # for test code
+            # ib_assets_df = ib_assets_df.sample(n=5000, replace=False, random_state=self.random_seed) # 중복뽑기x, random seed 고정, OOB개수의 IB_ratio 개
+            # oob_assets_df = oob_assets_df.sample(n=5000, replace=False, random_state=self.random_seed)
 
             print('\n\n')
             print('==> \tRANDOM SAMPLING INBODY_CSV')
@@ -413,17 +413,6 @@ class RobotDataset(Dataset):
             )
 
         return patient_per_dic
-
-
-
-
-
-
-        
-
-
-        # return self.assets_df
-
 
     def __len__(self):
         return len(self.img_list)

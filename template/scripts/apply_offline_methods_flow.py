@@ -109,21 +109,16 @@ def inference_main(args):
     print('restore : ', args.restore_path)
 
     # from finetuning model
-    if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
-        
-        if args.experiment_type == 'theator':
-            model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-        elif args.experiment_type == 'ours':
-            model = CAMIO.load_from_checkpoint(model_path, args=args)
-    else:
-        if args.experiment_type == 'theator':
-            model = TheatorTrainer(args)
-        elif args.experiment_type == 'ours':
-            model = CAMIO(args)
-    
-    model.change_deploy_mode() # repvgg 가 저장된 형태인 inference 모드로 불러옴.  
+    model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
+    model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
+    pt_path=None # for using change_deploy_mode for offline, it will be update on above if's branch
 
+    if 'repvgg' in args.model: # load pt from version/checkpoints 
+        pt_path = get_pt_path(os.path.join(args.restore_path, 'checkpoints'))
+        print('\n\t ===> LOAD PT FROM {}\n'.format(pt_path))
+    
+    model.change_deploy_mode(pt_path=pt_path) # 이거는 repvgg나 multi일떄만 적용됨. offline시 repvgg는 저장된 Pt에서 불러와야 하므로 pt_path를 arguments로 넣어주어야 함. 
+        
     model = model.cuda()
 
     # inference block
@@ -218,12 +213,14 @@ def inference_main(args):
 
             video_jaccard = video_metrics['Jaccard']
 
+            video_precision, video_recall = video_metrics['Precision'], video_metrics['Recall']
+
             print('\t => video_name: {}'.format(video_name))
             print('\t    video_CR: {:.3f} | video_OR: {:.3f}'.format(video_CR, video_OR))
             print('\t    video_TP: {} | video_FP: {} | video_TN: {} | video_FN: {}'.format(video_TP, video_FP, video_TN, video_FN))
 
             # save video metrics
-            video_results_dict = report.add_videos_report(patient_no=patient_no, video_no=video_name, FP=video_FP, TP=video_TP, FN=video_FN, TN=video_TN, TOTAL=video_TOTAL, CR=video_CR, OR=video_OR, gt_IB=video_gt_IB, gt_OOB=video_gt_OOB, predict_IB=video_predict_IB, predict_OOB=video_predict_OOB, jaccard=video_jaccard)
+            video_results_dict = report.add_videos_report(patient_no=patient_no, video_no=video_name, FP=video_FP, TP=video_TP, FN=video_FN, TN=video_TN, TOTAL=video_TOTAL, CR=video_CR, OR=video_OR, gt_IB=video_gt_IB, gt_OOB=video_gt_OOB, predict_IB=video_predict_IB, predict_OOB=video_predict_OOB, precision=video_precision, recall=video_recall, jaccard=video_jaccard)
             save_dict_to_csv(video_results_dict, videos_results_path)
 
             # for calc patients metric
@@ -239,12 +236,14 @@ def inference_main(args):
 
         patient_jaccard = patient_metrics['Jaccard']
 
+        patient_precision, patient_recall = patient_metrics['Precision'], patient_metrics['Recall']
+
         print('\t\t => patient_no: {}'.format(patient_no))
         print('\t\t    patient_CR: {:.3f} | patient_OR: {:.3f}'.format(patient_CR, patient_OR))
         print('\t\t    patient_TP: {} | patient_FP: {} | patient_TN: {} | patient_FN: {}'.format(patient_TP, patient_FP, patient_TN, patient_FN))
 
         # save patient metrics        
-        patient_results_dict = report.add_patients_report(patient_no=patient_no, FP=patient_FP, TP=patient_TP, FN=patient_FN, TN=patient_TN, TOTAL=patient_TOTAL, CR=patient_CR, OR=patient_OR, gt_IB=patient_gt_IB, gt_OOB=patient_gt_OOB, predict_IB=patient_predict_IB, predict_OOB=patient_predict_OOB, jaccard=patient_jaccard)
+        patient_results_dict = report.add_patients_report(patient_no=patient_no, FP=patient_FP, TP=patient_TP, FN=patient_FN, TN=patient_TN, TOTAL=patient_TOTAL, CR=patient_CR, OR=patient_OR, gt_IB=patient_gt_IB, gt_OOB=patient_gt_OOB, predict_IB=patient_predict_IB, predict_OOB=patient_predict_OOB, precision=patient_precision, recall=patient_recall, jaccard=patient_jaccard)
         save_dict_to_csv(patient_results_dict, patients_results_path)
     
         # for calc total patients CR, OR
@@ -262,8 +261,10 @@ def inference_main(args):
     # for calc total patients CR, OR + (mCR, mOR)
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
+    total_mPrecision, total_mRecall = total_metrics['mPrecision'], total_metrics['mRecall']
+    total_Jaccard = total_metrics['Jaccard']
 
-    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, details_path=details_results_path, model_path=model_path)
+    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -285,6 +286,10 @@ def inference_main(args):
         'mOR':total_mOR,
         'CR':total_CR,
         'OR':total_OR,
+        'mPrecision':total_mPrecision,
+        'mRecall': total_mRecall,
+        'Jaccard': total_Jaccard,
+
         'details_path':details_results_path,
         'model_path': model_path,
     }
@@ -314,42 +319,35 @@ def apply_offline_methods_main(args):
     args.restore_path = restore_path[args.stage] # set restore_path
     os.makedirs(args.restore_path, exist_ok=True) # for saveing version 0,1,2,3
 
-
     # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/mini_fold_stage_0/last/n_dropout=5
     # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/mini_fold_stage_0
     model_dir = os.path.join(mc_assets_save_path['robot'], args.model, 'WS={}-IB={}-seed={}'.format(args.WS_ratio, int(args.IB_ratio), args.random_seed), args.stage)
 
-    # # 1-1. model 불러오기
-    # if 'repvgg' not in args.model:
-    #     model_path = get_inference_model_path(model_dir) # best, last 결정
-        
-    #     if args.experiment_type == 'theator':
-    #         model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-    #     elif args.experiment_type == 'ours':
-    #         model = CAMIO.load_from_checkpoint(model_path, args=args)
-    # else: # repvgg?
-    #     if args.experiment_type == 'theator':
-    #         model = TheatorTrainer(args)
-    #     elif args.experiment_type == 'ours':
-    #         model = CAMIO(args)
-
     # 1-1. model 불러오기
-    model_path = get_inference_model_path(model_dir)       
+    model_path = get_inference_model_path(model_dir)
+    model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
+    pt_path=None # for using change_deploy_mode for offline, it will be update on above if's branch
 
-    if 'repvgg' not in args.model: 
-        # model_path = get_inference_model_path(model_dir)        
-        model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
-    else: # repvgg .pt
-        model = CAMIO(args)
+    if 'repvgg' in args.model: 
+        pt_path = get_pt_path(model_dir)
+        print('\n\t ===> LOAD PT FROM {}\n'.format(pt_path))
     
-    model.change_deploy_mode()
+    model.change_deploy_mode(pt_path=pt_path) # change feature_module weight from saved pt
+    # model.change_deploy_mode() # load weight from rule of online
+    
+    '''
+    if 'repvgg' in args.model: 
+        args.restore_path = model_dir
+        model.change_deploy_mode() # change feature_module weight from saved pt
+        args.restore_path = restore_path[args.stage] # set restore_path
+    '''
     
     model = model.cuda()
     # model.eval() # 어차피 mc dropout 에서 처리
-
     # 1-2. train/validation set 불러오기 // train set 불러오는 이유는 hem extract 할때 얼마나 뽑을지 정해주는 DATASET_COUNT.json을 저장하기 위해
     trainset = RobotDataset(args, state='train') # train dataset setting
     
+
     args.use_all_sample = True
     valset = RobotDataset(args, state='val') # val dataset setting
     args.use_all_sample = False
@@ -514,7 +512,7 @@ if __name__ == '__main__':
         sys.path.append(base_path+'/core/accessory/RepVGG')
         print(base_path)
         
-        from core.utils.misc import save_dict_to_csv, prepare_inference_aseets, get_inference_model_path, \
+        from core.utils.misc import save_dict_to_csv, prepare_inference_aseets, get_inference_model_path, get_pt_path, \
     set_args_per_stage, check_hem_online_mode, clean_paging_chache
 
     main()

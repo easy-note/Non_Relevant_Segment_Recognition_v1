@@ -79,6 +79,9 @@ class Report():
                 'mOR':0,
                 'CR':0,
                 'OR':0,
+                'mPrecision':0,
+                'mRecall':0,
+                'Jaccard':0,
                 'details_path':'',
                 'model_path':'',
 
@@ -100,6 +103,8 @@ class Report():
                 'TOTAL' : 0,
                 'CR' : 0,
                 'OR' : 0,
+                'Precision': 0,
+                'Recall': 0,
                 'Jaccard':0,
                 'gt_IB':0,
                 'gt_OOB':0,
@@ -117,6 +122,8 @@ class Report():
                 'TOTAL' : 0,
                 'CR' : 0,
                 'OR' : 0,
+                'Precision': 0,
+                'Recall': 0,
                 'Jaccard':0,
                 'gt_IB':0,
                 'gt_OOB':0,
@@ -130,7 +137,7 @@ class Report():
     def set_report_save_path(self, report_save_path):
         self.report_save_path = report_save_path
     
-    def set_experiment(self, model, methods, inference_fold, mCR, mOR, CR, OR, details_path, model_path):
+    def set_experiment(self, model, methods, inference_fold, mCR, mOR, CR, OR, mPrecision, mRecall, Jaccard, details_path, model_path):
         self.experiment['model'] = model
         self.experiment['method'] = methods
         self.experiment['inference_fold'] = inference_fold
@@ -138,11 +145,14 @@ class Report():
         self.experiment['mOR'] = mOR
         self.experiment['CR'] = CR
         self.experiment['OR'] = OR
+        self.experiment['mPrecision'] = mPrecision
+        self.experiment['mRecall'] = mRecall
+        self.experiment['Jaccard'] = Jaccard
         # TODO - patients.. 
         self.experiment['details_path'] = details_path
         self.experiment['model_path'] = model_path
     
-    def add_patients_report(self, patient_no, FP, TP, FN, TN, TOTAL, CR, OR, gt_IB, gt_OOB, predict_IB, predict_OOB, jaccard):
+    def add_patients_report(self, patient_no, FP, TP, FN, TN, TOTAL, CR, OR, gt_IB, gt_OOB, predict_IB, predict_OOB, precision, recall, jaccard):
         patient = self._get_report_form('patient')
 
         patient['patient_no'] = patient_no
@@ -157,13 +167,17 @@ class Report():
         patient['gt_OOB'] = gt_OOB
         patient['predict_IB'] = predict_IB
         patient['predict_OOB'] = predict_OOB
+
+        patient['Precision'] = precision
+        patient['Recall'] = recall
+
         patient['Jaccard'] = jaccard
         
         self.patients_report.append(patient)
 
         return patient
 
-    def add_videos_report(self, patient_no, video_no, FP, TP, FN, TN, TOTAL, CR, OR, gt_IB, gt_OOB, predict_IB, predict_OOB, jaccard):
+    def add_videos_report(self, patient_no, video_no, FP, TP, FN, TN, TOTAL, CR, OR, gt_IB, gt_OOB, predict_IB, predict_OOB, precision, recall, jaccard):
         video = self._get_report_form('video')
 
         video['patient_no'] = patient_no
@@ -179,6 +193,10 @@ class Report():
         video['gt_OOB'] = gt_OOB
         video['predict_IB'] = predict_IB
         video['predict_OOB'] = predict_OOB
+
+        video['Precision'] = precision
+        video['Recall'] = recall
+
         video['Jaccard'] = jaccard
         
         self.videos_report.append(video)
