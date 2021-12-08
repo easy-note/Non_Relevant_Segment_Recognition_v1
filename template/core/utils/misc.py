@@ -69,7 +69,8 @@ def get_inference_model_path(restore_path):
     if pt_path : # non blank list
         model_path = pt_path[-1]
     else : 
-        ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
+        # ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
+        ckpoint_path = os.path.join(restore_path, '*.ckpt') # 21.12.07 JH 변경 -> nas model 가져와야 함. 
         ckpts = glob.glob(ckpoint_path)
 
         for f_name in ckpts :
