@@ -49,7 +49,11 @@ class RobotDataset(Dataset):
                 
                 # split to 60/20 from 80 case
                 self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='train') # args.fold's train dataset(80 case) to 60 case
-                assets_type='sub'
+
+                if self.args.stage_flag:
+                    assets_type = 'stage_hem'
+                else:
+                    assets_type='sub'
 
                 # self.wise_sampling_mode = True
                 
@@ -112,7 +116,7 @@ class RobotDataset(Dataset):
             return patients_dict[self.args.mini_fold]
 
     def load_data(self, assets_type):
-        support_type = ['sub', 'meta', 'hem']
+        support_type = ['sub', 'meta', 'hem', 'stage_hem']
         assert assets_type in support_type, 'NOT SOPPORT TYPE'
 
         assets_root_path = ''
@@ -143,6 +147,9 @@ class RobotDataset(Dataset):
         elif assets_type == 'hem': # from extracted csv
             print('[LOAD FROM HEMSET]')
             self.load_data_from_hem_assets()
+
+        elif assets_type == 'stage_hem':
+            self.load_data_from_stage_assets() # from nas
 
     def load_v1(self):
         # TODO load dataset ver. 1 나중에 민국님과 회의 때, 논문에 사용하는지 여쭤보고 -> 필요하면 작업. 
@@ -374,6 +381,35 @@ class RobotDataset(Dataset):
         # last processing
         self.img_list = assets_df.img_path.tolist()
         self.label_list = assets_df.class_idx.tolist()
+
+
+    def load_data_from_stage_assets(self): # from nas
+        print('ASSETS_PATH: {}'.format(self.args.stage_hem_path))
+
+        # read_stage_hem_assets_df = pd.read_csv(self.args.stage_hem_path, names=['img_path', 'class_idx', 'HEM']) # read inbody csv
+        read_stage_hem_assets_df = pd.read_csv(self.args.stage_hem_path) # read inbody csv
+
+        # select patient frame 
+        print('==> \tPATIENT ({})'.format(len(self.patients_name)))
+        print('|'.join(self.patients_name))
+        patients_name_for_parser = [patient + '_' for patient in self.patients_name]
+        print('|'.join(patients_name_for_parser))
+
+        # select patient video
+        assets_df = read_stage_hem_assets_df[read_stage_hem_assets_df['img_path'].str.contains('|'.join(patients_name_for_parser))]
+
+        # sort & shuffle
+        assets_df = assets_df.sort_values(by=['img_path'])
+        assets_df = assets_df.sample(frac=1, random_state=self.random_seed).reset_index(drop=True)
+
+        print('\n==== FIANL STAGE ASSTES ====')
+        print(assets_df)
+        print('==== FIANL STAGE ASSTES ====\n')
+        
+        # last processing
+        self.img_list = assets_df.img_path.tolist()
+        self.label_list = assets_df.class_idx.tolist()
+
 
     def number_of_rs_nrs(self):
         return self.label_list.count(0) ,self.label_list.count(1)

@@ -32,5 +32,5 @@ oob_assets_save_path = {
 }
 
 mc_assets_save_path = {
-    'robot': '/data2/Public/OOB_Recog/offline/models',
+    'robot': '/data2/Public/OOB_Recog/offline',
 }
