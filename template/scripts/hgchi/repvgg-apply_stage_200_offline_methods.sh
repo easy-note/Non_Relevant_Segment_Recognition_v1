@@ -14,7 +14,6 @@ do
         --theator_stage_flag ${theator_stage_flag}\
         --fold "1" \
         --trial 1 \
-        --use_test_batch \
         --use_wise_sample \
         --apply_mode \
         --WS_ratio ${WS_ratio} \
