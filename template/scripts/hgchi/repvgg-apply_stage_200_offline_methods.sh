@@ -17,7 +17,7 @@ do
         --use_wise_sample \
         --apply_mode \
         --WS_ratio ${WS_ratio} \
-        --model "mobilenetv3_large_100" \
+        --model "repvgg-a0" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 50 \
@@ -34,6 +34,6 @@ do
         --stage "hem_train" \
         --inference_fold "1" \
         --hem_per_patient \
-        --experiments_sheet_dir "/OOB_RECOG/results-${theator_stage_flag}/mobilenet_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
-        --save_path "/OOB_RECOG/logs-${theator_stage_flag}/mobilenet_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" > /dev/null
+        --experiments_sheet_dir "/OOB_RECOG/results-${theator_stage_flag}/repvgg_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
+        --save_path "/OOB_RECOG/logs-${theator_stage_flag}/repvgg_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" > /dev/null
 done;
