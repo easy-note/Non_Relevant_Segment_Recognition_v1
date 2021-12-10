@@ -105,7 +105,7 @@ def inference_main(args):
 
     # from finetuning model
     if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(args.restore_path)        
+        model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
         model = CAMIO.load_from_checkpoint(model_path, args=args)
     else:
         model = CAMIO(args)
@@ -283,6 +283,8 @@ def main():
     import os, torch, random
     import numpy as np
 
+    from core.config.assets_info import mc_assets_save_path
+
     # 0. set each experiment args 
     args = get_experiment_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
@@ -328,7 +330,14 @@ def main():
 
                     save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
             else:
+                if args.stage_flag: # nas 데이터 로드 경로
+                    ## data2/../hem_assets/resnet18/WS=3-IB=3-seed=3829/hem_extract_mode=hem-softmax-offline_lower-ver=1-top_ratio=5-n_dropout=5.csv
+                    stage_hem_base_path = os.path.join(mc_assets_save_path['robot'], 'hem_assets', args.model, 'WS={}-IB={}-seed={}'.format(int(args.WS_ratio), int(args.IB_ratio), args.random_seed), 'hem_extract_mode=hem-softmax-offline_lower-ver={}-top_ratio={}-n_dropout={}.csv'.format(1, int(args.top_ratio * 100) , args.n_dropout))
+                    args.stage_hem_path = stage_hem_base_path
+                
                 args = train_main(args)
+
+                # exit(0)
 
                 # 3. inference
                 args, experiment_summary, patients_CR, patients_OR = inference_main(args)

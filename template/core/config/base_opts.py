@@ -211,6 +211,15 @@ def parse_opts():
             action='store_true',
             help='If true, Only testing')
 
+
+    parser.add_argument('--stage_flag',
+            action='store_true',
+            help='If true, Only testing')
+
+    parser.add_argument('--stage_hem_path',
+            default='',
+            help='If true, Only testing')
+
     # -------------- Train Methods --------------------
     parser.add_argument('--experiment_type', 
             default='ours', 
