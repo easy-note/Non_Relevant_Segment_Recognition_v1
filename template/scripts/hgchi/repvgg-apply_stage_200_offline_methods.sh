@@ -10,7 +10,7 @@ theator_stage_flag=200;
 
 for ratio in "${top_ratio[@]}";
 do
-    python ../apply_offline_methods_flow.py \
+    nohup python ../apply_offline_methods_flow.py \
         --theator_stage_flag ${theator_stage_flag}\
         --fold "1" \
         --trial 1 \
@@ -35,5 +35,5 @@ do
         --inference_fold "1" \
         --hem_per_patient \
         --experiments_sheet_dir "/OOB_RECOG/results-${theator_stage_flag}/repvgg_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
-        --save_path "/OOB_RECOG/logs-${theator_stage_flag}/repvgg_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment"
+        --save_path "/OOB_RECOG/logs-${theator_stage_flag}/repvgg_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" > /dev/null
 done;
