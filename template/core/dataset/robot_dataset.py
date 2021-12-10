@@ -50,10 +50,15 @@ class RobotDataset(Dataset):
                 # split to 60/20 from 80 case
                 self.patients_name = self.set_patient_per_mini_fold(train_videos[self.args.fold], mode='train') # args.fold's train dataset(80 case) to 60 case
 
-                if self.args.stage_flag:
-                    assets_type = 'stage_hem'
+                # if apply mode, load from nas~/hem_assets
+                if self.args.apply_mode :
+                    assets_type = 'sub'
+
                 else:
-                    assets_type='sub'
+                    if self.args.theator_stage_flag==100: # when first stage, it will load from 'sub'
+                        assets_type='sub'
+                    else: # second stage, thirds stage ...., load from stage_hem
+                        assets_type = 'stage_hem'
 
                 # self.wise_sampling_mode = True
                 

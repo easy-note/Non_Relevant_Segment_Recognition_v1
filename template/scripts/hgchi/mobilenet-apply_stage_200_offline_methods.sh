@@ -1,20 +1,24 @@
-# 21.12.6 off-line mc assets 뽑기 rep
-# [고정] hem_extract_mode:all-offline / random_seed:3829 / IB_ratio:3 / WS_ratio:2 / mc:5
+# 21.12.10 stage 200 apply로 뽑아버리기
 
-top_ratio=(0.07);
+top_ratio=(0.05);
 
 WS_ratio=3;
 n_dropout=1;
 IB_ratio=3;
 
+theator_stage_flag=200;
+
 for ratio in "${top_ratio[@]}";
 do
-    python ../apply_offline_methods_flow.py \
+    nohup python ../apply_offline_methods_flow.py \
+        --theator_stage_flag ${theator_stage_flag}\
         --fold "1" \
         --trial 1 \
+        --use_test_batch \
         --use_wise_sample \
+        --apply_mode \
         --WS_ratio ${WS_ratio} \
-        --model "resnet18" \
+        --model "mobilenetv3_large_100" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 50 \
@@ -31,6 +35,6 @@ do
         --stage "hem_train" \
         --inference_fold "1" \
         --hem_per_patient \
-        --experiments_sheet_dir "/OOB_RECOG/results/resnet_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
-        --save_path "/OOB_RECOG/logs/resnet_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment"
+        --experiments_sheet_dir "/OOB_RECOG/results-${theator_stage_flag}/mobilenet_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
+        --save_path "/OOB_RECOG/logs-${theator_stage_flag}/mobilenet_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" > /dev/null
 done;

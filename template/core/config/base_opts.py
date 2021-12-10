@@ -212,9 +212,11 @@ def parse_opts():
             help='If true, Only testing')
 
 
-    parser.add_argument('--stage_flag',
-            action='store_true',
-            help='If true, Only testing')
+    parser.add_argument('--theator_stage_flag',
+            type=int,
+            choices=[100,200,300],
+            help='for theator experiments for offline methods // 100 == first stage, 200 == second stage')
+
 
     parser.add_argument('--stage_hem_path',
             default='',
@@ -329,6 +331,10 @@ def parse_opts():
     
     
     parser.add_argument('--use_test_batch',
+            action='store_true',
+            help='?')
+
+    parser.add_argument('--apply_mode',
             action='store_true',
             help='?')
 
