@@ -321,8 +321,8 @@ def apply_offline_methods_main(args):
 
     # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/mini_fold_stage_0/last/n_dropout=5
     # /data2/Public/OOB_Recog/offline/models/mobilenetv3_large_100/WS=2-IB=3-seed=3829/mini_fold_stage_0
-    model_dir = os.path.join(mc_assets_save_path['robot'], 'models', args.model, 'WS={}-IB={}-seed={}'.format(args.WS_ratio, int(args.IB_ratio), args.random_seed), args.stage)
-
+    model_dir = os.path.join(mc_assets_save_path['robot'], 'models', 'theator_stage_flag={}'.format(args.theator_stage_flag) ,args.model, 'WS={}-IB={}-seed={}'.format(args.WS_ratio, int(args.IB_ratio), args.random_seed), args.stage)
+    print(model_dir)
     # 1-1. model 불러오기
     model_path = get_inference_model_path(model_dir)
     model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
