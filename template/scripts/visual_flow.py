@@ -348,11 +348,10 @@ def main():
             for ids, stage in enumerate(STAGE_LIST):
                 args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
 
-                if args.stage_flag: # STAGE 2 단계 학습이라면,
 
-                    ## data2/../hem_assets/resnet18/WS=3-IB=3-seed=3829/hem_extract_mode=hem-softmax-offline_lower-ver=1-top_ratio=5-n_dropout=5.csv
-                    stage_hem_base_path = os.path.join(mc_assets_save_path['robot'], 'hem_assets', 'theator_stage_flag={}'.format(args.theator_stage_flag), args.model, 'WS={}-IB={}-seed={}'.format(int(args.WS_ratio), int(args.IB_ratio), args.random_seed), 'hem_extract_mode={}-ver={}-top_ratio={}-n_dropout={}.csv'.format(args.hem_extract_mode + '_lower', 1, int(args.top_ratio * 100) , args.n_dropout))
-                    args.stage_hem_path = stage_hem_base_path
+                ## data2/../hem_assets/theator_stage_flag=100/resnet18/WS=3-IB=3-seed=3829/hem_extract_mode=hem-softmax-offline_lower-ver=1-top_ratio=5-n_dropout=5.csv
+                stage_hem_base_path = os.path.join(mc_assets_save_path['robot'], 'hem_assets', 'theator_stage_flag={}'.format(int(args.theator_stage_flag) - 100), args.model, 'WS={}-IB={}-seed={}'.format(int(args.WS_ratio), int(args.IB_ratio), args.random_seed), 'hem_extract_mode={}-ver={}-top_ratio={}-n_dropout={}.csv'.format(args.hem_extract_mode + '_lower', 1, int(args.top_ratio * 100) , args.n_dropout)) # you should get (theator_stage_flag - 100 dir)
+                args.stage_hem_path = stage_hem_base_path
                 
 
                 print('\n\n')
