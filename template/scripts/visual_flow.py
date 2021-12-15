@@ -14,7 +14,7 @@ def get_experiment_args():
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
     args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
     # args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
-    args.experiments_sheet_dir = args.save_path
+    # args.experiments_sheet_dir = args.save_path
 
     ### dataset opts
     args.data_base_path = '/raid/img_db'
@@ -114,6 +114,8 @@ def inference_main(args):
 
     # inference block
     os.makedirs(args.restore_path, exist_ok=True)
+
+    # args.restore_path = '/OOB_RECOG/1214-2'
 
     inference_assets_save_path = args.restore_path
     details_results_path = os.path.join(args.restore_path, 'inference_results')
@@ -243,7 +245,7 @@ def inference_main(args):
         visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval, window_size=300, section_num=2)
 
         # CLEAR PAGING CACHE
-        clean_paging_chache()
+        # clean_paging_chache()
 
     # for calc total patients CR, OR + (mCR, mOR)
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
@@ -402,5 +404,18 @@ if __name__ == '__main__':
         from core.utils.misc import save_dict_to_csv, prepare_inference_aseets, get_inference_model_path, \
     set_args_per_stage, check_hem_online_mode, clean_paging_chache
 
-    main()
+
+    import os
+
+    # main()
+
+    args = get_experiment_args()
+
+    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+
+    # 4. save experiments summary
+    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+    os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+
+    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
 
