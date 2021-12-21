@@ -1,4 +1,5 @@
 def visual_for_prediction_results(patient_gt_list, patient_no, model_name, results_dict, save_dir):
+     # figure b, predict results per methods
     from core.api.visualization import VisualTool # visual module
 
     import os
@@ -38,6 +39,26 @@ def get_inference_results_per_patient(inference_results_dir, patient_no):
 
     return patient_predict_list
 
+
+def extract_frame_by_index(patient_no, frame_index, save_dir):
+    ### extract one frame by frame_index // frame_index = 500
+    from core.utils.ffmpegHelper import ffmpegHelper
+
+    os.makedirs(save_dir, exist_ok=True)
+    ffmpeg_helper = ffmpegHelper('/data1/HuToM/Video_Robot_cordname/R000021/ch1_video_01.mp4', save_dir)
+
+    ffmpeg_helper.extract_frame_by_index(frame_index=frame_index)
+
+def extract_frame_by_time(patient_no, time, save_dir):
+    ### extract one frame by frame_index // frame_index = 500
+    from core.utils.ffmpegHelper import ffmpegHelper
+
+    os.makedirs(results_dir, exist_ok=True)
+    ffmpeg_helper = ffmpegHelper('/data1/HuToM/Video_Robot_cordname/R000021/ch1_video_01.mp4', save_dir)
+
+    ffmpeg_helper.extract_frame_by_time(time=time)
+
+
 if __name__ == '__main__':
     if __package__ is None:
         import sys
@@ -53,7 +74,8 @@ if __name__ == '__main__':
 
         from core.utils.parser import FileLoader
         from core.utils.prepare import PatientsGT
-
+    '''
+    ### figure b ####
     patient_no = 'R_2'
     model_name = 'mobilenet_v3_large'
     save_dir = '/OOB_RECOG/figures/predictions'
@@ -72,6 +94,23 @@ if __name__ == '__main__':
     }
 
     visual_for_prediction_results(patient_gt_list, patient_no, model_name, results_dict, save_dir) # figure b, predict results per methods
+    '''
+
+    ### gradcam ####
+    patinet_no = 'R_1'
+    frame_index = 300
+    time = '00:00:10.00'
+    save_dir = '/OOB_RECOG/ffmpeg_results'
+
+    patient_gt = PatientsGT()
+    patient_gt.get_video_no(patient_no)
+
+    patinet_
+    patient_gt.get_start_idx()
+    
+
+    # extract_frame_by_index(patinet_no, frame_index, save_dir)
+    extract_frame_by_time(patinet_no, time, save_dir)
 
 
 
