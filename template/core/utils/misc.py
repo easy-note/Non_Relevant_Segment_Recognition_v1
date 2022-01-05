@@ -98,6 +98,34 @@ def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
 
     return inference_assets
 
+def prepare_inference_aseets_etc(case, anno_ver, inference_fold, save_path):
+    from core.utils.prepare_etc import InferenceAssets_etc # inference assets helper (for prepare inference assets)
+    from core.utils.prepare_etc import OOBAssets_etc # OOB assets helper (for prepare inference assets)
+    from core.utils.parser import FileLoader # file load helper
+    
+    # OOBAssets
+    # assets_sheet_dir = os.path.join(save_path, 'assets')
+    # oob_assets = OOBAssets(assets_sheet_dir)
+    # oob_assets.save_assets_sheet() # you can save assets sheet
+    # video_sheet, annotation_sheet, img_db_sheet = oob_assets.get_assets_sheet() # you can only use assets although not saving
+    # video_sheet, annotation_sheet, img_db_sheet = oob_assets.load_assets_sheet(assets_sheet_dir) # you can also load saved aseets
+
+    # InferenceAssets_etc
+    inference_assets_save_path = os.path.join(save_path, 'patients_aseets.yaml')
+    inference_assets_helper = InferenceAssets_etc(case=case, anno_ver=anno_ver, fold=inference_fold)
+    inference_assets = inference_assets_helper.get_inference_assets() # dict (yaml)
+
+    # save InferenceAssets_etc: serialization from python object(dict) to YAML stream and save
+    os.makedirs(save_path, exist_ok=True)
+    inference_assets_helper.save_dict_to_yaml(inference_assets, inference_assets_save_path)
+    
+    # load InferenceAssets_etc: load saved inference assets yaml file // you can also load saved patients
+    f_loader = FileLoader()
+    f_loader.set_file_path(inference_assets_save_path)
+    inference_assets = f_loader.load()
+
+    return inference_assets
+
 def save_dict_to_csv(results_dict, save_path):
     import pandas as pd
     from core.utils.parser import FileLoader # file load helper

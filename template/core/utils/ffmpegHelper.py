@@ -20,10 +20,11 @@ class ffmpegHelper():
     
     def _process_cmd(self, process, **args):
         process_cmd = {
-            'cut_frame_total': ['ffmpeg', '-i', self.video_path, '-start_number', '0', '-vsync', '0', '-vf', 'scale=512:512', self.results_dir + '/frame-%010d.jpg'],
+            'cut_frame_total': ['ffmpeg', '-i', self.video_path, '-start_number', '0', '-vf', 'scale=512:512', self.results_dir + '/{}-%010d.jpg'.format(args.get('save_name', -100))],
+            # 'cut_frame_total': ['ffmpeg', '-i', self.video_path, '-start_number', '0', '-vsync', '0', '-vf', 'scale=512:512', self.results_dir + '/{}-%010d.jpg'.format(args.get('save_name', -100))],
             'cut_frame_1fps': ['ffmpeg', '-i', self.video_path, '-s', '224x224', '-vf', 'fps=1', self.results_dir + '/frame-%010d.jpg'],
-            'extract_frame_by_index': ['ffmpeg', '-i', self.video_path, '-vf', '"select=eq(n\,{})"'.format(args.get('frame_index', -100)), '-vframes', '1', self.results_dir + '/extracted_frame-{}.jpg'.format(args.get('frame_index', -100))], # https://superuser.com/questions/1009969/how-to-extract-a-frame-out-of-a-video-using-ffmpeg
-            'extract_frame_by_time': ['ffmpeg', '-i', self.video_path, '-ss', '{}'.format(args.get('time', -100)), '-frames:v', '1', self.results_dir + '/extracted_frame-{}.jpg'.format(args.get('time', -100))],
+            'extract_frame_by_index': ['ffmpeg', '-i', self.video_path, '-vf', '"select=eq(n\,{})"'.format(args.get('frame_index', self.EXCEPTION_NUM)), '-vframes', '1', self.results_dir + '/extracted_frame-{}.jpg'.format(args.get('frame_index', self.EXCEPTION_NUM))], # https://superuser.com/questions/1009969/how-to-extract-a-frame-out-of-a-video-using-ffmpeg
+            'extract_frame_by_time': ['ffmpeg', '-i', self.video_path, '-ss', '{}'.format(args.get('time', self.EXCEPTION_NUM)), '-frames:v', '1', self.results_dir + '/extracted_frame-{}.jpg'.format(args.get('time', self.EXCEPTION_NUM))],
         }
 
         cmd_list = process_cmd[process]
@@ -76,8 +77,8 @@ class ffmpegHelper():
 
         self._cmd_call(cmd)
 
-    def cut_frame_total(self):
-        cmd = self._process_cmd('cut_frame_total')
+    def cut_frame_total(self, save_name):
+        cmd = self._process_cmd('cut_frame_total', save_name=save_name)
 
         print('CUT FRAME TOTAL : {}'.format(cmd), end= ' ')
 
