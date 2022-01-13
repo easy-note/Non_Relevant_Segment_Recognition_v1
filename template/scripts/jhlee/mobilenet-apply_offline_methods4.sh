@@ -3,7 +3,7 @@
 
 top_ratio=(0.10);
 
-WS_ratio=4;
+WS_ratio=3;
 n_dropout=1;
 IB_ratio=3;
 
@@ -22,7 +22,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "0" \
+        --cuda_list "1" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --hem_extract_mode "all-offline" \
@@ -31,6 +31,6 @@ do
         --stage "hem_train" \
         --inference_fold "1" \
         --hem_per_patient \
-        --experiments_sheet_dir "/OOB_RECOG/results/1203-apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
-        --save_path "/OOB_RECOG/logs/1203-apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" > /dev/null
+        --experiments_sheet_dir "/OOB_RECOG/results/1202-apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" \
+        --save_path "/OOB_RECOG/logs/1202-apply_apply_apply_offline_methods-all-offline-IB_ratio=${IB_ratio}-ws_ratio=${WS_ratio}-MC=${n_dropout}-experiment" > /dev/null
 done;

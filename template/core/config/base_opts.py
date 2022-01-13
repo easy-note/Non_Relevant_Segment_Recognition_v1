@@ -17,7 +17,7 @@ def parse_opts():
                         'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
                         'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
                         'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns',
-                        'repvgg_b0', 'repvgg-a0'],
+                        'repvgg_b0', 'repvgg-a0', 'multi-model'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -265,6 +265,32 @@ def parse_opts():
     parser.add_argument('--n_dropout',
             default=1,
             type=int,
+            help='?')
+    
+    parser.add_argument('--use_loss_weight',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--alpha',
+            default=0.1,
+            type=float,
+            help='?')
+    
+    parser.add_argument('--use_multi_model',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--multi_stage',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--n_stage',
+            default=5,
+            type=int,
+            help='?')
+    
+    parser.add_argument('--use_emb_only',
+            action='store_true',
             help='?')
 
     # -------------- etc --------------------

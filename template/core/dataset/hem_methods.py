@@ -27,6 +27,7 @@ class HEMHelper():
         self.IB_CLASS, self.OOB_CLASS = (0, 1)
         self.bsz = self.args.batch_size
         self.cnt = 0
+        self.alpha = self.args.alpha
 
         self.method_idx = 0
 
@@ -65,8 +66,8 @@ class HEMHelper():
                 print('Parsing Fail, Error: {}'.format(e))
                 return None
 
-            patient_rs_count = int(target_nrs_cnt * patient_nrs_ratio)
-            patient_nrs_count = int(patient_rs_count * self.args.IB_ratio)
+            patient_nrs_count = int(target_nrs_cnt * patient_nrs_ratio)
+            patient_rs_count = int(patient_nrs_count * self.args.IB_ratio)
 
         return patient_rs_count, patient_nrs_count
 
@@ -170,6 +171,8 @@ class HEMHelper():
                 return self.hem_cos_hard_sim(*args)
             elif self.args.emb_type == 3:
                 return self.hem_cos_hard_sim2(*args)
+            elif self.args.emb_type == 4:
+                return self.hem_cos_hard_sim_only(*args)
         else: # exception
             return None
 
@@ -519,8 +522,8 @@ class HEMHelper():
             hard_df_upper_idx = (-dropout_predictions_mean_abs_diff).argsort()[:top_k].tolist() # 내림차순
 
             hard_idx = []
-            for i, gt in enumerate(gt_list):
-                if (i in hard_df_upper_idx) and gt==INCORRECT:
+            for i, answer in enumerate(consensus_list): # consensus_list
+                if (i in hard_df_upper_idx) and answer==INCORRECT:
                     hard_idx.append(i)
 
             vanila_idx = []
@@ -571,7 +574,7 @@ class HEMHelper():
         top_mi_index = sorted_mi_index[:top_k] # highest 
         btm_mi_index = sorted_mi_index[len(mutual_info) - btm_k:] # lowest
 
-        # extract wrong anwer from mean softmax 
+        # extract wrong anwer from mean softmax // you can also change like voting methods for extracting predict class
         predict_np = np.argmax(mean, axis=1)
         predict_list = predict_np.tolist() # to list
 
@@ -658,7 +661,9 @@ class HEMHelper():
             wrong_sim_dist = sim_dist[wrong_answer, neg_y]
             wrong_ids = torch.argsort(wrong_sim_dist)
             
+            
             w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
+            
             neg_y_hat = neg_y_hat[wrong_ids]
             neg_y = neg_y[wrong_ids]
             
@@ -676,11 +681,20 @@ class HEMHelper():
                         proxy_loss = proxy_loss + n_proxy * w[wi:wi+1]
             else:
                 for wi in range(len(w)):
-                    neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+                    if self.args.use_loss_weight:
+                        w = torch.exp(self.alpha - wrong_sim_dist[wi])
                     
-                    if self.args.use_neg_proxy:
-                        n_proxy = torch.nn.functional.cross_entropy(neg_sim_dist[wi:wi+1, ], neg_y[wi:wi+1])
-                        proxy_loss = proxy_loss + n_proxy * w[wi:wi+1]
+                        neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w
+                        
+                        if self.args.use_neg_proxy:
+                            n_proxy = torch.nn.functional.cross_entropy(neg_sim_dist[wi:wi+1, ], neg_y[wi:wi+1])
+                            proxy_loss = proxy_loss + n_proxy * w
+                    else:
+                        neg_loss += torch.nn.functional.cross_entropy(neg_y_hat[wi:wi+1, ], neg_y[wi:wi+1]) * w[wi:wi+1]
+                        
+                        if self.args.use_neg_proxy:
+                            n_proxy = torch.nn.functional.cross_entropy(neg_sim_dist[wi:wi+1, ], neg_y[wi:wi+1])
+                            proxy_loss = proxy_loss + n_proxy * w[wi:wi+1]
               
         else:
             neg_loss = 0
@@ -729,3 +743,66 @@ class HEMHelper():
             
         return (pos_loss + neg_loss) / 2. + proxy_loss
     
+    def hem_cos_hard_sim_only(self, model, x, y, loss_fn):
+        emb = model(x)
+        # emb = B x ch
+        # proxies = ch x classes
+        
+        sim_dist = torch.zeros((emb.size(0), model.proxies.size(1))).to(emb.device)
+        
+        for d in range(sim_dist.size(1)):
+            sim_dist[:, d] = 1 - torch.nn.functional.cosine_similarity(emb, model.proxies[:, d].unsqueeze(0))
+        
+        sim_preds = torch.argmin(sim_dist, -1)
+        
+        correct_answer = sim_preds == y
+        wrong_answer = sim_preds != y
+        
+        proxy_loss = torch.zeros(1, requires_grad=True).cuda()
+        
+        if sum(correct_answer) > 0:
+            pos_y = y[correct_answer]
+            
+            if self.args.use_proxy_all:
+                proxy_loss += loss_fn(sim_dist, y)
+            else:
+                proxy_loss += loss_fn(sim_dist[correct_answer], pos_y)
+        
+        if sum(wrong_answer) > 0:
+            neg_y = y[wrong_answer]
+            
+            wrong_sim_dist = sim_dist[wrong_answer, neg_y]
+            wrong_ids = torch.argsort(wrong_sim_dist)
+            
+            w = torch.Tensor(np.array(list(range(len(wrong_ids), 0, -1))) / len(wrong_ids)).cuda()
+            
+            neg_y = neg_y[wrong_ids]
+            
+            neg_loss = 0
+            neg_sim_dist = sim_dist[wrong_ids]
+            
+            if self.args.use_neg_proxy:
+                if self.args.use_half_neg:
+                    if len(w) > 1:
+                        st = len(w) // 2
+                    for wi in range(st, len(w)):
+                        n_proxy = torch.nn.functional.cross_entropy(neg_sim_dist[wi:wi+1, ], neg_y[wi:wi+1])
+                        
+                        if self.args.use_loss_weight:
+                            w = torch.exp(self.alpha - neg_sim_dist[wi])
+                            
+                            proxy_loss = proxy_loss + n_proxy * w
+                        else:
+                            proxy_loss = proxy_loss + n_proxy * w[wi:wi+1]
+                else:
+                    for wi in range(len(w)):
+                        n_proxy = torch.nn.functional.cross_entropy(neg_sim_dist[wi:wi+1, ], neg_y[wi:wi+1])
+                        
+                        if self.args.use_loss_weight:
+                            w = torch.exp(self.alpha - neg_sim_dist[wi])
+                        
+                            proxy_loss = proxy_loss + n_proxy * w
+                        else:
+                            proxy_loss = proxy_loss + n_proxy * w[wi:wi+1]
+            
+        return proxy_loss

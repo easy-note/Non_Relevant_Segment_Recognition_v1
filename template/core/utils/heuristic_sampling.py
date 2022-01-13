@@ -6,6 +6,8 @@ import numpy as np
 
 import natsort
 
+pd.options.mode.chained_assignment = None
+
 class HeuristicSampler():
     def __init__(self, assets_df, args):
         # img_path 기준 sort 된 assets_df

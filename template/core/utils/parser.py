@@ -165,7 +165,7 @@ class InfoParser():
         video_channel, _, video_slice_no = video_name.split('_') # ch1, video, 01
 
         new_nas_policy_name = "_".join([op_method, patient_idx, video_channel, video_slice_no]) # R_1_ch1_01
-        print('CONVERTED NAMING: {} \t ===> \t {}'.format(self.file_name, new_nas_policy_name))
+        # print('CONVERTED NAMING: {} \t ===> \t {}'.format(self.file_name, new_nas_policy_name))
 
         hospital = '01'
         surgery_type = 'G'
