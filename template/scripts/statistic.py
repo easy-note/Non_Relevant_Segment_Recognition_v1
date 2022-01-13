@@ -31,6 +31,7 @@ def statistic_nrs_event_cnt(base_path, save_path):
         ## ver 2 : using custom rule
         file_name = os.path.splitext(os.path.basename(fpath))[0] # 04_GS4_99_L_37_01_NRS_30.json
         hospital, department, surgeon, op_method, patient_idx, video_slice_no, _, _ = file_name.split('_') # LAPA Gangbuk annotation rule
+        patient_no = '_'.join([surgeon, op_method, patient_idx])
         patient_no = '_'.join([op_method, patient_idx])
 
         if patient_no in patient_dict:
@@ -49,7 +50,7 @@ def statistic_nrs_event_cnt(base_path, save_path):
 
     for key, f_list in patient_dict.items():
         f_list=natsort.natsorted(f_list) # sort for video slice
-        
+
         # init variable
         patient_totalFrame = 0
         patient_fps = 0
@@ -115,34 +116,52 @@ def statistic_nrs_event_cnt(base_path, save_path):
             
         # calc nrs frame cnt / nrs event cnt
         for start, end in zip(start_frame_idx, end_frame_idx):
-            patient_NRS_count += (end - start)
+            patient_NRS_count += (end - start) + 1
             patient_NRS_event_cnt += 1
         
         patient_RS_count = patient_totalFrame - patient_NRS_count
         patient_fps = patient_fps / len(f_list)
 
-        # save per patinets
-        patient_statistic_dict = {
-            'Patient':key,
-            'totalFrame': patient_totalFrame,
-            'fps': patient_fps,
-            'RS_count': patient_RS_count,
-            'NRS_count': patient_NRS_count,
-            'total_time': EXCEPTION_NUM,
-            'RS_event_time': EXCEPTION_NUM,
-            'NRS_event_time': EXCEPTION_NUM,
-            'NRS_event_cnt': [patient_NRS_event_cnt] * patient_NRS_event_cnt,
-            'start_frame_idx': start_frame_idx,
-            'end_frame_idx': end_frame_idx,
-            'start_frame_time': EXCEPTION_NUM,
-            'end_frame_time': EXCEPTION_NUM,
-            'NRS_event_duration': EXCEPTION_NUM,
-        }
+            # save per patinets
+        if patient_NRS_event_cnt == 0:
+            patient_statistic_dict = {
+                'Patient':key,
+                'totalFrame': patient_totalFrame,
+                'fps': patient_fps,
+                'RS_count': patient_RS_count,
+                'NRS_count': patient_NRS_count,
+                'total_time': EXCEPTION_NUM,
+                'RS_event_time': EXCEPTION_NUM,
+                'NRS_event_time': EXCEPTION_NUM,
+                'NRS_event_cnt': [0],
+                'start_frame_idx': [EXCEPTION_NUM],
+                'end_frame_idx': [EXCEPTION_NUM],
+                'start_frame_time': EXCEPTION_NUM,
+                'end_frame_time': EXCEPTION_NUM,
+                'NRS_event_duration': EXCEPTION_NUM,
+            }
+
+        else:
+            patient_statistic_dict = { 
+                'Patient':key,
+                'totalFrame': patient_totalFrame,
+                'fps': patient_fps,
+                'RS_count': patient_RS_count,
+                'NRS_count': patient_NRS_count,
+                'total_time': EXCEPTION_NUM,
+                'RS_event_time': EXCEPTION_NUM,
+                'NRS_event_time': EXCEPTION_NUM,
+                'NRS_event_cnt': [patient_NRS_event_cnt] * patient_NRS_event_cnt,
+                'start_frame_idx': start_frame_idx,
+                'end_frame_idx': end_frame_idx,
+                'start_frame_time': EXCEPTION_NUM,
+                'end_frame_time': EXCEPTION_NUM,
+                'NRS_event_duration': EXCEPTION_NUM,
+            }
         
         patient_statistic_pd = pd.DataFrame.from_dict(patient_statistic_dict)
-        # print(patient_statistic_pd)
 
-        total_statistic_pd = total_statistic_pd.append(patient_statistic_pd, ignore_index=True)
+        total_statistic_pd = total_statistic_pd.append(patient_statistic_pd, ignore_index=True)        
 
 
     # convert time
@@ -151,7 +170,7 @@ def statistic_nrs_event_cnt(base_path, save_path):
     total_statistic_pd['NRS_event_time'] = total_statistic_pd.apply(lambda x:frame_to_sec(x['NRS_count'], x['fps']), axis=1)
     total_statistic_pd['start_frame_time'] = total_statistic_pd.apply(lambda x:frame_to_sec(x['start_frame_idx'], x['fps']), axis=1)
     total_statistic_pd['end_frame_time'] = total_statistic_pd.apply(lambda x:frame_to_sec(x['end_frame_idx'], x['fps']), axis=1)
-    total_statistic_pd['NRS_event_duration'] = total_statistic_pd['end_frame_time'] - total_statistic_pd['start_frame_time']
+    total_statistic_pd['NRS_event_duration'] = total_statistic_pd['end_frame_time'] - total_statistic_pd['start_frame_time'] + 1/total_statistic_pd['fps'] # why add? corresponding to meaning of time.
 
     total_statistic_pd.to_csv(save_path)
 
@@ -178,6 +197,12 @@ if __name__ == '__main__':
         
         # base_path = annotation_path['annotation_v3_base_path']
         base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/gangbuksamsung_127case/NRS'
+        # base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/severance_1st/NRS'
+        # base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/severance_2nd/NRS'
+        
         save_dir = os.path.join('/OOB_RECOG', 'statistic')
         os.makedirs(save_dir, exist_ok=True)
+        # statistic_nrs_event_cnt(base_path, os.path.join(save_dir, 'robot_v3_nrs_statistic.csv'))
         statistic_nrs_event_cnt(base_path, os.path.join(save_dir, 'gangbuksamsung_v3_nrs_statistic.csv'))
+        # statistic_nrs_event_cnt(base_path, os.path.join(save_dir, 'severance_1st_nrs_statistic.csv'))
+        # statistic_nrs_event_cnt(base_path, os.path.join(save_dir, 'severance_2nd_nrs_statistic.csv'))
