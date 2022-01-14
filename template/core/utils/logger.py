@@ -27,11 +27,10 @@ class LogHelper():
     log 는 바로바로 write 할 때 마다 작성
     """
 
-    def __init__(self, save_dir):
-        f_dir, target_file = os.path.split(save_dir)
+    def __init__(self, logging_path):
+        f_dir, target_file = os.path.split(logging_path)
         f_name, ext = os.path.splitext(target_file)
 
-        self.save_dir = save_dir
         self.save_path = os.path.join(f_dir, '{}_{}{}'.format(f_name, self.get_current_time()[0], ext))
 
         print('=========> SAVING LOG ... | {}'.format(self.save_path)) # init print

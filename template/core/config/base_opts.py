@@ -318,7 +318,7 @@ def parse_opts():
     parser.add_argument('--inference_fold',
                     default='1',
                     type=str,
-                    choices=['1', '2', '3', '4', '5', 'free'],
+                    choices=['1', '2', '3', '4', '5', 'free', 'all'],
                     help='valset 1, 2, 3, 4, 5, free')
 
     parser.add_argument('--experiments_sheet_dir', type=str, 
