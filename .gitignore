@@ -3,7 +3,6 @@
 
 # results
 /*results*
-
 /template/results
 
 # python
@@ -12,3 +11,7 @@ __pycache__
 # dataset check
 /get_dataset_results
 template/scripts/test.sh
+
+# ssim .out
+/template/core/dataset/SSIM/*.out
+/template/core/dataset/SSIM/assets
