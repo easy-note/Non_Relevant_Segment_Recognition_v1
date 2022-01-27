@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-
+'''
 def save_OOB_result_csv(metric, epoch, args, save_path):
     m_keys = list(metric.keys())
 
@@ -29,6 +29,7 @@ def save_OOB_result_csv(metric, epoch, args, save_path):
     df.to_csv(save_path, 
             index=False,
             float_format='%.4f')
+'''
 
 
 # inference_flow.py에서 가져옴
@@ -40,17 +41,6 @@ def clean_paging_chache():
     subprocess.run('sync', shell=True)
     subprocess.run('echo 1 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
 
-def set_args_per_stage(args, ids, stage):
-    args.stage = stage
-
-    if ids > 3:
-        args.mini_fold = 'general'        
-        args.max_epoch = 100
-    else:
-        args.mini_fold = str(ids)
-
-    return args
-
 def check_hem_online_mode(args):
     if 'online' in args.hem_extract_mode.lower():
         return True
@@ -61,6 +51,8 @@ def get_inference_model_path(restore_path):
     # from finetuning model
     import glob
     import os
+    
+    model_path = ''
     
     ckpoint_path = os.path.join(restore_path, '*.ckpt')
     # ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
@@ -164,6 +156,31 @@ def save_dict_to_csv(results_dict, save_path):
         
         merged_df.to_csv(save_path, mode='w')
 
-        print(merged_df)
+        # print(merged_df)
 
     merged_df.to_csv(save_path, mode='w')
+
+def save_dataset_info(robot_dataset, save_path):
+    import json
+
+    rs_count, nrs_count = robot_dataset.number_of_rs_nrs()
+
+    save_data = {
+        'dataset': {
+            'rs': rs_count,
+            'nrs': nrs_count
+        },
+        'target_hem_count': {
+            'rs': rs_count // 3,
+            'nrs': nrs_count // 3
+        }
+    }
+
+    patient_per_dic = robot_dataset.number_of_patient_rs_nrs()
+
+    save_data['patients'] = patient_per_dic
+
+    with open(save_path, 'w') as f:
+        json.dump(save_data, f, indent=2)
+
+    return save_path

@@ -2,7 +2,7 @@ import torch
 import math
 import numpy as np
 from pycm import *
-from core.utils.misc import *
+# from core.utils.misc import *
 
 import matplotlib.pyplot as plt
 
@@ -152,9 +152,10 @@ class MetricHelper():
 
         return advanced_metrics
 
-    def save_metric(self, metric, epoch, args, save_path, task='OOB'):
+    def save_metric(self, model_name, metric, epoch, args, save_path, task='OOB'):
         if task=='OOB':
-            save_OOB_result_csv(metric=metric, epoch=epoch, args=args, save_path=save_path)
+            pass
+            # save_OOB_result_csv(metric=metric, epoch=epoch, args=args, save_path=save_path)
 
     def save_loss_pic(self, save_path):
         fig = plt.figure(figsize=(32, 16))
