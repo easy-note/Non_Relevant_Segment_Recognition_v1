@@ -41,11 +41,6 @@ def clean_paging_chache():
     subprocess.run('sync', shell=True)
     subprocess.run('echo 1 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
 
-def check_hem_online_mode(args):
-    if 'online' in args.hem_extract_mode.lower():
-        return True
-    else:
-        return False 
 
 def get_inference_model_path(restore_path):
     # from finetuning model

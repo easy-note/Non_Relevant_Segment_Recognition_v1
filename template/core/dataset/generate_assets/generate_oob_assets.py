@@ -29,17 +29,6 @@ def parsing_oob_list(json_file):
                 oob_list.append('{:010d}'.format(i))
 
     return oob_list
-
-def frame_length_parity_check(json_file):
-    with open(json_file) as json_file:
-        json_data = json.load(json_file)
-        json_total_frame = json_data["totalFrame"]
-    
-    return json_total_frame
-
-def save_log(save_path, log_txt):
-    with open(save_path, 'a') as f:
-        f.write(log_txt+'\n')
     
 # annotation_version_base_path, Device (ROBOT, LAPA)
 def make_oob_csv(anno_base_path, img_base_path, save_path, device):

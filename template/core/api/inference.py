@@ -9,7 +9,8 @@ class InferenceDB(): # InferenceDB
         Inference per DB from model
     """ 
 
-    def __init__(self, model, db_path, inference_interval=1):
+    def __init__(self, args, model, db_path, inference_interval=1):
+        self.args = args
         self.model = model
         self.model = self.model.eval()
 
@@ -24,7 +25,7 @@ class InferenceDB(): # InferenceDB
         self.inference_interval = inference_interval
 
     def _gen_dataset(self):
-        return DBDataset(self.db_path)
+        return DBDataset(self.args, self.db_path)
 
     def _gen_sampler(self):
         return IntervalSampler(self._gen_dataset(), interval=self.inference_interval)

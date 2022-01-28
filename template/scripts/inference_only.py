@@ -56,10 +56,7 @@ def inference_main(args):
     model_path = get_inference_model_path(args.restore_path)
     print('model path : ', model_path)
     
-    if 'repvgg' in args.model:
-        model = CAMIO(args)
-    else:    
-        model = CAMIO.load_from_checkpoint(model_path, args=args)
+    model = CAMIO.load_from_checkpoint(model_path, args=args)
     model = model.cuda()
 
     # inference block
@@ -111,7 +108,7 @@ def inference_main(args):
             db_path = video_path_info['db_path']
 
             # Inference module
-            inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+            inference = InferenceDB(args, model, db_path, args.inference_interval) # Inference object
             predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
   
             # for save video results

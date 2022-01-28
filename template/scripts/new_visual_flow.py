@@ -36,9 +36,7 @@ def train_main(args):
     from pytorch_lightning import loggers as pl_loggers
     from pytorch_lightning.plugins import DDPPlugin
 
-    from core.model import get_model, get_loss
     from core.api.trainer import CAMIO
-
     from torchsummary import summary
 
     tb_logger = pl_loggers.TensorBoardLogger(
@@ -360,65 +358,42 @@ def new_main():
     torch.backends.cudnn.deterministic=True
     torch.backends.cudnn.benchmark=True
 
-    # general mode
-    if args.train_stage == 'general_train':
-        args = train_main(args)
+    if args.multi_stage:
+        print('Go Multi Stage!')
+    else:
+        args.n_stage = 1
         
-        # 3. inference
-        args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+    for N in range(args.n_stage):
+        args.cur_stage = N+1
 
-        # 4. save experiments summary
-        experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-        os.makedirs(args.experiments_sheet_dir, exist_ok=True)
-
-        save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
-
-    # hem train (online/offline (apply에서만 사용할듯))
-    elif args.train_stage == 'hem_train': # 아마 보규님 Online 은 기존 scripts 던질때 stage 를 'hem_train'으로 고쳐야 할듯..
-    
-        if check_hem_online_mode(args): # online
-            if args.multi_stage:
-                print('Go Multi Stage!')
-                for N in range(args.n_stage):
-                    args.cur_stage = N+1
-                    args = train_main(args)
-
-                    # 3. inference
-                    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
-
-                    # 4. save experiments summary
-                    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-                    os.makedirs(args.experiments_sheet_dir, exist_ok=True)
-
-                    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+        # general mode
+        if args.train_stage == 'general_train' or args.train_stage == 'hem_train':
+            args = train_main(args)
             
-            else:
-                args = train_main(args)
+            # 3. inference
+            args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-                # 3. inference
-                args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+            # 4. save experiments summary
+            experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+            os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
-                # 4. save experiments summary
-                experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-                os.makedirs(args.experiments_sheet_dir, exist_ok=True)
-
-                save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+            save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
     
-    # baby model train (offline)
-    else: # mini_fold_stage_0, 1, 2, 3
-            mini_fold_stage = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3']
+        # baby model train (offline)
+        else: # mini_fold_stage_0, 1, 2, 3
+                mini_fold_stage = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3']
 
-            if args.hem_interation_idx == 100:
-                args.appointment_assets_path = ''
+                if args.hem_interation_idx == 100:
+                    args.appointment_assets_path = ''
 
-            else: # 200, 300 일때는 appointmnet assets path 에서 csv 불러오기
-                # csv 불러오기 위한 용도로 scripts에서 받아오는 args.hem_iteration idx, model_name, hem_extract_mode 대한 의미를 다음과 같이 부여가능 => 이중의미 (실제로 baby model학습모델 + 이전 iteration 에서 model을 사용해서 뽑은 hem_assets csv))
-                hem_assets_path = get_hem_assets_path(args.hem_interation_idx, args.model, hem_extract_mode='hem-softmax_diff_small-offline') # hem_extract_mode 도 args로 받게 해도 됨.
-                args.appointment_assets_path = hem_assets_path
-            
-            for train_stage in mini_fold_stage:
-                args.train_stage = train_stage
-                args = train_main(args) # for iter 돌면서 args.restore_path가 이전 정보로 trainer init 될 것, 하지만 sanity check 이후 다시 restore_path 재설정하므로 해당 for문 괜찮을듯.
+                else: # 200, 300 일때는 appointmnet assets path 에서 csv 불러오기
+                    # csv 불러오기 위한 용도로 scripts에서 받아오는 args.hem_iteration idx, model_name, hem_extract_mode 대한 의미를 다음과 같이 부여가능 => 이중의미 (실제로 baby model학습모델 + 이전 iteration 에서 model을 사용해서 뽑은 hem_assets csv))
+                    hem_assets_path = get_hem_assets_path(args.hem_interation_idx, args.model, hem_extract_mode='hem-softmax_diff_small-offline') # hem_extract_mode 도 args로 받게 해도 됨.
+                    args.appointment_assets_path = hem_assets_path
+                
+                for train_stage in mini_fold_stage:
+                    args.train_stage = train_stage
+                    args = train_main(args) # for iter 돌면서 args.restore_path가 이전 정보로 trainer init 될 것, 하지만 sanity check 이후 다시 restore_path 재설정하므로 해당 for문 괜찮을듯.
 
 
                 
@@ -428,11 +403,11 @@ if __name__ == '__main__':
         from os import path    
         base_path = path.dirname(path.dirname(path.abspath(__file__)))
         sys.path.append(base_path)
-        sys.path.append(base_path+'/core/accessory/RepVGG')
-        print(base_path)
+        
+        print('base path : ', base_path)
         
         from core.utils.misc import prepare_inference_aseets, get_inference_model_path, get_pt_path, \
-            check_hem_online_mode, clean_paging_chache, save_dict_to_csv, save_dataset_info
+            clean_paging_chache, save_dict_to_csv, save_dataset_info
 
     new_main()
 

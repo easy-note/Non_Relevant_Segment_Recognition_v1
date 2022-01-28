@@ -104,15 +104,9 @@ def inference_main(args):
     print('restore : ', args.restore_path)
 
     # from finetuning model
-    if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
-        model = CAMIO.load_from_checkpoint(model_path, args=args) # ckpt
 
-    else:
-        model = CAMIO(args) # pt -> ? 이게 뭘 하는거지? 모델 생성?
-        
-    model.change_deploy_mode() # 이거는 repvgg 만 적용돼서 infer model 로 변경. 
-        
+    model_path = get_inference_model_path(args.restore_path)        
+    model = CAMIO.load_from_checkpoint(model_path, args=args)
     model = model.cuda()
 
     # inference block
@@ -163,7 +157,7 @@ def inference_main(args):
             db_path = video_path_info['db_path']
 
             # Inference module
-            inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+            inference = InferenceDB(args, model, db_path, args.inference_interval) # Inference object
             predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
   
             # for save video results
@@ -291,7 +285,6 @@ def main():
     # 0. set each experiment args 
     args = get_experiment_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
-
     random.seed(args.random_seed)
     np.random.seed(args.random_seed)
     os.environ["PYTHONHASHSEED"]=str(args.random_seed)
@@ -299,20 +292,36 @@ def main():
     torch.cuda.manual_seed(args.random_seed)
     torch.backends.cudnn.deterministic=True
     torch.backends.cudnn.benchmark=True
-
+    
     # general mode
     if args.stage == 'general_train':
         args.mini_fold = 'general'
-        args = train_main(args)
         
-        # 3. inference
-        args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+        if args.multi_stage:
+            print('Go Multi Stage!')
+            for N in range(args.n_stage):
+                args.cur_stage = N+1
+                args = train_main(args)
 
-        # 4. save experiments summary
-        experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-        os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+                # 3. inference
+                args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-        save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+                # 4. save experiments summary
+                experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+                os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+
+                save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+        else:
+            args = train_main(args)
+            
+            # 3. inference
+            args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+
+            # 4. save experiments summary
+            experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+            os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+
+            save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
     else: # online mode
         if check_hem_online_mode(args):
             args.mini_fold = 'general'
@@ -402,7 +411,7 @@ if __name__ == '__main__':
         print(base_path)
         
         from core.utils.misc import save_dict_to_csv, prepare_inference_aseets, get_inference_model_path, \
-    set_args_per_stage, check_hem_online_mode, clean_paging_chache
+                                    set_args_per_stage, check_hem_online_mode, clean_paging_chache
 
     main()
 

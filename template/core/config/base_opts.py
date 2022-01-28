@@ -17,7 +17,7 @@ def parse_opts():
                         'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
                         'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
                         'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns',
-                        'repvgg_b0', 'repvgg-a0', 'multi-model'],
+                        'repvgg_b0', 'repvgg-a0', 'multi-model', 'mobile_vit'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -212,6 +212,15 @@ def parse_opts():
             default='ours', 
             type=str,
             choices=['ours', 'theator'], )
+    
+    parser.add_argument('--experiment_sub_type', 
+            default='none', 
+            type=str,
+            choices=['none', 'semi'])
+    
+    parser.add_argument('--semi_data', 
+            default='rs-general', 
+            type=str,)
 
     parser.add_argument('--train_stage', 
             default='general_train', 
@@ -287,6 +296,26 @@ def parse_opts():
     parser.add_argument('--use_emb_only',
             action='store_true',
             help='?')
+    
+    parser.add_argument('--use_oversample',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--update_type',
+            default=1,
+            type=int,
+            help='?')
+    
+    parser.add_argument('--update_type2',
+            default=False,
+            type=bool,
+            help='?')
+    
+    parser.add_argument('--use_step_weight',
+            default=False,
+            type=bool,
+            help='?')
+    
 
     # -------------- etc --------------------
     parser.add_argument('--random_seed', type=int, default=10, help='dataset random seed')

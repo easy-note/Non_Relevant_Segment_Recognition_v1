@@ -3,10 +3,10 @@ import math
 import numpy as np
 import csv
 import json
+import copy
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-
 from core.api import BaseTrainer
 from core.model import get_model, get_loss
 from core.dataset import *
@@ -23,8 +23,10 @@ class CAMIO(BaseTrainer):
  
         # TODO 필요한거 더 추가하기
         self.args = args
+        if hasattr(self.args, 'cur_stage'):
+            self.cur_stage = self.args.cur_stage
         self.save_hyperparameters() # save with hparams
-
+        
         self.model = get_model(self.args)
         self.loss_fn = get_loss(self.args)
 
@@ -53,10 +55,18 @@ class CAMIO(BaseTrainer):
         self.emb_only = self.args.use_emb_only
 
     def on_epoch_start(self):
+        print('ON EPOCH START')
+        print(self.restore_path, hasattr(self, 'cur_stage'))
         if hasattr(self, 'cur_stage'):
             print('restore path : ', self.restore_path)
+            
+            # if self.training and self.restore_path is not None and self.current_epoch == 0:
             if self.cur_stage > 1 and self.restore_path is not None and self.current_epoch == 0:
-                d_loader = DataLoader(self.trainset, 
+                trainset = copy.deepcopy(self.trainset)
+                trainset.img_list = trainset.img_list[trainset.split_patient:]
+                trainset.label_list = trainset.label_list[trainset.split_patient:]
+                
+                d_loader = DataLoader(trainset, 
                                     batch_size=self.args.batch_size, 
                                     shuffle=False, 
                                     num_workers=self.args.num_workers)
@@ -70,21 +80,12 @@ class CAMIO(BaseTrainer):
                         outputs = self.model(img)
                         ids = list(torch.argmax(outputs, -1).cpu().data.numpy())
                         change_list += ids
-
-                self.trainset.label_list = change_list
+                
+                self.trainset.label_list[self.trainset.split_patient:] = change_list
+                
                 self.args.restore_path = None
-                self.model = get_model(self.args)
+                self.model = get_model(self.args).cuda()
         
-    def change_deploy_mode(self, pt_path=None):
-        if 'repvgg' in self.args.model:
-            if pt_path: # load from pt path
-                self.model.load_feature_module(pt_path)
-            else: # load from rule of online (restore)
-                self.model.change_deploy_mode()
-
-        if 'multi' in self.args.model:
-            self.model.change_deploy_mode()
-
     def save_trainer_dataset_info(self): # 해당 trainer에서 사용한 train dataset, val dataset 정보 대해서 저장
         train_dataset_info_path = os.path.join(self.restore_path, 'train_dataset_info.json')
         save_dataset_info(self.trainset, train_dataset_info_path)
@@ -109,7 +110,7 @@ class CAMIO(BaseTrainer):
                         self.trainset = RobotDataset_new(self.args, state='train', appointment_assets_path=self.args.appointment_assets_path) # load from hem_assets
                         self.valset = RobotDataset_new(self.args, state='val')
                         
-                    elif self.args.hem_extract_mode in 'online': # online이 여기로 들어가면 hem_train 의미상 맞을듯.. // 기존에 subset 불러왔으니 맞을듯..
+                    elif 'online' in self.args.hem_extract_mode: # online이 여기로 들어가면 hem_train 의미상 맞을듯.. // 기존에 subset 불러왔으니 맞을듯..
                         self.trainset = RobotDataset_new(self.args, state='train', wise_sample=self.args.use_wise_sample) # train dataset setting
                         self.valset = RobotDataset_new(self.args, state='val') # val dataset setting
                 
@@ -158,13 +159,22 @@ class CAMIO(BaseTrainer):
                                         self.args.batch_size//2, self.args.batch_size)
             )
         else:
-            return DataLoader(
-                self.trainset,
-                batch_size=self.args.batch_size,
-                num_workers=self.args.num_workers,
-                shuffle=True,
-                drop_last=True,
-            )
+            if self.args.use_oversample:
+                return DataLoader(
+                    self.trainset,
+                    batch_size=self.args.batch_size,
+                    num_workers=self.args.num_workers,
+                    sampler=MPerClassSampler(self.trainset.label_list, 
+                                            self.args.batch_size//2, self.args.batch_size)
+                )
+            else:
+                return DataLoader(
+                    self.trainset,
+                    batch_size=self.args.batch_size,
+                    num_workers=self.args.num_workers,
+                    shuffle=True,
+                    drop_last=True,
+                )
 
     def val_dataloader(self):
         return DataLoader(
@@ -294,17 +304,6 @@ class CAMIO(BaseTrainer):
                     # TODO early stopping 적용시 구현 필요
                     self.best_val_loss = val_loss_mean
                     self.save_checkpoint()
-                    
-            # repvgg는 별도로 torch style save
-            elif 'repvgg' in self.args.model:
-                if self.best_mean_metric < metrics['Mean_metric']: # 기존 best mean metric 보다 현재 epoch 의 mean metric 이 더 크다면, 
-                    self.best_mean_metric = metrics['Mean_metric'] # best mean metric = 현재 mean metric.
-                    self.save_checkpoint()
-            
-            elif 'multi' in self.args.model:
-                if self.best_mean_metric < metrics['Mean_metric']:
-                    self.best_mean_metric = metrics['Mean_metric']
-                    self.save_checkpoint_multi()
 
             if self.current_epoch == self.last_epoch: # last epoch => save dataset info
                 self.save_trainer_dataset_info()

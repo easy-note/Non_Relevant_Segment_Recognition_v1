@@ -43,7 +43,6 @@ name_to_loss = {
     'focal': FocalLoss,
 }
 
-
 def get_loss(args):
     if args.loss_fn == 'focal':
         return name_to_loss[args.loss_fn](gamma=2, alpha=0.25)

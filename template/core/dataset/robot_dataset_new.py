@@ -9,7 +9,7 @@ import pandas as pd
 import natsort
 
 from torch.utils.data import Dataset
-from core.config.data_info import data_transforms, theator_data_transforms
+from core.config.data_info import data_transforms, data_transforms2, theator_data_transforms
 from core.config.patients_info import train_videos, val_videos
 from core.utils.heuristic_sampling import HeuristicSampler
 from core.config.assets_info import oob_assets_save_path
@@ -58,7 +58,10 @@ class RobotDataset_new(Dataset):
         self.patients_name = [] # init
 
         if self.experiment_type == 'ours':
-            d_transforms = data_transforms
+            if self.args.model == 'mobile_vit':
+                d_transforms = data_transforms2
+            else:    
+                d_transforms = data_transforms
         elif self.experiment_type == 'theator':
             d_transforms = theator_data_transforms
 

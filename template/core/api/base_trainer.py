@@ -6,7 +6,6 @@ from glob import glob
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
-from core.accessory.RepVGG.repvgg import repvgg_model_convert
 
 
 class BaseTrainer(pl.LightningModule):
@@ -218,24 +217,3 @@ class BaseTrainer(pl.LightningModule):
         #     torch.save(self.model.state_dict(), save_path)
 
         # print('[+] save checkpoint(torch ver.) : ', save_path)
-
-    def save_checkpoint_multi(self):
-        saved_pt_list = glob(os.path.join(self.logger.log_dir, 'checkpoints', '*pt'))
-
-        print('saved_pt_list ====> ', saved_pt_list)
-
-        if len(saved_pt_list) > self.args.save_top_n:
-            saved_pt_list = natsort.natsorted(saved_pt_list)
-
-            for li in saved_pt_list[:-(self.args.save_top_n+1)]:
-                os.remove(li)
-
-        save_path = '{}/epoch:{}-Mean_metric:{:.4f}.pt'.format(
-                    os.path.join(self.logger.log_dir, 'checkpoints'),
-                    self.current_epoch,
-                    self.best_mean_metric,
-                )
-
-        _ = repvgg_model_convert(self.model.repvgg_feature, save_path=save_path)        
-
-        print('[+] save checkpoint(torch ver.) : ', save_path)
