@@ -1,5 +1,5 @@
 # STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
-STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
+STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3'] #, 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
 
 def get_experiment_args():
     from core.config.base_opts import parse_opts
@@ -105,12 +105,13 @@ def inference_main(args):
 
     # from finetuning model
     if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(args.restore_path)        
-        model = CAMIO.load_from_checkpoint(model_path, args=args)
+        model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
+        model = CAMIO.load_from_checkpoint(model_path, args=args) # ckpt
+
     else:
-        model = CAMIO(args)
+        model = CAMIO(args) # pt -> ? 이게 뭘 하는거지? 모델 생성?
         
-    model.change_deploy_mode()
+    model.change_deploy_mode() # 이거는 repvgg 만 적용돼서 infer model 로 변경. 
         
     model = model.cuda()
 
@@ -285,6 +286,8 @@ def main():
     import os, torch, random
     import numpy as np
 
+    from core.config.assets_info import mc_assets_save_path
+
     # 0. set each experiment args 
     args = get_experiment_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
@@ -344,6 +347,12 @@ def main():
         else:
             for ids, stage in enumerate(STAGE_LIST):
                 args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
+
+
+                ## data2/../hem_assets/theator_stage_flag=100/resnet18/WS=3-IB=3-seed=3829/hem_extract_mode=hem-softmax-offline_lower-ver=1-top_ratio=5-n_dropout=5.csv
+                stage_hem_base_path = os.path.join(mc_assets_save_path['robot'], 'hem_assets', 'theator_stage_flag={}'.format(int(args.theator_stage_flag) - 100), args.model, 'WS={}-IB={}-seed={}'.format(int(args.WS_ratio), int(args.IB_ratio), args.random_seed), 'hem_extract_mode={}-ver={}-top_ratio={}-n_dropout={}.csv'.format(args.hem_extract_mode + '_lower', 1, int(args.top_ratio * 100) , args.n_dropout)) # you should get (theator_stage_flag - 100 dir)
+                args.stage_hem_path = stage_hem_base_path
+                
 
                 print('\n\n')
                 print('====='*7, args.stage.upper(),'====='*7)

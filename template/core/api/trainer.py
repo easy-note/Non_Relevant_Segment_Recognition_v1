@@ -11,6 +11,9 @@ from core.api import BaseTrainer
 from core.model import get_model, get_loss
 from core.dataset import *
 from core.utils.metric import MetricHelper
+from core.utils.misc import save_dict_to_csv, save_dataset_info
+# save_dict_to_csv: results 저장시 사용, 사용안하고 싶으면 한줄만 빼기 (not core function)
+# save_dataset_info: trainer 에서 사용한 train, val set 정보 저장
 
 
 
@@ -72,14 +75,24 @@ class CAMIO(BaseTrainer):
                 self.args.restore_path = None
                 self.model = get_model(self.args)
         
-    def change_deploy_mode(self):
+    def change_deploy_mode(self, pt_path=None):
         if 'repvgg' in self.args.model:
-            self.model.change_deploy_mode()
-                
+            if pt_path: # load from pt path
+                self.model.load_feature_module(pt_path)
+            else: # load from rule of online (restore)
+                self.model.change_deploy_mode()
+
         if 'multi' in self.args.model:
             self.model.change_deploy_mode()
 
-    def setup(self, stage):
+    def save_trainer_dataset_info(self): # 해당 trainer에서 사용한 train dataset, val dataset 정보 대해서 저장
+        train_dataset_info_path = os.path.join(self.restore_path, 'train_dataset_info.json')
+        save_dataset_info(self.trainset, train_dataset_info_path)
+
+        val_dataset_info_path = os.path.join(self.restore_path, 'val_dataset_info.json')
+        save_dataset_info(self.valset, val_dataset_info_path)
+
+    def setup(self, stage): # train할때만 setup, model 불러올때는 setup x
         '''
             Called one each GPU separetely - stage defines if we are at fit or test step.
             We wet up only relevant datasets when stage is specified (automatically set by pytorch-lightning).
@@ -87,8 +100,35 @@ class CAMIO(BaseTrainer):
         # training stage
         if stage == 'fit' or stage is None:
             if self.args.dataset == 'ROBOT':
-                self.trainset = RobotDataset(self.args, state='train') # train dataset setting
-                self.valset = RobotDataset(self.args, state='val') # val dataset setting
+                if self.args.train_stage == 'general_train': # original (20.80 데이터 사용)
+                    self.trainset = RobotDataset_new(self.args, state='train', wise_sample=self.args.use_wise_sample) # train dataset setting
+                    self.valset = RobotDataset_new(self.args, state='val') # val dataset setting
+                
+                elif self.args.train_stage == 'hem_train': # offline (apply) => load from appointmnet assets (== 뽑힌 hem assets)
+                    if 'offline' in self.args.hem_extract_mode:
+                        self.trainset = RobotDataset_new(self.args, state='train', appointment_assets_path=self.args.appointment_assets_path) # load from hem_assets
+                        self.valset = RobotDataset_new(self.args, state='val')
+                        
+                    elif self.args.hem_extract_mode in 'online': # online이 여기로 들어가면 hem_train 의미상 맞을듯.. // 기존에 subset 불러왔으니 맞을듯..
+                        self.trainset = RobotDataset_new(self.args, state='train', wise_sample=self.args.use_wise_sample) # train dataset setting
+                        self.valset = RobotDataset_new(self.args, state='val') # val dataset setting
+                
+                else : # mini_fold 1 2 3 4 ==> general (60개 환자만 train / 20개 환자 validation) baby model train stage
+                    train_stage_to_minifold = {
+                        'mini_fold_stage_0': '1',
+                        'mini_fold_stage_1': '2',
+                        'mini_fold_stage_2': '3',
+                        'mini_fold_stage_3': '4',
+                    }
+
+                    if self.args.hem_interation_idx == 100: # 초기 hem iteration => load from sub/meta set
+                        self.trainset = RobotDataset_new(self.args, state='train_mini', minifold=train_stage_to_minifold[self.args.train_stage], wise_sample=self.args.use_wise_sample) # train dataset setting
+                        self.valset = RobotDataset_new(self.args, state='val_mini', minifold=train_stage_to_minifold[self.args.train_stage]) # val dataset setting
+                    
+                    else: # 200, 300 ==> load from appointment assets (== 뽑힌 hem assets)
+                        self.trainset = RobotDataset_new(self.args, state='train_mini', minifold=train_stage_to_minifold[self.args.train_stage], appointment_assets_path=self.args.appointment_assets_path) # load from hem_assets
+                        self.valset = RobotDataset_new(self.args, state='val_mini', minifold=train_stage_to_minifold[self.args.train_stage], appointment_assets_path=self.args.appointment_assets_path)
+            
             elif self.args.dataset == 'LAPA':
                 self.trainset = LapaDataset(self.args, state='train') 
                 self.valset = LapaDataset(self.args, state='val')
@@ -96,7 +136,7 @@ class CAMIO(BaseTrainer):
         # testing stage
         if stage in (None, 'test'):
             if self.args.dataset == 'ROBOT':
-                self.testset = RobotDataset(self.args, state='val')
+                self.testset = RobotDataset_new(self.args, state='val')
             elif self.args.dataset == 'LAPA':
                 self.testset = LapaDataset(self.args, state='val')
 
@@ -162,6 +202,7 @@ class CAMIO(BaseTrainer):
             return self.model(x)
 
     def training_step(self, batch, batch_idx):
+
         if 'hem-emb' in self.hem_extract_mode and self.training:
             img_path, x, y = batch
             loss = self.hem_helper.compute_hem(self.model, x, y, self.loss_fn)
@@ -196,21 +237,7 @@ class CAMIO(BaseTrainer):
 
         # save number of train dataset (rs, nrs)
         if self.current_epoch == self.last_epoch:
-            rs_count, nrs_count = self.trainset.number_of_rs_nrs()
-            
-            save_data = {
-                'train_dataset': {
-                    'rs': rs_count,
-                    'nrs': nrs_count 
-                },
-                'target_hem_count': {
-                    'rs': rs_count // 3,
-                    'nrs': nrs_count // 3
-                }
-            }
-
-            with open(os.path.join(self.restore_path, 'DATASET_COUNT.json'), 'w') as f:
-                json.dump(save_data, f, indent=2)
+            pass
 
     def validation_step(self, batch, batch_idx): # val - every batch
         img_path, x, y = batch
@@ -249,7 +276,10 @@ class CAMIO(BaseTrainer):
             self.log_dict(metrics, on_epoch=True, prog_bar=True)
             
             # save result.csv 
-            self.metric_helper.save_metric(metric=metrics, epoch=self.current_epoch, args=self.args, save_path=os.path.join(self.args.save_path, self.logger.log_dir))
+            metrics_save_data = dict({'Model': self.args.model, 'Epoch': self.current_epoch}, **metrics)
+
+            save_dict_to_csv(metrics_save_data, os.path.join(self.args.save_path, self.logger.log_dir, 'train_metric.csv'))
+            # self.metric_helper.save_metric(model_name=args.model_name, metric=metrics, epoch=self.current_epoch, args=self.args, save_path=os.path.join(self.args.save_path, self.logger.log_dir))
 
             # write val loss
             self.metric_helper.write_loss(val_loss_mean, task='val')
@@ -267,42 +297,18 @@ class CAMIO(BaseTrainer):
                     
             # repvgg는 별도로 torch style save
             elif 'repvgg' in self.args.model:
-                if self.best_mean_metric < metrics['Mean_metric']:
-                    self.best_mean_metric = metrics['Mean_metric']
+                if self.best_mean_metric < metrics['Mean_metric']: # 기존 best mean metric 보다 현재 epoch 의 mean metric 이 더 크다면, 
+                    self.best_mean_metric = metrics['Mean_metric'] # best mean metric = 현재 mean metric.
                     self.save_checkpoint()
             
             elif 'multi' in self.args.model:
                 if self.best_mean_metric < metrics['Mean_metric']:
                     self.best_mean_metric = metrics['Mean_metric']
                     self.save_checkpoint_multi()
-            
-            # Hard Example Mining (Offline)
-            if self.current_epoch == self.last_epoch:
-                if self.args.stage not in ['hem_train', 'general_train'] and self.args.hem_extract_mode == 'all-offline': 
 
-                    self.hem_helper.set_restore_path(self.restore_path)
-
-                    # softmax_hem_df, voting_hem_df, vi_hem_df = self.hem_helper.compute_hem(self.model, outputs)
-                    # softmax_hem_df, voting_hem_df, vi_hem_df = self.hem_helper.compute_hem(self.model, self.valset)
-                    # softmax_diff_small_hem_final_df, softmax_diff_large_hem_final_df, voting_hem_final_df, vi_small_hem_final_df, vi_large_hem_final_df
-                    softmax_diff_small_hem_df, softmax_diff_large_hem_df, voting_hem_df, vi_small_hem_df, vi_large_hem_df = self.hem_helper.compute_hem(self.model, self.valset)
-                    
-                    softmax_diff_small_hem_df.to_csv(os.path.join(self.restore_path, 'softmax_diff_small_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-                    softmax_diff_large_hem_df.to_csv(os.path.join(self.restore_path, 'softmax_diff_large_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-
-                    voting_hem_df.to_csv(os.path.join(self.restore_path, 'voting_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-                    
-                    vi_small_hem_df.to_csv(os.path.join(self.restore_path, 'vi_small_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-                    vi_large_hem_df.to_csv(os.path.join(self.restore_path, 'vi_large_{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-
-                elif self.args.stage not in ['hem_train', 'general_train'] and 'offline' in self.args.hem_extract_mode: 
-                    self.hem_helper.set_restore_path(self.restore_path)
-
-                    # hem_df = self.hem_helper.compute_hem(self.model, outputs)
-                    hem_df = self.hem_helper.compute_hem(self.model, self.valset)
-                    hem_df.to_csv(os.path.join(self.restore_path, '{}-{}-{}.csv'.format(self.args.model, self.args.hem_extract_mode, self.args.fold)), header=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-            
-            
+            if self.current_epoch == self.last_epoch: # last epoch => save dataset info
+                self.save_trainer_dataset_info()
+                        
     def test_step(self, batch, batch_idx):
         img_path, x, y = batch
         y_hat = self.forward(x)

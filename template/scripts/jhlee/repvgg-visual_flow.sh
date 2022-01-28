@@ -5,7 +5,7 @@
 IB_ratio=3;
 
 top_ratio=(0.10);
-WS_ratio=4;
+WS_ratio=3;
 n_dropout=1;
 
 
@@ -16,7 +16,7 @@ do
         --trial 1 \
         --use_wise_sample \
         --WS_ratio ${WS_ratio} \
-        --model "resnet18" \
+        --model "repvgg-a0" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 50 \
@@ -24,7 +24,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "5" \
+        --cuda_list "0" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --inference_fold "1" \

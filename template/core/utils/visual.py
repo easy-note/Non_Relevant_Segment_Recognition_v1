@@ -35,7 +35,7 @@ class VisualHelper:
         frame = int(idx % fps)
 
         converted_time = str(datetime.timedelta(seconds=time_s))
-        converted_time = converted_time + ':' + str(frame)
+        converted_time = converted_time + '.' + str(frame / fps)
 
         return converted_time
 
