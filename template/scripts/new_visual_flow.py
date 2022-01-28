@@ -83,6 +83,7 @@ def inference_main(args):
     
     ### test inference module
     from core.api.trainer import CAMIO
+    from core.api.theator_trainer import TheatorTrainer
     from core.api.inference import InferenceDB # inference module
     from core.api.evaluation import Evaluator # evaluation module
     from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
@@ -103,14 +104,18 @@ def inference_main(args):
     print('restore : ', args.restore_path)
 
     # from finetuning model
-    if 'repvgg' not in args.model:
-        model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
-        model = CAMIO.load_from_checkpoint(model_path, args=args) # ckpt
+    model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
+    model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
 
-    else:
-        model = CAMIO(args) # pt -> ? 이게 뭘 하는거지? 모델 생성?
-        
-    model.change_deploy_mode() # 이거는 repvgg 만 적용돼서 infer model 로 변경. 
+    '''
+    pt_path=None # for using change_deploy_mode for offline, it will be update on above if's branch
+
+    if 'repvgg' in args.model: # load pt from version/checkpoints 
+        pt_path = get_pt_path(os.path.join(args.restore_path, 'checkpoints'))
+        print('\n\t ===> LOAD PT FROM {}\n'.format(pt_path))
+    
+    model.change_deploy_mode(pt_path=pt_path) # 이거는 repvgg나 multi일떄만 적용됨. offline시 repvgg는 저장된 Pt에서 불러와야 하므로 pt_path를 arguments로 넣어주어야 함. 
+    '''
         
     model = model.cuda()
 
@@ -162,7 +167,7 @@ def inference_main(args):
             db_path = video_path_info['db_path']
 
             # Inference module
-            inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+            inference = InferenceDB(args, model, db_path, args.inference_interval) # Inference object // args => InferenceDB init의 DBDataset(args) 생성시 args.model로 'mobile_vit' augmentation 처리해주기 위해
             predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
   
             # for save video results
@@ -206,12 +211,14 @@ def inference_main(args):
 
             video_jaccard = video_metrics['Jaccard']
 
+            video_precision, video_recall = video_metrics['Precision'], video_metrics['Recall']
+
             print('\t => video_name: {}'.format(video_name))
             print('\t    video_CR: {:.3f} | video_OR: {:.3f}'.format(video_CR, video_OR))
             print('\t    video_TP: {} | video_FP: {} | video_TN: {} | video_FN: {}'.format(video_TP, video_FP, video_TN, video_FN))
 
             # save video metrics
-            video_results_dict = report.add_videos_report(patient_no=patient_no, video_no=video_name, FP=video_FP, TP=video_TP, FN=video_FN, TN=video_TN, TOTAL=video_TOTAL, CR=video_CR, OR=video_OR, gt_IB=video_gt_IB, gt_OOB=video_gt_OOB, predict_IB=video_predict_IB, predict_OOB=video_predict_OOB, jaccard=video_jaccard)
+            video_results_dict = report.add_videos_report(patient_no=patient_no, video_no=video_name, FP=video_FP, TP=video_TP, FN=video_FN, TN=video_TN, TOTAL=video_TOTAL, CR=video_CR, OR=video_OR, gt_IB=video_gt_IB, gt_OOB=video_gt_OOB, predict_IB=video_predict_IB, predict_OOB=video_predict_OOB, precision=video_precision, recall=video_recall, jaccard=video_jaccard)
             save_dict_to_csv(video_results_dict, videos_results_path)
 
             # for calc patients metric
@@ -227,12 +234,14 @@ def inference_main(args):
 
         patient_jaccard = patient_metrics['Jaccard']
 
+        patient_precision, patient_recall = patient_metrics['Precision'], patient_metrics['Recall']
+
         print('\t\t => patient_no: {}'.format(patient_no))
         print('\t\t    patient_CR: {:.3f} | patient_OR: {:.3f}'.format(patient_CR, patient_OR))
         print('\t\t    patient_TP: {} | patient_FP: {} | patient_TN: {} | patient_FN: {}'.format(patient_TP, patient_FP, patient_TN, patient_FN))
 
         # save patient metrics        
-        patient_results_dict = report.add_patients_report(patient_no=patient_no, FP=patient_FP, TP=patient_TP, FN=patient_FN, TN=patient_TN, TOTAL=patient_TOTAL, CR=patient_CR, OR=patient_OR, gt_IB=patient_gt_IB, gt_OOB=patient_gt_OOB, predict_IB=patient_predict_IB, predict_OOB=patient_predict_OOB, jaccard=patient_jaccard)
+        patient_results_dict = report.add_patients_report(patient_no=patient_no, FP=patient_FP, TP=patient_TP, FN=patient_FN, TN=patient_TN, TOTAL=patient_TOTAL, CR=patient_CR, OR=patient_OR, gt_IB=patient_gt_IB, gt_OOB=patient_gt_OOB, predict_IB=patient_predict_IB, predict_OOB=patient_predict_OOB, precision=patient_precision, recall=patient_recall, jaccard=patient_jaccard)
         save_dict_to_csv(patient_results_dict, patients_results_path)
     
         # for calc total patients CR, OR
@@ -245,13 +254,15 @@ def inference_main(args):
         visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval, window_size=300, section_num=2)
 
         # CLEAR PAGING CACHE
-        clean_paging_chache()
+        # clean_paging_chache()
 
     # for calc total patients CR, OR + (mCR, mOR)
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
+    total_mPrecision, total_mRecall = total_metrics['mPrecision'], total_metrics['mRecall']
+    total_Jaccard = total_metrics['Jaccard']
 
-    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, details_path=details_results_path, model_path=model_path)
+    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -262,7 +273,7 @@ def inference_main(args):
         'model':args.model,
         'methods':args.hem_extract_mode,
         'top_ratio':args.top_ratio,
-        'stage': args.stage,
+        'stage': args.train_stage,
 
         'random_seed': args.random_seed,
         'IB_ratio': args.IB_ratio,
@@ -273,6 +284,10 @@ def inference_main(args):
         'mOR':total_mOR,
         'CR':total_CR,
         'OR':total_OR,
+        'mPrecision':total_mPrecision,
+        'mRecall': total_mRecall,
+        'Jaccard': total_Jaccard,
+
         'details_path':details_results_path,
         'model_path': model_path,
     }
@@ -406,7 +421,7 @@ if __name__ == '__main__':
         
         print('base path : ', base_path)
         
-        from core.utils.misc import prepare_inference_aseets, get_inference_model_path, get_pt_path, \
+        from core.utils.misc import prepare_inference_aseets, get_inference_model_path, \
             clean_paging_chache, save_dict_to_csv, save_dataset_info
 
     new_main()

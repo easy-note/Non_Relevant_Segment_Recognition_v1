@@ -1,37 +1,6 @@
 import os
 import pandas as pd
 
-'''
-def save_OOB_result_csv(metric, epoch, args, save_path):
-    m_keys = list(metric.keys())
-
-    cols = ['Model', 'Epoch', *m_keys]
-
-    save_path = save_path + '/result.csv'
-    model_name = args.model
-    
-    data = [model_name, epoch, *list(metric[key] for key in m_keys)]
-
-    if os.path.exists(save_path):
-        df = pd.read_csv(save_path)
-        print('Existed file loaded')
-        
-        new_df = pd.Series(data, index=cols)
-        df = df.append(new_df, ignore_index=True)
-        print('New line added')
-        
-    else:
-        print('New file generated!')
-        df = pd.DataFrame([data],
-                    columns=cols
-                    ) 
-
-    df.to_csv(save_path, 
-            index=False,
-            float_format='%.4f')
-'''
-
-
 # inference_flow.py에서 가져옴
 def clean_paging_chache():
     import subprocess # for CLEAR PAGING CACHE
@@ -61,20 +30,7 @@ def get_inference_model_path(restore_path):
         if f_name.find('last') != -1 :
             model_path = f_name
         '''
-    return model_path
-
-def get_pt_path(restore_path):
-    import glob
-    import os
-    
-    model_path = None
-    pt_dir = os.path.join(restore_path, '*.pt')
-    pts = glob.glob(pt_dir)
-
-    model_path = pts[-1] # load last pt
-
-    return model_path
-        
+    return model_path        
 
 def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
     from core.utils.prepare import InferenceAssets # inference assets helper (for prepare inference assets)
