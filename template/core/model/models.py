@@ -4,6 +4,8 @@ from core.model.resnet import generate_resnet
 from core.model.timm_model import generate_timm_model
 
 
+
+
 name_to_model = {
     # 'mobilenet_v3_small': generate_mobilenet,
     # 'mobilenet_v3_large': generate_mobilenet,
@@ -22,8 +24,8 @@ name_to_model = {
     # 'mobilenetv3_large_100_miil': generate_timm_model,
     'ig_resnext101_32x48d': generate_timm_model, 
     'swin_large_patch4_window7_224': generate_timm_model, 
+    'mobile_vit': generate_timm_model, 
 }
-
 
 
 def get_model(args):

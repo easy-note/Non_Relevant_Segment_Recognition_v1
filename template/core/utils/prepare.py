@@ -2,21 +2,21 @@ import core.config.patients_info as patients_info
 import core.config.assets_info as assets_info
 from core.utils.parser import FileLoader, InfoParser
 
+from core.utils.misc import prepare_inference_aseets
+from core.utils.parser import AnnotationParser
+
 import os
 import glob
 import yaml
 import re
 import natsort
 
-
-
-
 class InferenceAssets():
     """
         for prepare inference assets
         case; ['ROBOT', 'LAPA']
         anno_ver; ['V1', 'V2', 'V3']
-        fold; ['1', '2', '3', '4', '5', 'free']
+        fold; ['1', '2', '3', '4', '5', 'all', 'free']
 
         # inference_assets
         patients: 
@@ -46,7 +46,7 @@ class InferenceAssets():
         sanity = False
         if self.case in ['ROBOT']:
             if self.anno_ver in ['3']:
-                if self.fold in ['1','2','3','4','5', 'free']: 
+                if self.fold in ['1','2','3','4','5', 'all', 'free']: 
                     sanity = True
         
         return sanity        
@@ -85,10 +85,10 @@ class InferenceAssets():
 
             patient_video_dict[patient] = patient_video
 
-        print('\n----- RESULTS [PATIENT CNT : {} ] ------\n'.format(len(patient_video_dict)))
-        print('----- PATIENT : {} ------\n'.format(patient_list))
-        for keys, value in patient_video_dict.items() : 
-            print('{} | {}'.format(keys, value))
+        # print('\n----- RESULTS [PATIENT CNT : {} ] ------\n'.format(len(patient_video_dict)))
+        # print('----- PATIENT : {} ------\n'.format(patient_list))
+        # for keys, value in patient_video_dict.items() : 
+        #     print('{} | {}'.format(keys, value))
 
         return patient_video_dict
 
@@ -124,24 +124,24 @@ class InferenceAssets():
         patients = inference_assets['patients']
         patient_count = len(patients)
 
-        print('PATIENT COUNT : {}'.format(patient_count))
-        print('PATIENT LIST')
-        for idx in range(patient_count) : 
-            print('-', patients[idx]['patient_no'])
-        print('\n\n\t\t\t ### ### ### ### ### ### \n\n')
+        # print('PATIENT COUNT : {}'.format(patient_count))
+        # print('PATIENT LIST')
+        # for idx in range(patient_count) : 
+        #     print('-', patients[idx]['patient_no'])
+        # print('\n\n\t\t\t ### ### ### ### ### ### \n\n')
         
         for idx in range(patient_count) : 
             patient = patients[idx]
 
-            print('PATIENT_NO : \t\t{}'.format(patient['patient_no']))
-            print('PATIENT_VIDEO : \t{}\n'.format(patient['patient_video']))
+            # print('PATIENT_NO : \t\t{}'.format(patient['patient_no']))
+            # print('PATIENT_VIDEO : \t{}\n'.format(patient['patient_video']))
             
-            for video_path_info in patient['path_info'] :
-                print('VIDEO_NAME : \t\t{}'.format(video_path_info['video_name']))
-                print('VIDEO_PATH : \t\t{}'.format(video_path_info['video_path']))
-                print('ANNOTATION_PATH : \t{}'.format(video_path_info['annotation_path']))
-                print('DB_PATH : \t\t{}'.format(video_path_info['db_path']))
-                print('\n', '-----'*10, '\n')
+            # for video_path_info in patient['path_info'] :
+            #     print('VIDEO_NAME : \t\t{}'.format(video_path_info['video_name']))
+            #     print('VIDEO_PATH : \t\t{}'.format(video_path_info['video_path']))
+            #     print('ANNOTATION_PATH : \t{}'.format(video_path_info['annotation_path']))
+            #     print('DB_PATH : \t\t{}'.format(video_path_info['db_path']))
+            #     print('\n', '-----'*10, '\n')
 
             print('\n', '=== === === === ==='*5, '\n')
         
@@ -284,28 +284,28 @@ class OOBAssets():
                 # print('NON Matching \t', path)
 
 
-        print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(use_videos)))
-        print('FALIED DATA LIST : {}'.format(use_videos))
+        # print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(use_videos)))
+        # print('FALIED DATA LIST : {}'.format(use_videos))
 
         ### ADD EXCEPTION FILE
         EXCEPTION_RULE = {'R_76_ch1_01' : os.path.join(video_root_path, 'R000076', 'ch1_video_01_6915320_RDG.mp4'),
                         'R_84_ch1_01' : os.path.join(video_root_path, 'R000084', 'ch1_video_01_8459178_robotic\ subtotal.mp4'), 
                         'R_391_ch2_06' : os.path.join(video_root_path, 'R000391', '01_G_01_R_391_ch2_06.mp4')}
 
-        print('\n--REGISTERD EXCEPTION DATA RULE --\n')
-        for keys, value in EXCEPTION_RULE.items() : 
-            print('{} | {}'.format(keys, value))
+        # print('\n--REGISTERD EXCEPTION DATA RULE --\n')
+        # for keys, value in EXCEPTION_RULE.items() : 
+        #     print('{} | {}'.format(keys, value))
 
         print('\n ==> APPLY EXEPTION RULE')
         
         # apply EXCEPTION RULE
         for video_name in use_videos :
             video_path_dict[video_name] = EXCEPTION_RULE.get(video_name, '') # if Non key, return ''
-            print('{} | {}'.format(video_name, video_path_dict[video_name]))
+            # print('{} | {}'.format(video_name, video_path_dict[video_name]))
 
-        print('\n----- RESULTS [VIDEO_PATH_DICT CNT : {} ] ------\n'.format(len(video_path_dict)))
-        for keys, value in video_path_dict.items() : 
-            print('{} | {}'.format(keys, value))
+        # print('\n----- RESULTS [VIDEO_PATH_DICT CNT : {} ] ------\n'.format(len(video_path_dict)))
+        # for keys, value in video_path_dict.items() : 
+            # print('{} | {}'.format(keys, value))
 
         return video_path_dict
 
@@ -343,9 +343,9 @@ class OOBAssets():
         print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(use_videos)-cnt))
         # print('FALIED DATA LIST : {}'.format(use_videos))
         
-        print('\n----- RESULTS [ANNO_PATH_DICT CNT : {} ] ------\n'.format(len(anno_path_dict)))
-        for keys, value in anno_path_dict.items() : 
-            print('{} | {}'.format(keys, value))
+        # print('\n----- RESULTS [ANNO_PATH_DICT CNT : {} ] ------\n'.format(len(anno_path_dict)))
+        # for keys, value in anno_path_dict.items() : 
+        #     print('{} | {}'.format(keys, value))
 
         return anno_path_dict
 
@@ -378,9 +378,9 @@ class OOBAssets():
 
         print('\n----- PROCESSED DATA CNT : {} | FAILED PROCESSED DATA CNT : {} ------\n'.format(cnt, len(use_videos)-cnt))
         
-        print('\n----- RESULTS [ANNO_PATH_DICT CNT : {} ] ------\n'.format(len(db_path_dict)))
-        for keys, value in db_path_dict.items() : 
-            print('{} | {}'.format(keys, value))
+        # print('\n----- RESULTS [ANNO_PATH_DICT CNT : {} ] ------\n'.format(len(db_path_dict)))
+        # for keys, value in db_path_dict.items() : 
+        #     print('{} | {}'.format(keys, value))
 
         return db_path_dict
 
@@ -442,3 +442,72 @@ class OOBAssets():
         img_db_sheet = f_loader.load()
 
         return video_sheet, annotation_sheet, img_db_sheet
+
+class PatientsGT():
+    def __init__(self):
+        
+        self.patients_assets = {}
+        '''
+            self.patients_assets = {'R_100': [R_100_1.json, R_100_2.json ..], 'R_10':[R_10_1.json, ...]}
+        '''
+
+        # 1. load inference dataset
+        inference_assets = prepare_inference_aseets(case='ROBOT' , anno_ver='3', inference_fold='all', save_path='/OOB_RECOG/results')
+        patients = inference_assets['patients']
+        patients_count = len(patients)
+
+        # 2. set self.patints_assets
+        for idx in range(patients_count): # per patients
+            patient = patients[idx]
+            patient_no = patient['patient_no']
+            
+            self.patients_assets[patient_no] = []
+
+            for path_info in patient['path_info']: # get total annotation path
+                self.patients_assets[patient_no].append(path_info['annotation_path'])
+
+    def get_gt(self, patient_no):
+        patient_gt = []
+        annotation_path_list = self.patients_assets[patient_no]
+    
+        anno_parser = AnnotationParser(annotation_path_list[0]) # init annoParser
+
+        for annotation_path in annotation_path_list:
+            anno_parser.set_annotation_path(annotation_path)
+            patient_gt += anno_parser.get_event_sequence(extract_interval=1)
+        
+        return patient_gt
+    
+    def get_video_no(self, patient_no):
+        video_no = []
+        annotation_path_list = self.patients_assets[patient_no]
+
+        info_parser = InfoParser(parser_type='ROBOT_ANNOTATION')
+
+        for annotation_path in annotation_path_list:    
+            info_parser.write_file_name(annotation_path)
+            video_no.append(info_parser.get_video_name())
+
+        return video_no # already sorted
+
+    def get_start_idx(self, patient_no):
+        video_start_idx = []
+        annotation_path_list = self.patients_assets[patient_no]
+
+        anno_parser = AnnotationParser(annotation_path_list[0]) # init annoParser
+
+        patinet_len = 0
+        for annotation_path in annotation_path_list:
+            anno_parser.set_annotation_path(annotation_path)
+            
+            video_start_idx.append(patinet_len)
+
+            # [no.1 video] totalFrame:3000 => frame index:0~2999 // [no.2 video] start idx:3000
+            patinet_len += anno_parser.get_totalFrame()
+            
+        return video_start_idx
+
+
+
+        
+        

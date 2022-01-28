@@ -16,7 +16,8 @@ def parse_opts():
                         'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2', 'efficientnet_b3', 'efficientnet_b4', 
                         'efficientnet_b5', 'efficientnet_b6', 'efficientnet_b7',
                         'ig_resnext101_32x48d', 'swin_large_patch4_window7_224', 'mobilenetv3_large_100_miil',
-                        'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns'],
+                        'mobilenetv3_large_100', 'tf_efficientnetv2_b0', 'tf_efficientnet_b0_ns',
+                        'repvgg_b0', 'repvgg-a0', 'multi-model', 'mobile_vit'],
             help='Select model to train/test')
 
     parser.add_argument('--pretrained',
@@ -30,7 +31,7 @@ def parse_opts():
             help='Select loss_fn to train/test')
 
     parser.add_argument('--batch_size',
-            default=128,
+            default=256,
             type=int,
             help='Training/Testing batch size')
 
@@ -55,7 +56,7 @@ def parse_opts():
             help='What device to use for training or validation model')
 
     parser.add_argument('--cuda_list',
-            default='4',
+            default='7',
             type=str,
             help='Name list of gpus that are used to train')
 
@@ -80,7 +81,7 @@ def parse_opts():
 
     # /OOB_RECOG/logs/project-1/TB_log/version_0
     parser.add_argument('--save_path', type=str, 
-                        default='/OOB_RECOG/logs/211109_heuristic_sampling', help='')
+                        default='/OOB_RECOG/logs/2111119', help='')
 
     parser.add_argument('--test_mode',
             action='store_true',
@@ -158,15 +159,9 @@ def parse_opts():
             help='Data location')
 
     parser.add_argument('--fold',
-            default='2',
-            type=str,
-            choices=['1', '2', '3', '4', '5', 'free'],
-            help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
-
-    parser.add_argument('--mini_fold',
             default='1',
             type=str,
-            choices=['general', '1', '2', '3', '4'],
+            choices=['1', '2', '3', '4', '5', 'free'],
             help='valset 1, 2, 3, 4, 5, free=for setting train_videos, val_vidoes')
 
     parser.add_argument('--data_version',
@@ -178,6 +173,11 @@ def parse_opts():
     parser.add_argument('--IB_ratio',
             default=3,
             type=float,
+            help='')
+
+    parser.add_argument('--WS_ratio',
+            default=4,
+            type=int,
             help='')
 
     parser.add_argument('--num_workers',
@@ -197,25 +197,44 @@ def parse_opts():
             default=6,
             help='If true, Only testing')
 
+    parser.add_argument('--hem_interation_idx',
+            type=int,
+            choices=[100,200,300],
+            help='for iteration offline hem for offline methods // 100 == first stage, 200 == second stage')
+
+
+    parser.add_argument('--appointment_assets_path',
+            default='',
+            help='load from appointment_assets_path')
+
     # -------------- Train Methods --------------------
     parser.add_argument('--experiment_type', 
             default='ours', 
             type=str,
             choices=['ours', 'theator'], )
+    
+    parser.add_argument('--experiment_sub_type', 
+            default='none', 
+            type=str,
+            choices=['none', 'semi'])
+    
+    parser.add_argument('--semi_data', 
+            default='rs-general', 
+            type=str,)
 
-    parser.add_argument('--stage', 
-            default='mini_fold_stage_0', 
+    parser.add_argument('--train_stage', 
+            default='general_train', 
             type=str,
             choices=['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train'])
 
     parser.add_argument('--hem_extract_mode', type=str,
-            default='hem-softmax-offline', 
-            choices=['hem-softmax-offline', 'hem-voting-offline', 'hem-vi-offline', 
-                     'hem-emb-online', 'hem-focus-online'],
+            
+            choices=['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline',
+                     'hem-emb-online', 'hem-focus-online', 'offline'],
             help='Select train method, normal or hem method')
             
     parser.add_argument('--top_ratio', type=float,
-            default=7/100,
+            default=10/100,
             help='Select HEM top ratio')
     
     parser.add_argument('--sampling_type', type=int,
@@ -225,6 +244,78 @@ def parse_opts():
     parser.add_argument('--emb_type', type=int,
             default=1,
             help='?')
+    
+    parser.add_argument('--use_online_mcd',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_proxy_all',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_half_neg',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_neg_proxy',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--dropout_prob',
+            default=0.3,
+            type=float,
+            help='?')
+    
+    parser.add_argument('--n_dropout',
+            default=1,
+            type=int,
+            help='?')
+    
+    parser.add_argument('--use_loss_weight',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--alpha',
+            default=0.1,
+            type=float,
+            help='?')
+    
+    parser.add_argument('--use_multi_model',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--multi_stage',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--n_stage',
+            default=5,
+            type=int,
+            help='?')
+    
+    parser.add_argument('--use_emb_only',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--use_oversample',
+            action='store_true',
+            help='?')
+    
+    parser.add_argument('--update_type',
+            default=1,
+            type=int,
+            help='?')
+    
+    parser.add_argument('--update_type2',
+            default=False,
+            type=bool,
+            help='?')
+    
+    parser.add_argument('--use_step_weight',
+            default=False,
+            type=bool,
+            help='?')
+    
 
     # -------------- etc --------------------
     parser.add_argument('--random_seed', type=int, default=10, help='dataset random seed')
@@ -240,7 +331,7 @@ def parse_opts():
     parser.add_argument('--inference_fold',
                     default='1',
                     type=str,
-                    choices=['1', '2', '3', '4', '5', 'free'],
+                    choices=['1', '2', '3', '4', '5', 'free', 'all'],
                     help='valset 1, 2, 3, 4, 5, free')
 
     parser.add_argument('--experiments_sheet_dir', type=str, 
@@ -250,5 +341,11 @@ def parse_opts():
     parser.add_argument('--trial', type=int,
             default=1,
             help='?')
+    
+    
+    parser.add_argument('--use_test_batch',
+            action='store_true',
+            help='?')
+
 
     return parser

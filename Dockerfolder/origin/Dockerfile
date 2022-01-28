@@ -29,4 +29,4 @@ RUN dpkg-reconfigure --frontend noninteractive tzdata
 ADD . /OOB_RECOG
 WORKDIR /OOB_RECOG
 
-# RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt

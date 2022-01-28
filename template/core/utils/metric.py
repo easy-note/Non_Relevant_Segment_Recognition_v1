@@ -2,7 +2,7 @@ import torch
 import math
 import numpy as np
 from pycm import *
-from core.utils.misc import *
+# from core.utils.misc import *
 
 import matplotlib.pyplot as plt
 
@@ -136,6 +136,10 @@ class MetricHelper():
         advanced_metrics['mCR'] = np.mean([metrics['CR'] for metrics in metrics_list])
         advanced_metrics['mOR'] = np.mean([metrics['OR'] for metrics in metrics_list])
 
+        # calc mPrecision, mRecall
+        advanced_metrics['mPrecision'] = np.mean([metrics['Precision'] for metrics in metrics_list])
+        advanced_metrics['mRecall'] = np.mean([metrics['Recall'] for metrics in metrics_list])
+
         # calc Jaccard index (https://neo4j.com/docs/graph-data-science/current/alpha-algorithms/jaccard/)
         advanced_metrics['Jaccard'] = np.float16(advanced_metrics['TP']) / np.float16(advanced_metrics['predict_OOB'] + advanced_metrics['gt_OOB'] - advanced_metrics['TP'])
 
@@ -148,9 +152,10 @@ class MetricHelper():
 
         return advanced_metrics
 
-    def save_metric(self, metric, epoch, args, save_path, task='OOB'):
+    def save_metric(self, model_name, metric, epoch, args, save_path, task='OOB'):
         if task=='OOB':
-            save_OOB_result_csv(metric=metric, epoch=epoch, args=args, save_path=save_path)
+            pass
+            # save_OOB_result_csv(metric=metric, epoch=epoch, args=args, save_path=save_path)
 
     def save_loss_pic(self, save_path):
         fig = plt.figure(figsize=(32, 16))
@@ -163,3 +168,5 @@ class MetricHelper():
         
         plt.legend(['Train', 'Val'], fontsize=20)
         plt.savefig(save_path + '/loss.png')
+
+        plt.close(fig)

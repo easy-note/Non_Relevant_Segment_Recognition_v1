@@ -1,4 +1,5 @@
-STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
+# STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3', 'hem_train', 'general_train']
+STAGE_LIST = ['mini_fold_stage_0', 'mini_fold_stage_1', 'mini_fold_stage_2', 'mini_fold_stage_3'] #, 'hem_train', 'hem_train', 'hem_train', 'hem_train', 'hem_train'] # general 완성전까지 hem_train까지만 진행
 
 def get_experiment_args():
     from core.config.base_opts import parse_opts
@@ -12,6 +13,7 @@ def get_experiment_args():
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
     args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
+    # args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
     args.experiments_sheet_dir = args.save_path
 
     ### dataset opts
@@ -35,7 +37,6 @@ def train_main(args):
 
     from core.model import get_model, get_loss
     from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
 
     from torchsummary import summary
 
@@ -44,10 +45,7 @@ def train_main(args):
         name='TB_log',
         default_hp_metric=False)
 
-    if args.experiment_type == 'theator':
-        x = TheatorTrainer(args)
-    elif args.experiment_type == 'ours':
-        x = CAMIO(args)
+    x = CAMIO(args)
     
     if args.num_gpus > 1:
         trainer = pl.Trainer(gpus=args.num_gpus, 
@@ -57,7 +55,15 @@ def train_main(args):
                             plugins=DDPPlugin(find_unused_parameters=False), # [Warning DDP] error ?
                             accelerator='ddp')
     else:
-        trainer = pl.Trainer(gpus=args.num_gpus,
+        if args.use_test_batch:
+            trainer = pl.Trainer(gpus=args.num_gpus,
+                            limit_train_batches=2,
+                            limit_val_batches=2,
+                            max_epochs=args.max_epoch, 
+                            min_epochs=args.min_epoch,
+                            logger=tb_logger,)
+        else:    
+            trainer = pl.Trainer(gpus=args.num_gpus,
                             # limit_train_batches=2,#0.01,
                             # limit_val_batches=2,#0.01,
                             max_epochs=args.max_epoch, 
@@ -78,13 +84,12 @@ def inference_main(args):
     
     ### test inference module
     from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
     from core.api.inference import InferenceDB # inference module
     from core.api.evaluation import Evaluator # evaluation module
     from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
-    from core.utils.logging import Report # report helper (for experiments reuslts and inference results)
+    from core.utils.logger import Report # report helper (for experiments reuslts and inference results)
 
-    from core.utils.visual import VisualTool # visual module
+    from core.api.visualization import VisualTool # visual module
     
     import os
     import pandas as pd
@@ -99,13 +104,9 @@ def inference_main(args):
     print('restore : ', args.restore_path)
 
     # from finetuning model
-    model_path = get_inference_model_path(args.restore_path)
-    
-    if args.experiment_type == 'theator':
-        model = TheatorTrainer.load_from_checkpoint(model_path, args=args)
-    elif args.experiment_type == 'ours':
-        model = CAMIO.load_from_checkpoint(model_path, args=args)
-        
+
+    model_path = get_inference_model_path(args.restore_path)        
+    model = CAMIO.load_from_checkpoint(model_path, args=args)
     model = model.cuda()
 
     # inference block
@@ -141,6 +142,7 @@ def inference_main(args):
         patient_video = patient['patient_video']
 
         videos_metrics_list = [] # save each videos metrics
+        
         patient_gt_list = [] # each patients gt list for visual
         patient_predict_list = [] # each patients predict list for visual
 
@@ -155,7 +157,7 @@ def inference_main(args):
             db_path = video_path_info['db_path']
 
             # Inference module
-            inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+            inference = InferenceDB(args, model, db_path, args.inference_interval) # Inference object
             predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
   
             # for save video results
@@ -185,7 +187,9 @@ def inference_main(args):
                         })
             predict_df.to_csv(predict_csv_path)
 
-            # TO-DO: visulization
+            # for visulization per patients
+            patient_gt_list += gt_list
+            patient_predict_list += predict_list
 
             # metric per video
             video_metrics = evaluator.calc() # same return with metricHelper
@@ -207,9 +211,6 @@ def inference_main(args):
 
             # for calc patients metric
             videos_metrics_list.append(video_metrics)
-
-            patient_gt_list += gt_list
-            patient_predict_list += predict_list
         
         # calc each patients CR, OR
         patient_metrics = MetricHelper().aggregate_calc_metric(videos_metrics_list)
@@ -236,7 +237,7 @@ def inference_main(args):
         patient_predict_visual_path = os.path.join(each_patients_save_dir, 'predict-{}.png'.format(patient_no))
 
         visual_tool = VisualTool(patient_gt_list, patient_no, patient_predict_visual_path)
-        visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval)
+        visual_tool.visual_predict(patient_predict_list, args.model, args.inference_interval, window_size=300, section_num=2)
 
         # CLEAR PAGING CACHE
         clean_paging_chache()
@@ -255,9 +256,14 @@ def inference_main(args):
     experiment_summary = {
         'model':args.model,
         'methods':args.hem_extract_mode,
+        'top_ratio':args.top_ratio,
         'stage': args.stage,
+
+        'random_seed': args.random_seed,
         'IB_ratio': args.IB_ratio,
+        'WS_ratio': args.WS_ratio,
         'inference_fold':args.inference_fold,
+
         'mCR':total_mCR,
         'mOR':total_mOR,
         'CR':total_CR,
@@ -271,32 +277,43 @@ def inference_main(args):
 
 def main():    
     # 0. set each experiment args 
-    import os
+    import os, torch, random
+    import numpy as np
+
+    from core.config.assets_info import mc_assets_save_path
 
     # 0. set each experiment args 
     args = get_experiment_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
-
+    random.seed(args.random_seed)
+    np.random.seed(args.random_seed)
+    os.environ["PYTHONHASHSEED"]=str(args.random_seed)
+    torch.manual_seed(args.random_seed)
+    torch.cuda.manual_seed(args.random_seed)
+    torch.backends.cudnn.deterministic=True
+    torch.backends.cudnn.benchmark=True
+    
     # general mode
     if args.stage == 'general_train':
         args.mini_fold = 'general'
-        args = train_main(args)
         
-        # 3. inference
-        args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+        if args.multi_stage:
+            print('Go Multi Stage!')
+            for N in range(args.n_stage):
+                args.cur_stage = N+1
+                args = train_main(args)
 
-        # 4. save experiments summary
-        experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
-        os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+                # 3. inference
+                args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
-        save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
-    else: # online mode
-        if check_hem_online_mode(args):
-            args.mini_fold = 'general'
-            args.stage = 'hem_train'
+                # 4. save experiments summary
+                experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+                os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
+                save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+        else:
             args = train_main(args)
-
+            
             # 3. inference
             args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
@@ -305,10 +322,46 @@ def main():
             os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
             save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+    else: # online mode
+        if check_hem_online_mode(args):
+            args.mini_fold = 'general'
+            args.stage = 'hem_train'
+
+            if args.multi_stage:
+                print('Go Multi Stage!')
+                for N in range(args.n_stage):
+                    args.cur_stage = N+1
+                    args = train_main(args)
+
+                    # 3. inference
+                    args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+
+                    # 4. save experiments summary
+                    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+                    os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+
+                    save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
+            else:
+                args = train_main(args)
+
+                # 3. inference
+                args, experiment_summary, patients_CR, patients_OR = inference_main(args)
+
+                # 4. save experiments summary
+                experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+                os.makedirs(args.experiments_sheet_dir, exist_ok=True)
+
+                save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
         # offline mode
         else:
             for ids, stage in enumerate(STAGE_LIST):
                 args = set_args_per_stage(args, ids, stage) # 첫번째 mini-fold 1 
+
+
+                ## data2/../hem_assets/theator_stage_flag=100/resnet18/WS=3-IB=3-seed=3829/hem_extract_mode=hem-softmax-offline_lower-ver=1-top_ratio=5-n_dropout=5.csv
+                stage_hem_base_path = os.path.join(mc_assets_save_path['robot'], 'hem_assets', 'theator_stage_flag={}'.format(int(args.theator_stage_flag) - 100), args.model, 'WS={}-IB={}-seed={}'.format(int(args.WS_ratio), int(args.IB_ratio), args.random_seed), 'hem_extract_mode={}-ver={}-top_ratio={}-n_dropout={}.csv'.format(args.hem_extract_mode + '_lower', 1, int(args.top_ratio * 100) , args.n_dropout)) # you should get (theator_stage_flag - 100 dir)
+                args.stage_hem_path = stage_hem_base_path
+                
 
                 print('\n\n')
                 print('====='*7, args.stage.upper(),'====='*7)
@@ -319,7 +372,24 @@ def main():
                 args = train_main(args)
 
                 if ids > 3:
+                    exit(0)
+
+                '''
+                if ids > 3:
                     # 3. inference
+                    if ids == 4: # version 4
+                        args.hem_extract_mode = 'hem-softmax-small_diff-offline'
+                    elif ids == 5: # version 5
+                        args.hem_extract_mode = 'hem-softmax-large_diff-offline'
+
+                    elif ids == 6: # version 6
+                        args.hem_extract_mode = 'hem-voting-offline'
+
+                    elif ids == 7: # version 7
+                        args.hem_extract_mode = 'hem-vi_small-offline'
+                    elif ids == 8: # version 8
+                        args.hem_extract_mode = 'hem-vi_large-offline'
+                
                     args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
                     # 4. save experiments summary
@@ -327,17 +397,21 @@ def main():
                     os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
                     save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
-
+                    
+                    args.hem_extract_mode = 'all-offline'
+                '''
+                
 if __name__ == '__main__':
     if __package__ is None:
         import sys
         from os import path    
         base_path = path.dirname(path.dirname(path.abspath(__file__)))
         sys.path.append(base_path)
+        sys.path.append(base_path+'/core/accessory/RepVGG')
         print(base_path)
         
         from core.utils.misc import save_dict_to_csv, prepare_inference_aseets, get_inference_model_path, \
-    set_args_per_stage, check_hem_online_mode, clean_paging_chache
+                                    set_args_per_stage, check_hem_online_mode, clean_paging_chache
 
     main()
 
