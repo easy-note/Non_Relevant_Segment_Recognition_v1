@@ -106,16 +106,6 @@ def inference_main(args):
     # from finetuning model
     model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
     model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
-
-    '''
-    pt_path=None # for using change_deploy_mode for offline, it will be update on above if's branch
-
-    if 'repvgg' in args.model: # load pt from version/checkpoints 
-        pt_path = get_pt_path(os.path.join(args.restore_path, 'checkpoints'))
-        print('\n\t ===> LOAD PT FROM {}\n'.format(pt_path))
-    
-    model.change_deploy_mode(pt_path=pt_path) # 이거는 repvgg나 multi일떄만 적용됨. offline시 repvgg는 저장된 Pt에서 불러와야 하므로 pt_path를 arguments로 넣어주어야 함. 
-    '''
         
     model = model.cuda()
 
@@ -317,11 +307,6 @@ def get_hem_assets_path(hem_interation_idx, model_name, hem_extract_mode):
                 {
                     'hem-softmax_diff_small-offline': 0.05
                 },
-            
-            'repvgg-a0':
-                {
-                    'hem-softmax_diff_small-offline': 0.05
-                },
 
             'resnet18':
                 {
@@ -333,11 +318,6 @@ def get_hem_assets_path(hem_interation_idx, model_name, hem_extract_mode):
             'mobilenetv3_large_100':
                 {
                     'hem-softmax_diff_small-offline': 0.05
-                },
-            
-            'repvgg-a0':
-                {
-                    'hem-softmax_diff_small-offline': 0.05 # 0.07도 있긴 함.
                 },
 
             'resnet18':
