@@ -150,13 +150,6 @@ def inference_main(args):
     # from finetuning model
     model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
     model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
-    pt_path=None # for using change_deploy_mode for offline, it will be update on above if's branch
-
-    if 'repvgg' in args.model: # load pt from version/checkpoints 
-        pt_path = get_pt_path(os.path.join(args.restore_path, 'checkpoints'))
-        print('\n\t ===> LOAD PT FROM {}\n'.format(pt_path))
-    
-    model.change_deploy_mode(pt_path=pt_path) # 이거는 repvgg나 multi일떄만 적용됨. offline시 repvgg는 저장된 Pt에서 불러와야 하므로 pt_path를 arguments로 넣어주어야 함. 
         
     model = model.cuda()
 
@@ -208,7 +201,7 @@ def inference_main(args):
             db_path = video_path_info['db_path']
 
             # Inference module
-            inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+            inference = InferenceDB(args, model, db_path, args.inference_interval) # Inference object // args => InferenceDB init의 DBDataset(args) 생성시 args.model로 'mobile_vit' augmentation 처리해주기 위해
             predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
   
             # for save video results
@@ -437,7 +430,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args = get_clean_args()
         # ==> 공용 
         # args.model = model_name
-        args.model = 'mobilenetv3_large_100' # model 정보만 정확하게 넘겨주면 되지 않을까?????
+        args.model = extract_args.model # 'mobilenetv3_large_100' # model 정보만 정확하게 넘겨주면 되지 않을까?????
         
         args.experiment_type = 'ours'
         args.hem_extract_mode = 'offline' # 어차피 사용안됨, 그냥 넣어줌
@@ -452,8 +445,10 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.n_dropout = 1 
         # ------------ ------------- ------------ #
 
+        
         model_path = get_inference_model_path(model_dir)    
         model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
+        '''
         pt_path=None # for using change_deploy_mode for offline, it will be update on above if's branch
 
         if 'repvgg' in args.model: 
@@ -461,6 +456,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
             print('\n\t ===> LOAD PT FROM {}\n'.format(pt_path))
         
         model.change_deploy_mode(pt_path=pt_path) # change feature_module weight from saved pt
+        '''
 
         model = model.cuda()
         # model.eval() # 어차피 mc dropout 에서 처리
@@ -507,7 +503,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
             # ------------ 4.  hem_helper args ------------ # 
             args = get_clean_args()
 
-            n_dropout = 1  # hem_helper_init
+            n_dropout = extract_args.n_dropout  # hem_helper_init
             hem_extract_mode = method # hem_helper_init
             use_hem_per_patient = True # hem_helper init 
             
@@ -635,8 +631,8 @@ if __name__ == '__main__':
         sys.path.append(base_path+'/core/accessory/RepVGG')
         print(base_path)
         
-        from core.utils.misc import prepare_inference_aseets, get_inference_model_path, get_pt_path, \
-            check_hem_online_mode, clean_paging_chache, save_dict_to_csv, save_dataset_info
+        from core.utils.misc import prepare_inference_aseets, get_inference_model_path, \
+            clean_paging_chache, save_dict_to_csv, save_dataset_info
 
     main()
 
