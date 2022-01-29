@@ -27,7 +27,7 @@ class RobotDataset_new(Dataset):
         self.minifold = minifold
 
         ## set self var from args
-
+        self.model = self.args.model
         self.IB_ratio = self.args.IB_ratio
         self.random_seed = self.args.random_seed
         self.WS_ratio = self.args.WS_ratio
@@ -58,7 +58,7 @@ class RobotDataset_new(Dataset):
         self.patients_name = [] # init
 
         if self.experiment_type == 'ours':
-            if self.args.model == 'mobile_vit':
+            if self.model == 'mobile_vit':
                 d_transforms = data_transforms2
             else:    
                 d_transforms = data_transforms
