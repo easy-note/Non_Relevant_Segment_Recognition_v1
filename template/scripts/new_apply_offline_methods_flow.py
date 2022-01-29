@@ -58,6 +58,7 @@ def get_extract_hem_assets_args(args):
         'max_epoch': 0,
         'use_online_mcd': False,
         'hem_interation_idx': args.hem_interation_idx, # var
+        'baby_model_save_path': args.baby_model_save_path # var
     }
 
     # 2. only set for extract hem assets from input args
@@ -330,7 +331,7 @@ def inference_main(args):
     return args, experiment_summary, patients_CR, patients_OR
 
 
-def get_offline_methods_model_path(hem_interation_idx, model_name, train_stage):
+def get_baby_model_path_from_NAS(hem_interation_idx, model_name, train_stage):
     import os
     from core.config.assets_info import mc_assets_save_path
 
@@ -345,6 +346,21 @@ def get_offline_methods_model_path(hem_interation_idx, model_name, train_stage):
     random_seed = 3829
 
     model_dir = os.path.join(mc_assets_save_path['robot'], 'models', 'theator_stage_flag={}'.format(hem_interation_idx), model_name, 'WS={}-IB={}-seed={}'.format(WS_ratio, IB_ratio, random_seed), train_stage)
+    
+    return model_dir
+
+def get_baby_model_path_from_restore_dir(baby_model_save_path, train_stage):
+    import os
+
+    # visual flow에서 학습한 baby model dir을 넣어주어서 train_stage에 따라서 model path 가져오기
+    train_stage_to_restore_path = {
+        'mini_fold_stage_0': 'TB_log/version_0/checkpoints',
+        'mini_fold_stage_1': 'TB_log/version_1/checkpoints',
+        'mini_fold_stage_2': 'TB_log/version_2/checkpoints',
+        'mini_fold_stage_3': 'TB_log/version_3/checkpoints',
+    }
+
+    model_dir = os.path.join(baby_model_save_path, train_stage_to_restore_path[train_stage])
     
     return model_dir
 
@@ -419,8 +435,12 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         restore_path = train_stage_to_restore_path[train_stage] # set restore_path
         os.makedirs(restore_path, exist_ok=True) # for saveing version 0,1,2,3
 
-        # 1-1. model 불러오기 (from NAS)
-        model_dir = get_offline_methods_model_path(extract_args.hem_interation_idx, extract_args.model, train_stage)
+        # 1. baby model (extract model) 불러오기
+        if extract_args.baby_model_save_path == '': # 1-1. model 불러오기 (from NAS)
+            model_dir = get_baby_model_path_from_NAS(extract_args.hem_interation_idx, extract_args.model, train_stage)
+        else : # 1-2. local에서 불러오기
+            model_dir = get_baby_model_path_from_restore_dir(extract_args.baby_model_save_path, train_stage)
+        
         print(model_dir)
 
         # args는 model 불러올떄만 사용하기 위해(checkpoint)
@@ -467,6 +487,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args = get_clean_args()
         # ==> 공용 
         args.experiment_type = 'ours'
+        args.model = extract_args.model
         args.IB_ratio = 3  # hueristic sampler 에서도 사용
         args.WS_ratio = 3 # hueristic sampler 에서 사용
         args.random_seed = 3829
@@ -484,6 +505,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args = get_clean_args()
         # ==> 공용 
         args.experiment_type = 'ours'
+        args.model = extract_args.model
         args.IB_ratio = 3  # hueristic sampler 에서도 사용
         args.WS_ratio = 3 # hueristic sampler 에서 사용
         args.random_seed = 3829
@@ -510,7 +532,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
             IB_ratio = 3 # 이건 get_target_patient_hem_count
             random_seed = 3829 # 이건 set_ratio에서 사용
 
-            top_ratio = 0.5
+            top_ratio = extract_args.top_ratio
 
             hem_helper = HEMHelper(args)
             hem_helper.set_method(hem_extract_mode)
