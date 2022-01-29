@@ -347,5 +347,10 @@ def parse_opts():
             action='store_true',
             help='?')
 
+    parser.add_argument('--baby_model_save_path',
+            default='',
+            type=str,
+            help='load baby model path from speicific path, only useing in new_apply_offline_methods_flow.py')
+
 
     return parser
