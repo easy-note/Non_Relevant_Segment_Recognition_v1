@@ -43,10 +43,10 @@ class HEMHelper():
     def set_method(self, method):
         if method in ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline']:
             self.method = method # 'hem-vi-offline'
-        else:
+        else: # offline_multi / online
             self.method = method
 
-    def set_restore_path(self, restore_path):
+    def set_restore_path(self, restore_path): # offline multi 시 사용
         self.restore_path = restore_path
 
     def set_IB_ratio(self, IB_ratio):
@@ -54,7 +54,11 @@ class HEMHelper():
     
     def set_random_seed(self, random_seed):
         self.random_seed = random_seed # use in def set_ratio
-    
+
+    ### only for multi offline
+    def set_offline_multi_stack(self, offline_multi_stack): # offline multi시 사용
+        self.offline_multi_stack = offline_multi_stack
+    ### only for multi offline
     
     def set_target_hem_count(self, rs_cnt, nrs_cnt):
         self.target_hem_rs_cnt, self.target_hem_nrs_cnt = (rs_cnt, nrs_cnt)
@@ -121,9 +125,13 @@ class HEMHelper():
         
     def compute_hem(self, *args):
         if self.method in ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline']:
-            # 사용할 args setting (기능하는 func내에 self.args로 남겨주면 오히려 코드 읽을때나 구성할때 헷갈릴 것 같습니다. T.T)
             # model, dataset, hem_method, hem_per_patient, n_dropout = kwargs['model'], kwargs['valset'], self.method, self.hem_per_patient, self.n_dropout
-            return self.hem_vi_offline(*args)
+
+            model, dataset = args
+            dropout_predictions, gt_list, img_path_list = self.calc_mc_dropout(model, dataset, self.n_dropout) # MC dropout
+
+            # return self.hem_vi_offline(*args)
+            return self.hem_vi_offline(dropout_predictions, gt_list, img_path_list) # computing hem
 
         elif self.method == 'hem-emb-online':
             return self.hem_sim_method(*args)
@@ -133,6 +141,28 @@ class HEMHelper():
             #     return self.hem_cos_hard_sim2(*args)
             # elif self.args.emb_type == 4:
             #     return self.hem_cos_hard_sim_only(*args)
+
+        elif self.method == 'offline-multi':
+
+            model, dataset = args
+            dropout_predictions, gt_list, img_path_list = self.calc_mc_dropout(model, dataset, self.n_dropout) # MC dropout
+            
+            results_dict = {}
+            
+            for method_idx, method in enumerate(self.offline_multi_stack, 1):
+                method_info = '{}({})'.format(method, method_idx)
+                
+                self.method = method
+                hem_final_df = self.hem_vi_offline(dropout_predictions, gt_list, img_path_list) # computing hem
+                hem_final_df_path = os.path.join(self.restore_path, '{}.csv'.format(method_info))
+                hem_final_df.to_csv(hem_final_df_path, index=False) # restore_path / hem-softmax_diff_small-offline(1).csv)
+
+                results_dict[method_info] = hem_final_df_path
+
+            self.method = 'offline-multi' # 원상복귀(혹시몰라)
+            
+            return results_dict
+
         else: # exception
             return None
 
@@ -240,9 +270,8 @@ class HEMHelper():
         return method
     
     
-    def hem_vi_offline(self, model, dataset): # offline
+    def hem_vi_offline(self, dropout_predictions, gt_list, img_path_list): # offline
         # self.n_dropout, self.hem_per_patient, self.method 사용
-        dropout_predictions, gt_list, img_path_list = self.calc_mc_dropout(model, dataset, self.n_dropout) # MC dropout
 
         #### patient 별 hem extract 구현
         print(dropout_predictions.shape)
