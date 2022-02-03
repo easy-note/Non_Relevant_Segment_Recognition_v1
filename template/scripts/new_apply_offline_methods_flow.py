@@ -56,7 +56,9 @@ def get_extract_hem_assets_args(args):
         'max_epoch': 0,
         'use_online_mcd': False,
         'hem_interation_idx': args.hem_interation_idx, # var
-        'baby_model_save_path': args.baby_model_save_path # var
+        'baby_model_save_path': args.baby_model_save_path, # var
+        'experiment_sub_type': 'none', # only in semi (dataset)
+        'semi_data': 'rs-general', # only in semi (dataset)
     }
 
     # 2. only set for extract hem assets from input args
@@ -455,6 +457,9 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.random_seed = 3829
         args.fold = '1'
         args.use_wise_sample = True # 사실 이건 mini fold stage에서 wise sampling 햇냐 안햇냐의 재현 여부
+        # ==> semi
+        args.experiment_sub_type = extract_args.experiment_sub_type # 'semi' or 'none'
+        args.semi_data == extract_args.semi_data # 'rs-general'
         # ------------ ------------- ------------ #
 
         trainset = RobotDataset_new(args, state='train_mini', minifold=train_stage_to_minifold[train_stage], wise_sample=args.use_wise_sample) # train dataset setting
@@ -472,6 +477,9 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.WS_ratio = 3 # hueristic sampler 에서 사용
         args.random_seed = 3829
         args.fold = '1'
+        # ==> semi
+        args.experiment_sub_type = extract_args.experiment_sub_type # 'semi' or 'none'
+        args.semi_data == extract_args.semi_data # 'rs-general'
         # ------------ ----save_hem_assets_info--------- ------------ #
 
         val_all_metaset = RobotDataset_new(args, state='val_mini',  minifold=train_stage_to_minifold[train_stage], all_sample=True, use_metaset=True) # val dataset setting
