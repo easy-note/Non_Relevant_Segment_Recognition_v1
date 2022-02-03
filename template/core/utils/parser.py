@@ -121,8 +121,8 @@ class InfoParser():
             'ROBOT_VIDEO_2':(lambda x: self._robot_video_name_to_info_v2()), # for Robot video 60
             'LAPA_VIDEO_1':(lambda x: self._lapa_video_name_to_info_v1()), # for Lapa video 100
             'ROBOT_ANNOTATION':(lambda x: self._robot_annotation_name_to_info()), # for Robot annotation,
-            'ETC_VIDEO_1': (lambda x: self._etc_video_name_to_info()), # for etc video 24
-            'ETC_ANNOTATION': (lambda x: self._etc_annotation_name_to_info()), # for etc annotation 24
+            'ETC_VIDEO_1': (lambda x: self._etc_video_name_to_info()), # for etc video 24, and also you can use gangbuk 127 case
+            'ETC_ANNOTATION': (lambda x: self._etc_annotation_name_to_info()), # for etc annotation 24, and also you can use gangbuk 127 case
         }
 
         # return rule
