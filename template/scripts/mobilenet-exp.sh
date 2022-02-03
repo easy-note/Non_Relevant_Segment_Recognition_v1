@@ -1,6 +1,6 @@
 python new_visual_flow.py --fold '1' --trial 1 --model "mobilenetv3_large_100" --max_epoch 1 \
 --batch_size 256 --lr_scheduler "step_lr" --lr_scheduler_step 5 --lr_scheduler_factor 0.9 --cuda_list '0' \
---IB_ratio 3 --random_seed 3829 --stage 'general_train' --inference_fold '1' \       
+--IB_ratio 3 --random_seed 3829 --train_stage 'general_train' --inference_fold '1' \
 --experiment_sub_type 'semi' \
 --n_stage 3 \
 --multi_stage \
