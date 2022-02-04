@@ -120,7 +120,9 @@ class InfoParser():
             'ROBOT_VIDEO_1': (lambda x: self._robot_video_name_to_info_v1()), # for Robot video 40
             'ROBOT_VIDEO_2':(lambda x: self._robot_video_name_to_info_v2()), # for Robot video 60
             'LAPA_VIDEO_1':(lambda x: self._lapa_video_name_to_info_v1()), # for Lapa video 100
-            'ROBOT_ANNOTATION':(lambda x: self._robot_annotation_name_to_info()), # for Robot annotation
+            'ROBOT_ANNOTATION':(lambda x: self._robot_annotation_name_to_info()), # for Robot annotation,
+            'ETC_VIDEO_1': (lambda x: self._etc_video_name_to_info()), # for etc video 24
+            'ETC_ANNOTATION': (lambda x: self._etc_annotation_name_to_info()), # for etc annotation 24
         }
 
         # return rule
@@ -163,33 +165,40 @@ class InfoParser():
         video_channel, _, video_slice_no = video_name.split('_') # ch1, video, 01
 
         new_nas_policy_name = "_".join([op_method, patient_idx, video_channel, video_slice_no]) # R_1_ch1_01
-        print('CONVERTED NAMING: {} \t ===> \t {}'.format(self.file_name, new_nas_policy_name))
+        # print('CONVERTED NAMING: {} \t ===> \t {}'.format(self.file_name, new_nas_policy_name))
 
         hospital = '01'
         surgery_type = 'G'
         surgeon = '01'
-
-        self.file_name = ''
 
         return hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no
 
     def _robot_video_name_to_info_v2(self):
         file_name = self._clean_file_ext()
         hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no = file_name.split('_') # parsing video name
-        self.file_name = ''
-
-        
     
     def _lapa_video_name_to_info_v1(self):
         file_name = self._clean_file_ext()
         hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no = file_name.split('_') # parsing video name
-        self.file_name = ''
 
         return hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no
 
     def _robot_annotation_name_to_info(self):
         file_name = self._clean_file_ext()
-        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no, _, _ = file_name.split('_') # parsing video name
-        self.file_name = ''
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no, _, _ = file_name.split('_') # parsing annotation name
+
+        return hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no
+
+    def _etc_video_name_to_info(self):
+        file_name = self._clean_file_ext()
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_slice_no, = file_name.split('_') # parsing video name
+        video_channel = 'empty'
+
+        return hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no
+
+    def _etc_annotation_name_to_info(self):
+        file_name = self._clean_file_ext()
+        hospital, surgery_type, surgeon, op_method, patient_idx, video_slice_no, _, _ = file_name.split('_') # parsing annotation name
+        video_channel = 'empty'
 
         return hospital, surgery_type, surgeon, op_method, patient_idx, video_channel, video_slice_no

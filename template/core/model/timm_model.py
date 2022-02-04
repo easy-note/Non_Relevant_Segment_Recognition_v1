@@ -1,6 +1,8 @@
 import timm
 import torch
 import torch.nn as nn
+from core.model.mobilevit import MobileViT_Feat
+
 
 
 def generate_timm_model(args):
@@ -22,35 +24,48 @@ class TIMM(nn.Module):
         
         self.args = args
         self.use_emb = False
+        self.emb_only = args.use_emb_only
+        
         arch_name = self.args.model
         
-        model = timm.create_model(arch_name, pretrained=True)
-        
         # help documents - https://fastai.github.io/timmdocs/create_model (how to use feature_extractor in timm)
-        if self.args.model == 'swin_large_patch4_window7_224':
-            self.feature_module = nn.Sequential(
-                *list(model.children())[:-2],
-            )
-            self.gap = nn.AdaptiveAvgPool1d(1)
+        if self.args.model == 'mobile_vit':
+            # https://github.com/chinhsuanwu/mobilevit-pytorch
+            dims = [64, 80, 96]
+            channels = [16, 16, 24, 24, 48, 48, 64, 64, 80, 80, 320]
+
+            model = MobileViT_Feat((256, 256), dims, channels, num_classes=2, expansion=2)
+            
+            self.feature_module = model
+            n_feat = channels[-1]
         else:
-            self.feature_module = nn.Sequential(
-                *list(model.children())[:-1]
-            )
+            model = timm.create_model(arch_name, pretrained=True)
+            
+            if self.args.model == 'swin_large_patch4_window7_224':
+                self.feature_module = nn.Sequential(
+                    *list(model.children())[:-2],
+                )
+                self.gap = nn.AdaptiveAvgPool1d(1)
+            else:
+                self.feature_module = nn.Sequential(
+                    *list(model.children())[:-1]
+                )
+            n_feat = model.num_features
         
         if self.args.experiment_type == 'theator':
             for p in self.feature_module.parameters():
                 p.requires_grad = False
                 
-        self.classifier = nn.Linear(model.num_features, 2)
+        self.classifier = nn.Linear(n_feat, 2)
         
         if 'hem-emb' in self.args.hem_extract_mode or 'hem-focus' in self.args.hem_extract_mode:
             self.use_emb = True
-            self.proxies = nn.Parameter(torch.randn(model.num_features, 2))
+            self.proxies = nn.Parameter(torch.randn(n_feat, 2))
         
         else : # off-line and genral
             self.classifier = nn.Sequential(
                 nn.Dropout(p=self.args.dropout_prob, inplace=True),
-                nn.Linear(model.num_features, 2)
+                nn.Linear(n_feat, 2)
             )
         
         if self.args.use_online_mcd:
@@ -60,22 +75,29 @@ class TIMM(nn.Module):
         features = self.feature_module(x)
         
         if self.args.model == 'swin_large_patch4_window7_224':
-            features = self.gap(features.permute(0, 2, 1))
+            features = self.gap(features.permute(0, 2, 1)).squeeze()            
+        
+        features = torch.nn.functional.normalize(features, p=2, dim=-1)
             
-        if self.args.use_online_mcd: #  해당 방식처럼 training에 따라서 forward 컨셉으로 offline도 구성하고 싶었는데.. 우선 online을 제외한 general. offline에서 classifier에 dropout을 추가하는 방향으로 임시 변경하였습니다.
-            if self.training: # 학습 중간에 넣나요? 보규님? 어떻게 접근하는지 궁금합니다!
+        if self.args.use_online_mcd: 
+            if self.training: 
                 features = self.dropout(features)
             else:
                 mcd_outputs = []
                 for _ in range(self.args.n_dropout):
-                    mcd_outputs.append(self.dropout(features).unsqueeze(0))
+                    drop = self.dropout(features).unsqueeze(0)    
+                    mcd_outputs.append(drop)
                     
                 a = torch.vstack(mcd_outputs)
+                
                 features = torch.mean(a, 0)
+
+        if self.emb_only:
+            return features
+        else:   
+            output = self.classifier(features.view(x.size(0), -1))
             
-        output = self.classifier(features.view(x.size(0), -1))
-        
-        if self.use_emb and self.training:
-            return features, output
-        else:
-            return output
+            if self.use_emb and self.training:
+                return features, output
+            else:
+                return output

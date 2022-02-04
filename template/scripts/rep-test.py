@@ -326,7 +326,13 @@ def main():
             args.mini_fold = 'general'
             args.stage = 'hem_train'
 
-            args = train_main(args)
+            if args.multi_stage:
+                print('Go Multi Stage!')
+                for N in range(args.n_stage):
+                    args.cur_stage = N+1
+                    args = train_main(args)
+            else:
+                args = train_main(args)
 
             # 3. inference
             # args, experiment_summary, patients_CR, patients_OR = inference_main(args)

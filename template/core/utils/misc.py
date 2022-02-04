@@ -1,36 +1,6 @@
 import os
 import pandas as pd
 
-
-def save_OOB_result_csv(metric, epoch, args, save_path):
-    m_keys = list(metric.keys())
-
-    cols = ['Model', 'Epoch', *m_keys]
-
-    save_path = save_path + '/result.csv'
-    model_name = args.model
-    
-    data = [model_name, epoch, *list(metric[key] for key in m_keys)]
-
-    if os.path.exists(save_path):
-        df = pd.read_csv(save_path)
-        print('Existed file loaded')
-        
-        new_df = pd.Series(data, index=cols)
-        df = df.append(new_df, ignore_index=True)
-        print('New line added')
-        
-    else:
-        print('New file generated!')
-        df = pd.DataFrame([data],
-                    columns=cols
-                    ) 
-
-    df.to_csv(save_path, 
-            index=False,
-            float_format='%.4f')
-
-
 # inference_flow.py에서 가져옴
 def clean_paging_chache():
     import subprocess # for CLEAR PAGING CACHE
@@ -40,35 +10,27 @@ def clean_paging_chache():
     subprocess.run('sync', shell=True)
     subprocess.run('echo 1 > /writable_proc/sys/vm/drop_caches', shell=True) ### For use this Command you should make writable proc file when you run docker
 
-def set_args_per_stage(args, ids, stage):
-    args.stage = stage
-
-    if ids > 3:
-        args.mini_fold = 'general'        
-        args.max_epoch = 100
-    else:
-        args.mini_fold = str(ids)
-
-    return args
-
-def check_hem_online_mode(args):
-    if 'online' in args.hem_extract_mode.lower():
-        return True
-    else:
-        return False 
 
 def get_inference_model_path(restore_path):
     # from finetuning model
     import glob
-
+    import os
+    
+    model_path = ''
+    
     ckpoint_path = os.path.join(restore_path, '*.ckpt')
+    # ckpoint_path = os.path.join(restore_path, 'checkpoints/*.ckpt')
+    
     ckpts = glob.glob(ckpoint_path)
 
     for f_name in ckpts :
         if f_name.find('best') != -1 :
-            return f_name
-        # if f_name.find('last') != -1 :
-        #     return f_name
+            model_path = f_name
+        '''
+        if f_name.find('last') != -1 :
+            model_path = f_name
+        '''
+    return model_path        
 
 def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
     from core.utils.prepare import InferenceAssets # inference assets helper (for prepare inference assets)
@@ -98,6 +60,34 @@ def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
 
     return inference_assets
 
+def prepare_inference_aseets_etc(case, anno_ver, inference_fold, save_path):
+    from core.utils.prepare_etc import InferenceAssets_etc # inference assets helper (for prepare inference assets)
+    from core.utils.prepare_etc import OOBAssets_etc # OOB assets helper (for prepare inference assets)
+    from core.utils.parser import FileLoader # file load helper
+    
+    # OOBAssets
+    # assets_sheet_dir = os.path.join(save_path, 'assets')
+    # oob_assets = OOBAssets(assets_sheet_dir)
+    # oob_assets.save_assets_sheet() # you can save assets sheet
+    # video_sheet, annotation_sheet, img_db_sheet = oob_assets.get_assets_sheet() # you can only use assets although not saving
+    # video_sheet, annotation_sheet, img_db_sheet = oob_assets.load_assets_sheet(assets_sheet_dir) # you can also load saved aseets
+
+    # InferenceAssets_etc
+    inference_assets_save_path = os.path.join(save_path, 'patients_aseets.yaml')
+    inference_assets_helper = InferenceAssets_etc(case=case, anno_ver=anno_ver, fold=inference_fold)
+    inference_assets = inference_assets_helper.get_inference_assets() # dict (yaml)
+
+    # save InferenceAssets_etc: serialization from python object(dict) to YAML stream and save
+    os.makedirs(save_path, exist_ok=True)
+    inference_assets_helper.save_dict_to_yaml(inference_assets, inference_assets_save_path)
+    
+    # load InferenceAssets_etc: load saved inference assets yaml file // you can also load saved patients
+    f_loader = FileLoader()
+    f_loader.set_file_path(inference_assets_save_path)
+    inference_assets = f_loader.load()
+
+    return inference_assets
+
 def save_dict_to_csv(results_dict, save_path):
     import pandas as pd
     from core.utils.parser import FileLoader # file load helper
@@ -117,6 +107,31 @@ def save_dict_to_csv(results_dict, save_path):
         
         merged_df.to_csv(save_path, mode='w')
 
-        print(merged_df)
+        # print(merged_df)
 
     merged_df.to_csv(save_path, mode='w')
+
+def save_dataset_info(robot_dataset, save_path):
+    import json
+
+    rs_count, nrs_count = robot_dataset.number_of_rs_nrs()
+
+    save_data = {
+        'dataset': {
+            'rs': rs_count,
+            'nrs': nrs_count
+        },
+        'target_hem_count': {
+            'rs': rs_count // 3,
+            'nrs': nrs_count // 3
+        }
+    }
+
+    patient_per_dic = robot_dataset.number_of_patient_rs_nrs()
+
+    save_data['patients'] = patient_per_dic
+
+    with open(save_path, 'w') as f:
+        json.dump(save_data, f, indent=2)
+
+    return save_path

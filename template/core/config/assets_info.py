@@ -7,16 +7,20 @@
 video_path = {
     # dataset 1 (40 case) + dataset 2 (60 case)
     'robot': ['/data1/HuToM/Video_Robot_cordname', '/data2/Video/Robot/Dataset2_60case'],
+    'etc24': ['/data3/DATA/IMPORT/211220/12_14/TEST_24case'],
 }
 
 annotation_path = {
     'annotation_v1_base_path': '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V1',
     'annotation_v2_base_path': '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V2',
-    'annotation_v3_base_path': '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V3/TBE'
+    'annotation_v3_base_path': '/data2/Public/IDC_21.06.25/ANNOTATION/Gastrectomy/Event/OOB/V3/TBE',
+    'annotation_etc24_base_path': '/data2/Public/OOB_Recog/annotation/ROBOT/etc/etc24',
+
 }
 
 img_db_path = {
     'robot': '/raid/img_db/ROBOT', ### cuaton @@@ changed key @@@ 12 -> robot
+    'etc24': '/raid/img_db/ETC24',
 }
 
 oob_assets_save_path = {
@@ -32,5 +36,5 @@ oob_assets_save_path = {
 }
 
 mc_assets_save_path = {
-    'robot': '/data2/Public/OOB_Recog/offline/models',
+    'robot': '/data2/Public/OOB_Recog/offline',
 }

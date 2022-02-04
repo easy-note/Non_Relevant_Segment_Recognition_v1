@@ -91,8 +91,8 @@ class ffmpegHelper():
 
         self._cmd_call(cmd)
 
-    def cut_frame_total(self):
-        cmd = self._process_cmd('cut_frame_total')
+    def cut_frame_total(self, save_name):
+        cmd = self._process_cmd('cut_frame_total', save_name=save_name)
 
         print('CUT FRAME TOTAL : {}'.format(cmd), end= ' ')
 

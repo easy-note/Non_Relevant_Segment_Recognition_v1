@@ -8,15 +8,26 @@ from torchvision import transforms
 from PIL import Image
 from natsort import natsorted
 
-from core.config.data_info import data_transforms
+from core.config.data_info import data_transforms, data_transforms2, theator_data_transforms
 
 class DBDataset(Dataset): 
 
-    def __init__(self, DB_path): 
+    def __init__(self, args, DB_path): 
+        self.args = args
         self.img_list = glob.glob(os.path.join(DB_path, '*.jpg')) # ALL img into DB path
         self.img_list = natsorted(self.img_list) # sorting
 
-        self.aug = data_transforms['test']
+        if self.args.experiment_type == 'ours':
+            if self.args.model == 'mobile_vit':
+                d_transforms = data_transforms2
+            else:    
+                d_transforms = data_transforms
+        elif self.args.experiment_type == 'theator':
+            d_transforms = theator_data_transforms
+
+        self.aug = d_transforms['test']
+        # self.aug = data_transforms2['test']
+        # self.aug = data_transforms['test']
     
     def __len__(self):
         return len(self.img_list)
