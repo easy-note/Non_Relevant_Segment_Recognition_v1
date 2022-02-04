@@ -12,6 +12,13 @@ __pycache__
 /get_dataset_results
 template/scripts/test.sh
 
+# ssim out
+/template/core/dataset/SSIM/*.out
+/template/core/dataset/SSIM/assets
+/template/core/dataset/SSIM/*.csv
+/template/core/dataset/SSIM/csv_save
+/template/core/dataset/SSIM/temp.py
+
 # ssim .out
 /template/core/dataset/SSIM/*.out
 /template/core/dataset/SSIM/assets
