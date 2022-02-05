@@ -100,46 +100,38 @@ class CAMIO(BaseTrainer):
         '''
         # training stage
         if stage == 'fit' or stage is None:
-            if self.args.dataset == 'ROBOT':
-                if self.args.train_stage == 'general_train': # original (20.80 데이터 사용)
-                    self.trainset = RobotDataset_new(self.args, state='train', wise_sample=self.args.use_wise_sample) # train dataset setting
-                    self.valset = RobotDataset_new(self.args, state='val') # val dataset setting
-                
-                elif self.args.train_stage == 'hem_train': # offline (apply) => load from appointmnet assets (== 뽑힌 hem assets)
-                    if 'offline' in self.args.hem_extract_mode:
-                        self.trainset = RobotDataset_new(self.args, state='train', appointment_assets_path=self.args.appointment_assets_path) # load from hem_assets
-                        self.valset = RobotDataset_new(self.args, state='val')
-                        
-                    elif 'online' in self.args.hem_extract_mode: # online이 여기로 들어가면 hem_train 의미상 맞을듯.. // 기존에 subset 불러왔으니 맞을듯..
-                        self.trainset = RobotDataset_new(self.args, state='train', wise_sample=self.args.use_wise_sample) # train dataset setting
-                        self.valset = RobotDataset_new(self.args, state='val') # val dataset setting
-                
-                else : # mini_fold 1 2 3 4 ==> general (60개 환자만 train / 20개 환자 validation) baby model train stage
-                    train_stage_to_minifold = {
-                        'mini_fold_stage_0': '1',
-                        'mini_fold_stage_1': '2',
-                        'mini_fold_stage_2': '3',
-                        'mini_fold_stage_3': '4',
-                    }
-
-                    if self.args.hem_interation_idx == 100: # 초기 hem iteration => load from sub/meta set
-                        self.trainset = RobotDataset_new(self.args, state='train_mini', minifold=train_stage_to_minifold[self.args.train_stage], wise_sample=self.args.use_wise_sample) # train dataset setting
-                        self.valset = RobotDataset_new(self.args, state='val_mini', minifold=train_stage_to_minifold[self.args.train_stage]) # val dataset setting
-                    
-                    else: # 200, 300 ==> load from appointment assets (== 뽑힌 hem assets)
-                        self.trainset = RobotDataset_new(self.args, state='train_mini', minifold=train_stage_to_minifold[self.args.train_stage], appointment_assets_path=self.args.appointment_assets_path) # load from hem_assets
-                        self.valset = RobotDataset_new(self.args, state='val_mini', minifold=train_stage_to_minifold[self.args.train_stage], appointment_assets_path=self.args.appointment_assets_path)
+            if self.args.train_stage == 'general_train': # original (20.80 데이터 사용)
+                self.trainset = RobotDataset_new(self.args, dataset_type=self.args.dataset, state='train', wise_sample=self.args.use_wise_sample) # train dataset setting
+                self.valset = RobotDataset_new(self.args, state='val', dataset_type=self.args.dataset) # val dataset setting
             
-            elif self.args.dataset == 'LAPA':
-                self.trainset = LapaDataset(self.args, state='train') 
-                self.valset = LapaDataset(self.args, state='val')
+            elif self.args.train_stage == 'hem_train': # offline (apply) => load from appointmnet assets (== 뽑힌 hem assets)
+                if 'offline' in self.args.hem_extract_mode:
+                    self.trainset = RobotDataset_new(self.args, state='train', dataset_type=self.args.dataset, appointment_assets_path=self.args.appointment_assets_path) # load from hem_assets
+                    self.valset = RobotDataset_new(self.args, state='val', dataset_type=self.args.dataset)
+                    
+                elif 'online' in self.args.hem_extract_mode: # online이 여기로 들어가면 hem_train 의미상 맞을듯.. // 기존에 subset 불러왔으니 맞을듯..
+                    self.trainset = RobotDataset_new(self.args, state='train', dataset_type=self.args.dataset, wise_sample=self.args.use_wise_sample) # train dataset setting
+                    self.valset = RobotDataset_new(self.args, state='val', dataset_type=self.args.dataset) # val dataset setting
+            
+            else : # mini_fold 1 2 3 4 ==> general (60개 환자만 train / 20개 환자 validation) baby model train stage
+                train_stage_to_minifold = {
+                    'mini_fold_stage_0': '1',
+                    'mini_fold_stage_1': '2',
+                    'mini_fold_stage_2': '3',
+                    'mini_fold_stage_3': '4',
+                }
+
+                if self.args.hem_interation_idx == 100: # 초기 hem iteration => load from sub/meta set
+                    self.trainset = RobotDataset_new(self.args, state='train_mini', dataset_type=self.args.dataset, minifold=train_stage_to_minifold[self.args.train_stage], wise_sample=self.args.use_wise_sample) # train dataset setting
+                    self.valset = RobotDataset_new(self.args, state='val_mini', dataset_type=self.args.dataset, minifold=train_stage_to_minifold[self.args.train_stage]) # val dataset setting
+                
+                else: # 200, 300 ==> load from appointment assets (== 뽑힌 hem assets)
+                    self.trainset = RobotDataset_new(self.args, state='train_mini', dataset_type=self.args.dataset, minifold=train_stage_to_minifold[self.args.train_stage], appointment_assets_path=self.args.appointment_assets_path) # load from hem_assets
+                    self.valset = RobotDataset_new(self.args, state='val_mini', dataset_type=self.args.dataset, minifold=train_stage_to_minifold[self.args.train_stage], appointment_assets_path=self.args.appointment_assets_path)
 
         # testing stage
         if stage in (None, 'test'):
-            if self.args.dataset == 'ROBOT':
-                self.testset = RobotDataset_new(self.args, state='val')
-            elif self.args.dataset == 'LAPA':
-                self.testset = LapaDataset(self.args, state='val')
+            self.testset = RobotDataset_new(self.args, state='val', dataset_type=self.args.dataset)
 
     def train_dataloader(self):
         if 'hem-focus' in self.hem_extract_mode:

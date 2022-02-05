@@ -55,6 +55,8 @@ class HEMHelper():
     def set_random_seed(self, random_seed):
         self.random_seed = random_seed # use in def set_ratio
     
+    def set_dataset_type(self, dataset_type):
+        self.dataset_type = dataset_type # use in def set_ratio (different method parsing patinet per dataset_type)
     
     def set_target_hem_count(self, rs_cnt, nrs_cnt):
         self.target_hem_rs_cnt, self.target_hem_nrs_cnt = (rs_cnt, nrs_cnt)
@@ -256,7 +258,28 @@ class HEMHelper():
             # patient 별 divide
             print('hem_per')
             assets_df = pd.DataFrame(img_path_list, columns=['img_path'])
-            assets_df['patient'] = assets_df.img_path.str.split('/').str[4] # patient 파싱
+
+            # dataset_type에 따라 patinet parsing 방법 다름.
+            if self.dataset_type == 'ROBOT':
+                assets_df['patient'] = assets_df.img_path.str.split('/').str[4] # patient 파싱
+            
+            elif self.dataset_type == 'LAPA':
+                assets_df['hospital'] = assets_df.img_path.str.split('/').str[4] # hospital - vihub
+                
+                gangbuksamsung = assets_df[assets_df['hospital'] == 'gangbuksamsung_127case']
+                severance_1st = assets_df[assets_df['hospital'] == 'severance_1st']
+                severance_2nd = assets_df[assets_df['hospital'] == 'severance_2nd']
+
+                # new (patient)
+                gangbuksamsung['video'] = gangbuksamsung.img_path.str.split('/').str[6] # video
+                severance_1st['video'] = severance_1st.img_path.str.split('/').str[7] # video
+                severance_2nd['video'] = severance_2nd.img_path.str.split('/').str[7] # video
+
+                gangbuksamsung['patient'] = gangbuksamsung.video.str.rsplit('_', n=1).str[0] # patient
+                severance_1st['patient'] = severance_1st.video.str.rsplit('_', n=1).str[0] # patient
+                severance_2nd['patient'] = severance_2nd.video.str.rsplit('_', n=1).str[0] # patient
+
+                assets_df = pd.concat([gangbuksamsung, severance_1st, severance_2nd])
 
             assets_df['gt'] = gt_list
 

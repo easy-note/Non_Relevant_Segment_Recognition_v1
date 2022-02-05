@@ -1,5 +1,22 @@
 EXCEPTION_NUM = -100
 
+def split_to_csv(csv_path):
+    import pandas as pd
+
+    RS_CLASS, NRS_CLASS = (0,1)
+    assets = pd.read_csv(csv_path, names=['img_path', 'class_idx']) # read csv
+
+    ib_assets = assets[assets['class_idx'] == RS_CLASS]
+    oob_assets = assets[assets['class_idx'] == NRS_CLASS]
+
+    print(ib_assets['img_path'])
+    '''
+    ib_assets.to_csv(v, index = False)
+    print(ib_assets)
+    oob_assets.to_csv(os.path.join('/raid/img_db/oob_assets/V3/LAPA', 'PP-VIHUB_ALL-assets_nrs-fps=1.csv'), index = False)
+    print(oob_assets)
+    '''
+
 def frame_to_sec(frame, fps):
     return frame * (1/fps)
 
@@ -183,6 +200,83 @@ def statistic_nrs_event_cnt(base_path, save_path):
     print('환자별중복처리개수(aggregation): {}'.format(aggregation_cnt)) # 환자별처리 count (pateints aggregation)
     print('중복처리환자(aggregation): {}'.format(aggregation_patients)) # 환자별처리 count (pateints aggregation)
 
+def get_patient_to_video(base_path, save_path):
+    import json
+    from glob import glob
+    import natsort
+    import pandas as pd
+
+    from core.utils.parser import InfoParser
+    from core.utils.parser import AnnotationParser
+
+    # 0. load all annotation file data
+    file_list = natsort.natsorted(glob(os.path.join(base_path, '*.json')))
+
+    # 1. parsing patients
+    patient_dict = {}
+    info_parser= InfoParser(parser_type='ROBOT_ANNOTATION')
+
+    for fpath in file_list:
+        
+        # parsing annotation info from file name
+        ## ver 1 : using InforParser rule
+        '''
+        info_parser.write_file_name(fpath)
+        patient_no = info_parser.get_patient_no()
+        '''
+
+        ## ver 2 : using custom rule
+        file_name = os.path.splitext(os.path.basename(fpath))[0] # 04_GS4_99_L_37_01_NRS_30.json
+        hospital, department, surgeon, op_method, patient_idx, video_slice_no, _, _ = file_name.split('_') # LAPA Gangbuk annotation rule
+        patient_no = '_'.join([hospital, department, surgeon, op_method, patient_idx])
+        # patient_no = '_'.join([surgeon, op_method, patient_idx])
+        # patient_no = '_'.join([op_method, patient_idx])
+
+        
+        if patient_no in ['01_VIHUB1.2_A9_L_33', '01_VIHUB1.2_B4_L_79']:
+            continue
+
+        if patient_no in patient_dict:
+            patient_dict[patient_no].append(fpath)
+        else:
+            patient_dict[patient_no] = [fpath]
+
+    # train_patients = [patient + '_' for patient in train_patients_name]
+    # val_patients = [patient + '_' for patient in val_patients_name]
+    videos = []
+    non_init_videos = []
+
+    for key, f_list in patient_dict.items():
+        print(key)
+        print(f_list)
+        print('\n====\t=====\n')
+        init_video = f_list[0]
+        init_video = os.path.splitext(os.path.basename(init_video))[0] # 04_GS4_99_L_37_01_NRS_30.json
+        hospital, department, surgeon, op_method, patient_idx, video_slice_no, _, _ = init_video.split('_') # LAPA Gangbuk annotation rule
+
+        # 01로 시작하지 않는 비디오 탐색
+        if video_slice_no != '01':
+            non_init_videos.append('_'.join([hospital, department, surgeon, op_method, patient_idx, video_slice_no]))
+
+        # 모든 patinet의 비디오 적재
+        for fpath in f_list:
+            file_name = os.path.splitext(os.path.basename(fpath))[0] # 04_GS4_99_L_37_01_NRS_30.json
+            hospital, department, surgeon, op_method, patient_idx, video_slice_no, _, _ = file_name.split('_') # LAPA Gangbuk annotation rule
+            videos.append('_'.join([hospital, department, surgeon, op_method, patient_idx, video_slice_no]))
+
+
+    print('\n\n\t\t===== {} =====\t\t\n\n'.format('결과'))
+    print('처리된환자개수: {}'.format(len(patient_dict)))
+    print('처리된비디오개수: {}'.format(len(videos)))
+    print('01로 시작하지 않는 환자개수: {}'.format(len(non_init_videos)))
+    print('\n\t\t==== \t\t ==== \t\t ==== \t\t\n\n')
+    print('처리환자: {}'.format(list(patient_dict.keys())))
+    print('처리비디오: {}'.format(videos))
+    print('01로 시작하지 않는 환자: {}'.format(non_init_videos))
+    
+
+
+
 if __name__ == '__main__':
     if __package__ is None:
         import sys
@@ -195,6 +289,7 @@ if __name__ == '__main__':
 
         from core.config.assets_info import annotation_path
         
+        '''
         # base_path = annotation_path['annotation_v3_base_path']
         base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/gangbuksamsung_127case/NRS'
         # base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/severance_1st/NRS'
@@ -206,3 +301,12 @@ if __name__ == '__main__':
         statistic_nrs_event_cnt(base_path, os.path.join(save_dir, 'gangbuksamsung_v3_nrs_statistic.csv'))
         # statistic_nrs_event_cnt(base_path, os.path.join(save_dir, 'severance_1st_nrs_statistic.csv'))
         # statistic_nrs_event_cnt(base_path, os.path.join(save_dir, 'severance_2nd_nrs_statistic.csv'))
+        '''
+
+        # base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/gangbuksamsung_127case/NRS'
+        # base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/severance_1st/NRS'
+        # base_path = '/data3/Public/NRS_Recog/annotation/Gastrectomy/Lapa/v3/severance_2nd/NRS'
+        # save_dir = os.path.join('/OOB_RECOG', 'statistic')
+        # get_patient_to_video(base_path, os.path.join(save_dir, 'gangbuksamsung_v3_nrs_statistic.csv'))
+
+        split_to_csv('/raid/img_db/oob_assets/V3/LAPA/PP-assets-VIHUB_ALL-1FPS.csv')

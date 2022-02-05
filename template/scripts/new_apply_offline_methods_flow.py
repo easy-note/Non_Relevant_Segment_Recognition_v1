@@ -58,7 +58,9 @@ def get_extract_hem_assets_args(args):
         'max_epoch': 0,
         'use_online_mcd': False,
         'hem_interation_idx': args.hem_interation_idx, # var
-        'baby_model_save_path': args.baby_model_save_path # var
+        'baby_model_save_path': args.baby_model_save_path, # var
+        'dataset': args.dataset, # var
+        'fold': args.fold, # var
     }
 
     # 2. only set for extract hem assets from input args
@@ -221,6 +223,13 @@ def inference_main(args):
             # Evaluation module
             evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
             gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
+
+            # except (img_db length 와 json length 다를 때 처리)
+            if len(target_frame_idx_list) > len(gt_list):
+                target_frame_idx_list = target_frame_idx_list[:len(gt_list)]
+
+            if len(target_img_list) > len(gt_list):
+                target_img_list = target_img_list[:len(gt_list)]
 
             # save predict list to csv
             predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
@@ -491,11 +500,13 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.IB_ratio = 3  # hueristic sampler 에서도 사용
         args.WS_ratio = 3 # hueristic sampler 에서 사용
         args.random_seed = 3829
-        args.fold = '1'
+        args.fold = extract_args.fold
         args.use_wise_sample = True # 사실 이건 mini fold stage에서 wise sampling 햇냐 안햇냐의 재현 여부
+        args.fold = extract_args.fold # lapa .. 
+        args.dataset = extract_args.dataset # lapa ..
         # ------------ ------------- ------------ #
 
-        trainset = RobotDataset_new(args, state='train_mini', minifold=train_stage_to_minifold[train_stage], wise_sample=args.use_wise_sample) # train dataset setting
+        trainset = RobotDataset_new(args, state='train_mini', dataset_type=args.dataset, minifold=train_stage_to_minifold[train_stage], wise_sample=args.use_wise_sample) # train dataset setting
 
         train_dataset_info_path = os.path.join(restore_path, 'train_reproduce_dataset_info.json')
         save_dataset_info(trainset, train_dataset_info_path)
@@ -509,10 +520,11 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.IB_ratio = 3  # hueristic sampler 에서도 사용
         args.WS_ratio = 3 # hueristic sampler 에서 사용
         args.random_seed = 3829
-        args.fold = '1'
+        args.fold = extract_args.fold # lapa .. 
+        args.dataset = extract_args.dataset # lapa ..
         # ------------ ----save_hem_assets_info--------- ------------ #
 
-        val_all_metaset = RobotDataset_new(args, state='val_mini',  minifold=train_stage_to_minifold[train_stage], all_sample=True, use_metaset=True) # val dataset setting
+        val_all_metaset = RobotDataset_new(args, state='val_mini', dataset_type=args.dataset, minifold=train_stage_to_minifold[train_stage], all_sample=True, use_metaset=True) # val dataset setting
 
         val_dataset_info_path = os.path.join(restore_path, 'val_all_metaset_info.json')
         save_dataset_info(val_all_metaset, val_dataset_info_path)
@@ -534,6 +546,8 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
 
             top_ratio = extract_args.top_ratio
 
+            dataset_type = extract_args.dataset # ['LAPA', 'ROBOT'] ==> patinet parsing 방법이 다름.
+
             hem_helper = HEMHelper(args)
             hem_helper.set_method(hem_extract_mode)
             hem_helper.set_restore_path(restore_path)
@@ -542,6 +556,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
             hem_helper.set_IB_ratio(IB_ratio)
             hem_helper.set_random_seed(random_seed)
             hem_helper.set_top_ratio(top_ratio)
+            hem_helper.set_dataset_type(dataset_type) # ['LAPA', 'ROBOT'] ==> patinet parsing 방법이 다름.
 
             ### => dataset_info load and set target hem cnt
             f_loader = FileLoader()
@@ -641,7 +656,9 @@ def main():
     torch.backends.cudnn.deterministic=True
     torch.backends.cudnn.benchmark=True
 
-    apply_offline_methods_main(args, apply_offline_methods= ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline'])
+    # apply_offline_methods = ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline']
+    apply_offline_methods = ['hem-softmax_diff_small-offline']
+    apply_offline_methods_main(args, apply_offline_methods= apply_offline_methods)
     
 
 if __name__ == '__main__':

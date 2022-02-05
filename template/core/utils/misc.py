@@ -33,8 +33,8 @@ def get_inference_model_path(restore_path):
     return model_path        
 
 def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
-    from core.utils.prepare import InferenceAssets # inference assets helper (for prepare inference assets)
-    from core.utils.prepare import OOBAssets # OOB assets helper (for prepare inference assets)
+    from core.utils.prepare_lapa import InferenceAssets_lapa # inference assets helper (for prepare inference assets)
+    from core.utils.prepare_lapa import OOBAssets_lapa # OOB assets helper (for prepare inference assets)
     from core.utils.parser import FileLoader # file load helper
     
     # OOBAssets
@@ -46,7 +46,7 @@ def prepare_inference_aseets(case, anno_ver, inference_fold, save_path):
 
     # InferenceAssets
     inference_assets_save_path = os.path.join(save_path, 'patients_aseets.yaml')
-    inference_assets_helper = InferenceAssets(case=case, anno_ver=anno_ver, fold=inference_fold)
+    inference_assets_helper = InferenceAssets_lapa(case=case, anno_ver=anno_ver, fold=inference_fold)
     inference_assets = inference_assets_helper.get_inference_assets() # dict (yaml)
 
     # save InferenceAssets: serialization from python object(dict) to YAML stream and save
@@ -87,6 +87,8 @@ def prepare_inference_aseets_etc(case, anno_ver, inference_fold, save_path):
     inference_assets = f_loader.load()
 
     return inference_assets
+
+
 
 def save_dict_to_csv(results_dict, save_path):
     import pandas as pd

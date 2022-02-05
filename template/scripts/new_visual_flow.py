@@ -177,6 +177,13 @@ def inference_main(args):
             evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
             gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
 
+            # except (img_db length 와 json length 다를 때 처리)
+            if len(target_frame_idx_list) > len(gt_list):
+                target_frame_idx_list = target_frame_idx_list[:len(gt_list)]
+
+            if len(target_img_list) > len(gt_list):
+                target_img_list = target_img_list[:len(gt_list)]
+
             # save predict list to csv
             predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
             predict_df = pd.DataFrame({

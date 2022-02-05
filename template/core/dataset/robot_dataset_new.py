@@ -10,7 +10,14 @@ import natsort
 
 from torch.utils.data import Dataset
 from core.config.data_info import data_transforms, data_transforms2, theator_data_transforms
-from core.config.patients_info import train_videos, val_videos, unsup_videos
+
+from core.config.patients_info import train_videos as robot_train_videos
+from core.config.patients_info import val_videos as robot_val_videos
+from core.config.patients_info import unsup_videos as robot_unsup_videos
+
+from core.config.patients_info_lapa import train_videos as lapa_train_videos
+from core.config.patients_info_lapa import val_videos as lapa_val_videos
+
 from core.utils.heuristic_sampling import HeuristicSampler
 from core.config.assets_info import oob_assets_save_path
 
@@ -18,13 +25,14 @@ from scripts.unit_test.test_visual_sampling import visual_flow_for_sampling
 
 class RobotDataset_new(Dataset):
 
-    def __init__(self, args, state, minifold='0', wise_sample=False, all_sample=False, use_metaset=False, appointment_assets_path='') : # 애초에 appointment_assets_path 에서 불러올꺼면 객체생성부터 초기화해주어야 함.
+    def __init__(self, args, state, dataset_type='ROBOT', minifold='0', wise_sample=False, all_sample=False, use_metaset=False, appointment_assets_path='') : # 애초에 appointment_assets_path 에서 불러올꺼면 객체생성부터 초기화해주어야 함.
         super().__init__()
 
 
         self.args = args
         self.state = state
         self.minifold = minifold
+        self.dataset_type = dataset_type # ['ROBOT', 'LAPA']   
 
         ## set self var from args
         self.model = self.args.model
@@ -34,10 +42,11 @@ class RobotDataset_new(Dataset):
 
         self.experiment_type = self.args.experiment_type
         
-        self.fold = self.args.fold        
+        self.fold = self.args.fold  
 
         ## set load setting
         ''' TIP
+        # dataset = ['ROBOT', 'LAPA']
         # wise sample : wise_sample[True], all_sample[Fasle]
         # all sample : wise_sampple[Fasle], all_sample[True]
         # random sample : wise_sample[Fasle], all_sample[False]
@@ -49,6 +58,12 @@ class RobotDataset_new(Dataset):
         self.all_sampling_mode = all_sample
         self.use_metaset = use_metaset
         self.appointment_assets_path = appointment_assets_path
+
+        ## get patinets video
+        if self.dataset_type == 'ROBOT':
+            train_videos, val_videos = robot_train_videos, robot_val_videos
+        elif self.dataset_type == 'LAPA':
+            train_videos, val_videos = lapa_train_videos, lapa_val_videos
         
         ### ### ###
         ## init self var
@@ -76,25 +91,62 @@ class RobotDataset_new(Dataset):
             self.wise_sampling_mode = False # 혹시 실수할까봐 어차피 validation set 은 wise sampling 하면안됨.
         
         elif state == 'train_mini': # 60 case
-            minifold_to_patients = {
-                '0': [], # nothing,
-                '1': train_videos[self.fold][20:],
-                '2': train_videos[self.fold][:20] + train_videos[self.fold][40:],
-                '3': train_videos[self.fold][:40] + train_videos[self.fold][60:],   
-                '4': train_videos[self.fold][:60],
-            }
+            if self.dataset_type == 'ROBOT':
+                minifold_to_patients = {
+                    '0': [], # nothing,
+                    '1': train_videos[self.fold][20:],
+                    '2': train_videos[self.fold][:20] + train_videos[self.fold][40:],
+                    '3': train_videos[self.fold][:40] + train_videos[self.fold][60:],   
+                    '4': train_videos[self.fold][:60],
+                }
+            elif self.dataset_type == 'LAPA':
+                if self.fold == '1':
+                    minifold_to_patients = {
+                        '0': [], # nothing,
+                        '1': train_videos[self.fold][50:],
+                        '2': train_videos[self.fold][:50] + train_videos[self.fold][100:],
+                        '3': train_videos[self.fold][:100] + train_videos[self.fold][150:],   
+                        '4': train_videos[self.fold][:150],
+                    }
+                elif self.fold == '2':
+                    minifold_to_patients = {
+                        '0': [], # nothing,
+                        '1': train_videos[self.fold][40:],
+                        '2': train_videos[self.fold][:40] + train_videos[self.fold][80:],
+                        '3': train_videos[self.fold][:80] + train_videos[self.fold][120:],   
+                        '4': train_videos[self.fold][:120],
+                    }
             
             self.aug = d_transforms['train']     
             self.patients_name = minifold_to_patients[self.minifold]
 
         elif state == 'val_mini': # 20 case
-            minifold_to_patients = {
-                '0': [], # nothing,
-                '1': train_videos[self.fold][:20],
-                '2': train_videos[self.fold][20:40],
-                '3': train_videos[self.fold][40:60],   
-                '4': train_videos[self.fold][60:],
-            }
+            if self.dataset_type == 'ROBOT':
+                minifold_to_patients = {
+                    '0': [], # nothing,
+                    '1': train_videos[self.fold][:20],
+                    '2': train_videos[self.fold][20:40],
+                    '3': train_videos[self.fold][40:60],   
+                    '4': train_videos[self.fold][60:],
+                }
+            elif self.dataset_type == 'LAPA':
+                if self.fold == '1':
+                    minifold_to_patients = {
+                        '0': [], # nothing,
+                        '1': train_videos[self.fold][:50],
+                        '2': train_videos[self.fold][50:100],
+                        '3': train_videos[self.fold][100:150],
+                        '4': train_videos[self.fold][150:200],
+                    }
+
+                elif self.fold == '2':
+                    minifold_to_patients = {
+                        '0': [], # nothing,
+                        '1': train_videos[self.fold][:40],
+                        '2': train_videos[self.fold][40:80],
+                        '3': train_videos[self.fold][80:120],
+                        '4': train_videos[self.fold][120:],
+                    }
 
             self.aug = d_transforms['val']
             self.patients_name = minifold_to_patients[self.minifold]
@@ -104,7 +156,7 @@ class RobotDataset_new(Dataset):
             pass
         
         self.load_data(self.appointment_assets_path)
-
+    
     def load_data(self, appointment_assets_path):
 
         if appointment_assets_path is not '':
@@ -114,14 +166,26 @@ class RobotDataset_new(Dataset):
         
         else: # assets type check
             ## set meta/sub assets path
-            assets_root_path = os.path.join(oob_assets_save_path['oob_assets_v3_robot_save_path'])
+            if self.dataset_type == 'ROBOT':       
+                assets_root_path = os.path.join(oob_assets_save_path['oob_assets_v3_robot_save_path'])
 
-            assets_path = {
-                'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=5.csv'),
-                'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=5.csv'),
-                'sub_ib':os.path.join(assets_root_path, 'oob_assets_inbody.csv'),
-                'sub_oob':os.path.join(assets_root_path, 'oob_assets_outofbody.csv'),
-            }
+                assets_path = {
+                    'meta_ib':os.path.join(assets_root_path, 'oob_assets_inbody-fps=5.csv'),
+                    'meta_oob':os.path.join(assets_root_path, 'oob_assets_outofbody-fps=5.csv'),
+                    'sub_ib':os.path.join(assets_root_path, 'oob_assets_inbody.csv'),
+                    'sub_oob':os.path.join(assets_root_path, 'oob_assets_outofbody.csv'),
+                    }
+
+            elif self.dataset_type == 'LAPA':
+                assets_root_path = os.path.join(oob_assets_save_path['vihub_assets_v3_lapa_save_path'])
+
+                assets_path = {
+                    'meta_ib':os.path.join(assets_root_path, 'PP-VIHUB_ALL-assets_rs-fps=5-update.csv'),
+                    'meta_oob':os.path.join(assets_root_path, 'PP-VIHUB_ALL-assets_nrs-fps=5-update.csv'),
+                    'sub_ib':os.path.join(assets_root_path, 'PP-VIHUB_ALL-assets_rs-fps=1-update.csv'),
+                    'sub_oob':os.path.join(assets_root_path, 'PP-VIHUB_ALL-assets_nrs-fps=1-update.csv'),              
+                    }
+
 
             if self.use_metaset: # 30fps -> 5fps
                 
@@ -147,16 +211,6 @@ class RobotDataset_new(Dataset):
                     self.load_data_from_assets(assets_path['sub_ib'], assets_path['sub_oob'])
                 
     
-    def load_vihub_assets(self, vi_hub_csv_path):
-        vi_hub_assets = pd.read_csv(vi_hub_csv_path, names=['img_path', 'class_idx']) # read inbody csv
-        
-        print(vi_hub_assets.head())
-        
-        # TODO .....?
-        # 잘 만들어 주세요.
-        
-        
-    
     def load_data_from_semi_assets(self, ib_assets_csv_path, oob_assets_csv_path, ib_assets_csv_path2, oob_assets_csv_path2):
         read_ib_assets_df = pd.read_csv(ib_assets_csv_path, names=['img_path', 'class_idx']) # read inbody csv
         read_oob_assets_df = pd.read_csv(oob_assets_csv_path, names=['img_path', 'class_idx']) # read inbody csv
@@ -165,8 +219,8 @@ class RobotDataset_new(Dataset):
         read_oob_assets_df2 = pd.read_csv(oob_assets_csv_path2, names=['img_path', 'class_idx']) # read inbody csv
 
         # select patient frame 
-        self.patients_name = train_videos[self.args.fold]
-        self.patients_name2 = unsup_videos
+        self.patients_name = robot_train_videos[self.args.fold]
+        self.patients_name2 = robot_unsup_videos
         
         
         patients_name_for_parser = [patient + '_' for patient in self.patients_name]
@@ -388,7 +442,6 @@ class RobotDataset_new(Dataset):
 
         self.assets_df = assets_df
 
-
     def number_of_rs_nrs(self):
         return self.label_list.count(0) ,self.label_list.count(1)
 
@@ -398,7 +451,38 @@ class RobotDataset_new(Dataset):
 
         val_assets_df = self.assets_df
 
-        val_assets_df['patient'] = val_assets_df.img_path.str.split('/').str[4]
+        #####
+        if self.dataset_type == 'ROBOT':
+            val_assets_df['patient'] = val_assets_df.img_path.str.split('/').str[4]
+        
+        elif self.dataset_type == 'LAPA':
+            val_assets_df['hospital'] = val_assets_df.img_path.str.split('/').str[4] # hospital - vihub
+            
+            gangbuksamsung = val_assets_df[val_assets_df['hospital'] == 'gangbuksamsung_127case']
+            severance_1st = val_assets_df[val_assets_df['hospital'] == 'severance_1st']
+            severance_2nd = val_assets_df[val_assets_df['hospital'] == 'severance_2nd']
+
+            # old (video)
+            '''
+            gangbuksamsung['patient'] = gangbuksamsung.img_path.str.split('/').str[6] # video
+            severance_1st['patient'] = severance_1st.img_path.str.split('/').str[7] # video
+            severance_2nd['patient'] = severance_2nd.img_path.str.split('/').str[7] # video
+            '''
+
+            # new (patinet)
+            gangbuksamsung['video'] = gangbuksamsung.img_path.str.split('/').str[6] # video
+            severance_1st['video'] = severance_1st.img_path.str.split('/').str[7] # video
+            severance_2nd['video'] = severance_2nd.img_path.str.split('/').str[7] # video
+
+            gangbuksamsung['patient'] = gangbuksamsung.video.str.rsplit('_', n=1).str[0] # patient
+            severance_1st['patient'] = severance_1st.video.str.rsplit('_', n=1).str[0] # patient
+            severance_2nd['patient'] = severance_2nd.video.str.rsplit('_', n=1).str[0] # patient
+
+            val_assets_df = pd.concat([gangbuksamsung, severance_1st, severance_2nd])
+
+            print(val_assets_df)
+        #####
+        
 
         total_rs_count = len(val_assets_df[val_assets_df['class_idx']==0])
         total_nrs_count = len(val_assets_df[val_assets_df['class_idx']==1])
