@@ -230,7 +230,7 @@ def parse_opts():
     parser.add_argument('--hem_extract_mode', type=str,
             default='offline',
             choices=['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline',
-                     'hem-emb-online', 'hem-focus-online', 'offline'],
+                     'hem-emb-online', 'hem-focus-online', 'offline-multi'],
             help='Select train method, normal or hem method')
             
     parser.add_argument('--top_ratio', type=float,

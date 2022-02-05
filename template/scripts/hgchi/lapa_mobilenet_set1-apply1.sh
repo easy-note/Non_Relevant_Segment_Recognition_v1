@@ -48,7 +48,7 @@ do
         --cuda_list "6" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
-        --hem_extract_mode "offline" \
+        --hem_extract_mode "offline-multi" \
         --top_ratio ${ratio} \
         --n_dropout ${n_dropout} \
         --train_stage "hem_train" \
