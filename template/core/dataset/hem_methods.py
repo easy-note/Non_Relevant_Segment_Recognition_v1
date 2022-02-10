@@ -15,6 +15,8 @@ from torchsummary import summary
 
 from collections import defaultdict
 
+from core.utils.misc import parse_patient_for_lapa
+
 class HEMHelper():
     """
         Help computation ids for Hard Example Mining.
@@ -74,7 +76,7 @@ class HEMHelper():
         if patient_no :
             patient_nrs_count = int(self.target_hem_nrs_cnt * self.target_patient_dict[patient_no]['nrs_ratio'])
             patient_rs_count = int(patient_nrs_count * self.IB_ratio)
-            target_rs_cnt, target_nrs_cnt = patient_nrs_count, patient_rs_count
+            target_rs_cnt, target_nrs_cnt = patient_rs_count, patient_nrs_count
         
         else : # if patinet_no = None
             target_rs_cnt, target_nrs_cnt = self.target_hem_rs_cnt, self.target_hem_nrs_cnt
@@ -149,6 +151,11 @@ class HEMHelper():
 
             model, dataset = args
             dropout_predictions, gt_list, img_path_list = self.calc_mc_dropout(model, dataset, self.n_dropout) # MC dropout
+
+            print(img_path_list[0], gt_list[0])
+            print(img_path_list[1], gt_list[1])
+            print(img_path_list[2], gt_list[2])
+            print(img_path_list[3], gt_list[3])
             
             results_dict = {}
             
@@ -294,22 +301,7 @@ class HEMHelper():
                 assets_df['patient'] = assets_df.img_path.str.split('/').str[4] # patient 파싱
             
             elif self.dataset_type == 'LAPA':
-                assets_df['hospital'] = assets_df.img_path.str.split('/').str[4] # hospital - vihub
-                
-                gangbuksamsung = assets_df[assets_df['hospital'] == 'gangbuksamsung_127case']
-                severance_1st = assets_df[assets_df['hospital'] == 'severance_1st']
-                severance_2nd = assets_df[assets_df['hospital'] == 'severance_2nd']
-
-                # new (patient)
-                gangbuksamsung['video'] = gangbuksamsung.img_path.str.split('/').str[6] # video
-                severance_1st['video'] = severance_1st.img_path.str.split('/').str[7] # video
-                severance_2nd['video'] = severance_2nd.img_path.str.split('/').str[7] # video
-
-                gangbuksamsung['patient'] = gangbuksamsung.video.str.rsplit('_', n=1).str[0] # patient
-                severance_1st['patient'] = severance_1st.video.str.rsplit('_', n=1).str[0] # patient
-                severance_2nd['patient'] = severance_2nd.video.str.rsplit('_', n=1).str[0] # patient
-
-                assets_df = pd.concat([gangbuksamsung, severance_1st, severance_2nd])
+                assets_df['patient'] = assets_df['img_path'].apply(parse_patient_for_lapa)
 
             assets_df['gt'] = gt_list
 

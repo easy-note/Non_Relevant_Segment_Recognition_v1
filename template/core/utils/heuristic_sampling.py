@@ -6,6 +6,8 @@ import numpy as np
 
 import natsort
 
+from core.utils.misc import parse_patient_for_lapa
+
 pd.options.mode.chained_assignment = None
 
 class HeuristicSampler():
@@ -13,39 +15,12 @@ class HeuristicSampler():
         # img_path 기준 sort 된 assets_df
         self.assets_df = assets_df.reset_index(drop=True)
         # self.assets_df['patient'] = self.assets_df.img_path.str.split('/').str[4]
-        #####
+
         if args.dataset == 'ROBOT':
             self.assets_df['patient'] = self.assets_df.img_path.str.split('/').str[4]
         
         elif args.dataset == 'LAPA':
-            self.assets_df['hospital'] = self.assets_df.img_path.str.split('/').str[4] # hospital - vihub
-            
-            gangbuksamsung = self.assets_df[self.assets_df['hospital'] == 'gangbuksamsung_127case']
-            severance_1st = self.assets_df[self.assets_df['hospital'] == 'severance_1st']
-            severance_2nd = self.assets_df[self.assets_df['hospital'] == 'severance_2nd']
-
-            # old (video)
-            '''
-            gangbuksamsung['patient'] = gangbuksamsung.img_path.str.split('/').str[6]
-            severance_1st['patient'] = severance_1st.img_path.str.split('/').str[7]
-            severance_2nd['patient'] = severance_2nd.img_path.str.split('/').str[7]
-            '''
-
-            # new (patient)
-            gangbuksamsung['video'] = gangbuksamsung.img_path.str.split('/').str[6] # video
-            severance_1st['video'] = severance_1st.img_path.str.split('/').str[7] # video
-            severance_2nd['video'] = severance_2nd.img_path.str.split('/').str[7] # video
-
-            gangbuksamsung['patient'] = gangbuksamsung.video.str.rsplit('_', n=1).str[0] # patient
-            severance_1st['patient'] = severance_1st.video.str.rsplit('_', n=1).str[0] # patient
-            severance_2nd['patient'] = severance_2nd.video.str.rsplit('_', n=1).str[0] # patient
-
-            self.assets_df = pd.concat([gangbuksamsung, severance_1st, severance_2nd])
-
-            print(self.assets_df)
-        #####
-    
-
+            self.assets_df['patient'] = self.assets_df['img_path'].apply(parse_patient_for_lapa)
 
         patients_list = list(set(self.assets_df['patient']))
         patients_list = natsort.natsorted(patients_list)

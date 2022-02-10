@@ -137,3 +137,23 @@ def save_dataset_info(robot_dataset, save_path):
         json.dump(save_data, f, indent=2)
 
     return save_path
+
+def parse_patient_for_lapa(img_db_path): # 'lapa img db path => patient'
+    # hospital
+    hospital = img_db_path.split('/')[4]
+    
+    if hospital == 'gangbuksamsung_127case':
+        video = img_db_path.split('/')[6] # video
+
+    elif hospital == 'severance_1st':
+        video = img_db_path.split('/')[7] # video
+
+    elif hospital == 'severance_2nd':
+        video = img_db_path.split('/')[7] # video
+    
+    else: 
+        pass # not support
+    
+    patient = video.rsplit('_',  1)[0]
+
+    return patient

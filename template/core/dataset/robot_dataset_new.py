@@ -23,6 +23,8 @@ from core.config.assets_info import oob_assets_save_path
 
 from scripts.unit_test.test_visual_sampling import visual_flow_for_sampling
 
+from core.utils.misc import parse_patient_for_lapa
+
 class RobotDataset_new(Dataset):
 
     def __init__(self, args, state, dataset_type='ROBOT', minifold='0', wise_sample=False, all_sample=False, use_metaset=False, appointment_assets_path='') : # 애초에 appointment_assets_path 에서 불러올꺼면 객체생성부터 초기화해주어야 함.
@@ -360,6 +362,7 @@ class RobotDataset_new(Dataset):
         oob_assets_df = oob_assets_df.sample(n=300, replace=False, random_state=self.random_seed)
         '''
         
+        
 
         # hueristic_sampling
         if self.wise_sampling_mode:
@@ -451,38 +454,11 @@ class RobotDataset_new(Dataset):
 
         val_assets_df = self.assets_df
 
-        #####
         if self.dataset_type == 'ROBOT':
             val_assets_df['patient'] = val_assets_df.img_path.str.split('/').str[4]
         
         elif self.dataset_type == 'LAPA':
-            val_assets_df['hospital'] = val_assets_df.img_path.str.split('/').str[4] # hospital - vihub
-            
-            gangbuksamsung = val_assets_df[val_assets_df['hospital'] == 'gangbuksamsung_127case']
-            severance_1st = val_assets_df[val_assets_df['hospital'] == 'severance_1st']
-            severance_2nd = val_assets_df[val_assets_df['hospital'] == 'severance_2nd']
-
-            # old (video)
-            '''
-            gangbuksamsung['patient'] = gangbuksamsung.img_path.str.split('/').str[6] # video
-            severance_1st['patient'] = severance_1st.img_path.str.split('/').str[7] # video
-            severance_2nd['patient'] = severance_2nd.img_path.str.split('/').str[7] # video
-            '''
-
-            # new (patinet)
-            gangbuksamsung['video'] = gangbuksamsung.img_path.str.split('/').str[6] # video
-            severance_1st['video'] = severance_1st.img_path.str.split('/').str[7] # video
-            severance_2nd['video'] = severance_2nd.img_path.str.split('/').str[7] # video
-
-            gangbuksamsung['patient'] = gangbuksamsung.video.str.rsplit('_', n=1).str[0] # patient
-            severance_1st['patient'] = severance_1st.video.str.rsplit('_', n=1).str[0] # patient
-            severance_2nd['patient'] = severance_2nd.video.str.rsplit('_', n=1).str[0] # patient
-
-            val_assets_df = pd.concat([gangbuksamsung, severance_1st, severance_2nd])
-
-            print(val_assets_df)
-        #####
-        
+            val_assets_df['patient'] = val_assets_df['img_path'].apply(parse_patient_for_lapa) # hospital - vihub
 
         total_rs_count = len(val_assets_df[val_assets_df['class_idx']==0])
         total_nrs_count = len(val_assets_df[val_assets_df['class_idx']==1])
