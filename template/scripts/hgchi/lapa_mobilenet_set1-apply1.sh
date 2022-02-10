@@ -45,7 +45,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "6" \
+        --cuda_list "4" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --hem_extract_mode "offline-multi" \
@@ -55,5 +55,5 @@ do
         --inference_fold "1" \
         --inference_interval "30" \
         --experiments_sheet_dir "/OOB_RECOG/results-lapa/mobilenet-set1-apply1" \
-        --save_path "/OOB_RECOG/logs-lapa/mobilenet-set1-apply1" > "lapa-set1-apply1.out"
+        --save_path "/OOB_RECOG/logs-lapa/mobilenet-set1-apply1" > "./nohup_logs/lapa-set1-apply1.out"
 done;

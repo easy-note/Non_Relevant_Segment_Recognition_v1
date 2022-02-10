@@ -43,7 +43,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "5" \
+        --cuda_list "1" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --train_stage "general_train" \
@@ -51,5 +51,5 @@ do
         --inference_interval "30" \
         --hem_extract_mode "hem-softmax_diff_small-offline" \
         --experiments_sheet_dir "/OOB_RECOG/results-lapa/mobilenet-set2-general1" \
-        --save_path "/OOB_RECOG/logs-lapa/mobilenet-set2-general1" > "lapa-set2-general1.out"
+        --save_path "/OOB_RECOG/logs-lapa/mobilenet-set2-general1" > "./nohup_logs/lapa-set2-general1.out"
 done;

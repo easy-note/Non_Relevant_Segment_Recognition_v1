@@ -43,11 +43,11 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "6" \
+        --cuda_list "2" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --train_stage "mini_fold_stage_0" \
         --hem_extract_mode "hem-softmax_diff_small-offline" \
         --experiments_sheet_dir "/OOB_RECOG/results-lapa/mobilenet-set1-visual1" \
-        --save_path "/OOB_RECOG/logs-lapa/mobilenet-set1-visual1" > "lapa-set1-visual1.out"
+        --save_path "/OOB_RECOG/logs-lapa/mobilenet-set1-visual1" > "./nohup_logs/lapa-set1-visual1.out"
 done;
