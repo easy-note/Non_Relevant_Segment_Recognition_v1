@@ -10,6 +10,7 @@ def visual_flow_for_sampling(final_assets_df, model_name, save_dir, window_size=
     print('======= \t VISUAL FLOW FOR SAMPLING \t =======')
     print(final_assets_df)
 
+
     sampling_visual_save_dir = os.path.join(save_dir, 'sampling_visualization')
     sampling_assets_save_dir = os.path.join(save_dir, 'sampling_assets')
     os.makedirs(save_dir, exist_ok=True)
@@ -62,8 +63,10 @@ def visual_flow_for_sampling(final_assets_df, model_name, save_dir, window_size=
     final_assets_df['frame_idx'] = final_assets_df['img_path'].apply(get_frame_idx) # extract frame index from image db path
     final_assets_df['consensus_frame_idx'] = final_assets_df['img_path'].apply(get_frame_idx) # init consensus_frame_idx
 
+
     patients_assets = PatientsGT()    
     patients_grouped = final_assets_df.groupby('patinet_no') # grouping by patinets no
+
 
     # visualziation
     for patient_no, patient_df in tqdm(patients_grouped, desc='Sampling Visualization'): # per each patient

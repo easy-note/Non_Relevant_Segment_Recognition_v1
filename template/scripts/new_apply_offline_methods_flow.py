@@ -529,7 +529,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         for method_idx, method in enumerate(offline_methods, 1):
             method_info = '{}({})'.format(method, method_idx)
 
-            if method_info in hem_assets_paths:
+            if method_info in hem_assets_paths: # 같은 method 를 여러 번 수행했을 때. 
                 hem_assets_paths[method_info].append(results_dict[method_info])
             else:
                 hem_assets_paths[method_info] = [results_dict[method_info]]
@@ -574,6 +574,21 @@ def apply_offline_methods_main(args, apply_offline_methods):
         method_info = '{}({})'.format(method, method_idx)
         hem_assets_path = hem_assets_paths[method_info]
 
+        ####### hem assets visualization #######
+        
+        try:
+            hem_df = pd.read_csv(hem_assets_path)
+            model = args.model
+            save_dir = os.path.join('/'.join(hem_assets_path.sptit('/')[:-1]), method_info)
+
+            test_visual_sampling.visual_flow_for_sampling(hem_df, model, save_dir)
+
+        except:
+            print('visual error')
+            pass
+        
+
+
         args.train_stage = 'hem_train'
         args.appointment_assets_path = hem_assets_path
         args.hem_extract_mode = method
@@ -602,7 +617,12 @@ def main():
     torch.backends.cudnn.deterministic=True
     torch.backends.cudnn.benchmark=True
 
-    apply_offline_methods_main(args, apply_offline_methods= ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline'])
+    if args.hem_extract_mode == 'offline-multi':
+        apply_offline_methods = ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline']
+    else:
+        apply_offline_methods = [args.hem_extract_mode]
+    
+    apply_offline_methods_main(args, apply_offline_methods=apply_offline_methods)
     
 
 if __name__ == '__main__':
@@ -633,6 +653,8 @@ if __name__ == '__main__':
 
         from torchsummary import summary
 
+        from scripts.unit_test import test_visual_sampling
+
         ### test inference module
         # from core.api.trainer import CAMIO
         # from core.api.theator_trainer import TheatorTrainer
@@ -659,4 +681,6 @@ if __name__ == '__main__':
         import json
         import natsort
 
+
+    
     main()

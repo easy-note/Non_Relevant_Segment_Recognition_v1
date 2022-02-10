@@ -381,10 +381,12 @@ def new_main():
                 if args.hem_interation_idx == 100:
                     args.appointment_assets_path = ''
 
+                '''
                 else: # 200, 300 일때는 appointmnet assets path 에서 csv 불러오기
                     # csv 불러오기 위한 용도로 scripts에서 받아오는 args.hem_iteration idx, model_name, hem_extract_mode 대한 의미를 다음과 같이 부여가능 => 이중의미 (실제로 baby model학습모델 + 이전 iteration 에서 model을 사용해서 뽑은 hem_assets csv))
                     hem_assets_path = get_hem_assets_path(args.hem_interation_idx, args.model, hem_extract_mode='hem-softmax_diff_small-offline') # hem_extract_mode 도 args로 받게 해도 됨.
                     args.appointment_assets_path = hem_assets_path
+                '''
                 
                 for train_stage in mini_fold_stage:
                     args.train_stage = train_stage
