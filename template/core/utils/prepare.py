@@ -40,7 +40,8 @@ class InferenceAssets():
     def __init__(self, case, anno_ver, fold):
         self.case = case
         self.anno_ver = anno_ver
-        self.fold = fold
+        # self.fold = fold
+        self.fold = 'all'
 
     def _support_sanity_check(self):
         sanity = False

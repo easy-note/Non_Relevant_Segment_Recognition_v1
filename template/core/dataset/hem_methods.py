@@ -71,7 +71,7 @@ class HEMHelper():
         if patient_no :
             patient_nrs_count = int(self.target_hem_nrs_cnt * self.target_patient_dict[patient_no]['nrs_ratio'])
             patient_rs_count = int(patient_nrs_count * self.IB_ratio)
-            target_rs_cnt, target_nrs_cnt = patient_nrs_count, patient_rs_count
+            target_rs_cnt, target_nrs_cnt = patient_rs_count, patient_nrs_count
         
         else : # if patinet_no = None
             target_rs_cnt, target_nrs_cnt = self.target_hem_rs_cnt, self.target_hem_nrs_cnt
@@ -159,7 +159,7 @@ class HEMHelper():
 
                 results_dict[method_info] = hem_final_df_path
 
-            self.method = 'offline-multi' # 원상복귀(혹시몰라)
+            self.method = 'offline-multi' # 원상복귀(혹시몰라 ^-^)
             
             return results_dict
 
