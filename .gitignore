@@ -23,5 +23,9 @@ template/scripts/test.sh
 /template/core/dataset/SSIM/*.out
 /template/core/dataset/SSIM/assets
 
+# scripts
+/template/scripts/jhlee/*.sh
+
+
 # .out
 **.out
