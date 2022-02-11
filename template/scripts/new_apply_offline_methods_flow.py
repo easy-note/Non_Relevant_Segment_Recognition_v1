@@ -579,7 +579,7 @@ def apply_offline_methods_main(args, apply_offline_methods):
         try:
             hem_df = pd.read_csv(hem_assets_path)
             model = args.model
-            save_dir = os.path.join('/'.join(hem_assets_path.sptit('/')[:-1]), method_info)
+            save_dir = os.path.join('/'.join(hem_assets_path.split('/')[:-1]), method_info)
 
             test_visual_sampling.visual_flow_for_sampling(hem_df, model, save_dir)
 
