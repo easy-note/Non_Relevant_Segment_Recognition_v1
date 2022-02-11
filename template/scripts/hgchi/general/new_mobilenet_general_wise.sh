@@ -17,36 +17,32 @@
 
 # --inference 부분은 없어도 됨, 어차피 안함.
 
-
+# 22.02.11 general 실험 (WS)
 
 IB_ratio=3;
-
-top_ratio=(0.05);
 WS_ratio=3;
-n_dropout=5;
 
 hem_interation_idx=100;
 
-for ratio in "${top_ratio[@]}";
-do
-    nohup python ../new_visual_flow.py \
-        --hem_interation_idx ${hem_interation_idx}\
-        --fold "1" \
-        --use_wise_sample \
-        --WS_ratio ${WS_ratio} \
-        --model "mobilenetv3_large_100" \
-        --pretrained \
-        --use_lightning_style_save \
-        --max_epoch 50 \
-        --batch_size 256 \
-        --lr_scheduler "step_lr" \
-        --lr_scheduler_step 5 \
-        --lr_scheduler_factor 0.9 \
-        --cuda_list "0" \
-        --random_seed 3829 \
-        --IB_ratio ${IB_ratio} \
-        --train_stage "mini_fold_stage_0" \
-        --hem_extract_mode "hem-softmax_diff_small-offline" \
-        --experiments_sheet_dir "/OOB_RECOG/results/mobilenet-vanila1" \
-        --save_path "/OOB_RECOG/logs-new/mobilenet-vanila1" > "./mobilenet-vanila1.out"
-done;
+nohup python -u ../../new_visual_flow.py \
+    --hem_interation_idx ${hem_interation_idx}\
+    --fold "1" \
+    --use_wise_sample \
+    --WS_ratio ${WS_ratio} \
+    --model "mobilenetv3_large_100" \
+    --pretrained \
+    --use_lightning_style_save \
+    --max_epoch 100 \
+    --batch_size 256 \
+    --lr_scheduler "step_lr" \
+    --lr_scheduler_step 5 \
+    --lr_scheduler_factor 0.9 \
+    --cuda_list "0" \
+    --random_seed 3829 \
+    --IB_ratio ${IB_ratio} \
+    --train_stage "general_train" \
+    --hem_extract_mode "hem-softmax_diff_small-offline" \
+    --inference_fold "1" \
+    --inference_interval 30 \
+    --experiments_sheet_dir "/OOB_RECOG/results-offline/general/new_mobilenet_general_wise" \
+    --save_path "/OOB_RECOG/logs-offline/general/new_mobilenet_general_wise" > "./nohup_logs/new_mobilenet_general_wise.out"

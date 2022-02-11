@@ -16,17 +16,17 @@ n_dropout=5;
 IB_ratio=3;
 
 hem_interation_idx=100;
-baby_model_save_path="/OOB_RECOG/logs-new/mobilenet-vanila1"
+baby_model_save_path="/OOB_RECOG/logs-new/mobilevit-vanila1"
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../new_apply_offline_methods_flow.py \
+    nohup python ../../new_apply_offline_methods_flow.py \
         --hem_interation_idx ${hem_interation_idx} \
         --baby_model_save_path ${baby_model_save_path} \
         --fold "1" \
         --use_wise_sample \
         --WS_ratio ${WS_ratio} \
-        --model "mobilenetv3_large_100" \
+        --model "mobile_vit" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 100 \
@@ -34,7 +34,7 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "0" \
+        --cuda_list "1" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --hem_extract_mode "offline-multi" \
@@ -43,6 +43,6 @@ do
         --train_stage "hem_train" \
         --inference_fold "1" \
         --inference_interval "30" \
-        --experiments_sheet_dir "/OOB_RECOG/results/mobilenet-apply1" \
-        --save_path "/OOB_RECOG/logs-new/mobilenet-apply1" > "./mobilenet-apply1.out"
+        --experiments_sheet_dir "/OOB_RECOG/results/mobilevit-apply1" \
+        --save_path "/OOB_RECOG/logs-new/mobilevit-apply1" > "../nohup_logs/mobilevit-apply1.out"
 done;

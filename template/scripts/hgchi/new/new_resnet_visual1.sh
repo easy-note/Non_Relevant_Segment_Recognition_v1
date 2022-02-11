@@ -29,12 +29,12 @@ hem_interation_idx=100;
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../new_visual_flow.py \
+    nohup python ../../new_visual_flow.py \
         --hem_interation_idx ${hem_interation_idx}\
         --fold "1" \
         --use_wise_sample \
         --WS_ratio ${WS_ratio} \
-        --model "mobile_vit" \
+        --model "resnet18" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 50 \
@@ -42,11 +42,11 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "1" \
+        --cuda_list "2" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --train_stage "mini_fold_stage_0" \
         --hem_extract_mode "hem-softmax_diff_small-offline" \
-        --experiments_sheet_dir "/OOB_RECOG/results/mobilevit-vanila1" \
-        --save_path "/OOB_RECOG/logs-new/mobilevit-vanila1" > "./mobilevit-vanila1.out"
+        --experiments_sheet_dir "/OOB_RECOG/results/resnet18-vanila1" \
+        --save_path "/OOB_RECOG/logs-new/resnet18-vanila1" > "../nohup_logs/resnet18-vanila1.out"
 done;
