@@ -201,6 +201,13 @@ def inference_main(args):
             evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
             gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
 
+            # except (img_db length 와 json length 다를 때 처리)
+            if len(target_frame_idx_list) > len(gt_list):
+                target_frame_idx_list = target_frame_idx_list[:len(gt_list)]
+
+            if len(target_img_list) > len(gt_list):
+                target_img_list = target_img_list[:len(gt_list)]
+
             # save predict list to csv
             predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
             predict_df = pd.DataFrame({
@@ -274,9 +281,10 @@ def inference_main(args):
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
     total_mPrecision, total_mRecall = total_metrics['mPrecision'], total_metrics['mRecall']
+    total_Precision, total_Recall = total_metrics['Precision'], total_metrics['Recall']
     total_Jaccard = total_metrics['Jaccard']
 
-    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
+    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Precision=total_Precision, Recall=total_Recall , Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -300,6 +308,8 @@ def inference_main(args):
         'OR':total_OR,
         'mPrecision':total_mPrecision,
         'mRecall': total_mRecall,
+        'Precision':total_Precision,
+        'Recall': total_Recall,
         'Jaccard': total_Jaccard,
 
         'details_path':details_results_path,

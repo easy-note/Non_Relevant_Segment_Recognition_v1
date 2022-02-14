@@ -141,7 +141,7 @@ class MetricHelper():
         advanced_metrics['mRecall'] = np.mean([metrics['Recall'] for metrics in metrics_list])
 
         # calc Jaccard index (https://neo4j.com/docs/graph-data-science/current/alpha-algorithms/jaccard/)
-        advanced_metrics['Jaccard'] = np.float16(advanced_metrics['TP']) / np.float16(advanced_metrics['predict_OOB'] + advanced_metrics['gt_OOB'] - advanced_metrics['TP'])
+        advanced_metrics['Jaccard'] = np.float16(advanced_metrics['TP']) / (np.float16(advanced_metrics['predict_OOB'] + advanced_metrics['gt_OOB'] - advanced_metrics['TP']))
 
         # exception
         for k, v in advanced_metrics.items():
