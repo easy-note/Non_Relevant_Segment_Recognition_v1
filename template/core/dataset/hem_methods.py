@@ -514,6 +514,7 @@ class HEMHelper():
         hem_idx = []
 
         # 1. extract hem index
+        # https://stackoverflow.com/questions/63691865/calculating-accuracy-for-monte-carlo-dropout-on-pytorch
 
         ## Calculate maen and variance
         mean = np.mean(dropout_predictions, axis=0) # shape (n_samples, n_classes) 
