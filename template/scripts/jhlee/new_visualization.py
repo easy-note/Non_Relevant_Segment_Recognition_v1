@@ -10,11 +10,12 @@ sys.path.append(base_path)
 import os
 import glob
 import pandas as pd
-from core.api.visualization import VisualTool # visual module
+
+from scripts.unit_test import test_visual_sampling
 
 
 base_path = '/OOB_RECOG/logs-new'
-model = 'mobilenet' # ['mobilevit', 'resnet']
+model = 'resnet' # ['mobilenet', 'mobilevit', 'resnet']
 
 target_path  = glob.glob(os.path.join(base_path, model+'*','hem_assets' ,'*.csv')) 
 
