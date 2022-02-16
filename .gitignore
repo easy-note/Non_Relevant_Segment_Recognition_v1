@@ -26,6 +26,7 @@ template/scripts/test.sh
 # scripts
 /template/scripts/jhlee/*.sh
 /template/scripts/jhlee/script_A
+/template/scripts/jhlee/02*
 
 
 # .out
