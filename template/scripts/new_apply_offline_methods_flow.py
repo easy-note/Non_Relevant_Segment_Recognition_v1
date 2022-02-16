@@ -411,6 +411,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
 
         # 1. baby model (extract model) 불러오기
         if extract_args.baby_model_save_path == '': # 1-1. model 불러오기 (from NAS)
+            assert False, "not support, check baby model save path"
             model_dir = get_baby_model_path_from_NAS(extract_args.hem_interation_idx, extract_args.model, train_stage)
         else : # 1-2. local에서 불러오기
             model_dir = get_baby_model_path_from_restore_dir(extract_args.baby_model_save_path, train_stage)
