@@ -5,6 +5,8 @@
 /*results*
 /template/results
 
+/stage=100
+
 # python
 __pycache__
 
