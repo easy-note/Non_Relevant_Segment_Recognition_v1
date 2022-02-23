@@ -1,19 +1,18 @@
-def get_experiment_args():
-    from core.config.base_opts import parse_opts
-    import os
-
+def get_experiment_args():    
     parser = parse_opts()
 
     args = parser.parse_args()
-    
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
 
     ### model basic info opts
     args.pretrained = True
     # TODO 원하는대로 변경 하기
     # 전 그냥 save path와 동일하게 가져갔습니다. (bgpark)
-    args.save_path = args.save_path
-    args.experiments_sheet_dir = args.save_path
+    # args.save_path = args.save_path + '-trial:{}-fold:{}'.format(args.trial, args.fold)
+    # args.save_path = args.save_path + '-model:{}-IB_ratio:{}-WS_ratio:{}-hem_extract_mode:{}-top_ratio:{}-seed:{}'.format(args.model, args.IB_ratio, args.WS_ratio, args.hem_extract_mode, args.top_ratio, args.random_seed) # offline method별 top_ratio별 IB_ratio별 실험을 위해
+    # args.experiments_sheet_dir = args.save_path
+
+    ### dataset opts
+    args.data_base_path = '/raid/img_db'
 
     ### train args
     args.num_gpus = 1
@@ -21,27 +20,10 @@ def get_experiment_args():
     ### etc opts
     args.use_lightning_style_save = True # TO DO : use_lightning_style_save==False 일 경우 오류해결 (True일 경우 정상작동)
 
-    ### set resotre path
-    args.restore_path = args.save_path
-    
     return args
 
 def inference_main(args):
     print('inference_main')
-    
-    ### test inference module
-    from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
-    from core.api.inference import InferenceDB # inference module
-    from core.api.evaluation import Evaluator # evaluation module
-    from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
-    from core.utils.logger import Report # report helper (for experiments reuslts and inference results)
-
-    from core.api.visualization import VisualTool # visual module
-    
-    import os
-    import pandas as pd
-    import glob
 
     # from pretrained model
     '''
@@ -54,13 +36,6 @@ def inference_main(args):
     # from finetuning model
     model_path = get_inference_model_path(os.path.join(args.restore_path, 'checkpoints'))
     model = CAMIO.load_from_checkpoint(model_path, args=args) # .ckpt
-    # pt_path=None # for using change_deploy_mode for offline, it will be update on above if's branch
-
-    if 'repvgg' in args.model: # load pt from version/checkpoints 
-        pt_path = get_pt_path(os.path.join(args.restore_path, 'checkpoints'))
-        print('\n\t ===> LOAD PT FROM {}\n'.format(pt_path))
-    
-    # model.change_deploy_mode(pt_path=pt_path) # 이거는 repvgg나 multi일떄만 적용됨. offline시 repvgg는 저장된 Pt에서 불러와야 하므로 pt_path를 arguments로 넣어주어야 함. 
         
     model = model.cuda()
 
@@ -68,7 +43,7 @@ def inference_main(args):
     os.makedirs(args.restore_path, exist_ok=True)
 
     inference_assets_save_path = args.restore_path
-    details_results_path = os.path.join(args.restore_path, 'inference_results')
+    details_results_path = os.path.join(args.restore_path, 'inference_etc_results')
     patients_results_path = os.path.join(details_results_path, 'patients_report.csv')
     videos_results_path = os.path.join(details_results_path, 'videos_report.csv')
 
@@ -112,7 +87,7 @@ def inference_main(args):
             db_path = video_path_info['db_path']
 
             # Inference module
-            inference = InferenceDB(model, db_path, args.inference_interval) # Inference object
+            inference = InferenceDB(args, model, db_path, args.inference_interval) # Inference object // args => InferenceDB init의 DBDataset(args) 생성시 args.model로 'mobile_vit' augmentation 처리해주기 위해
             predict_list, target_img_list, target_frame_idx_list = inference.start() # call start
   
             # for save video results
@@ -131,6 +106,13 @@ def inference_main(args):
             # Evaluation module
             evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
             gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
+
+            # except (img_db length 와 json length 다를 때 처리)
+            if len(target_frame_idx_list) > len(gt_list):
+                target_frame_idx_list = target_frame_idx_list[:len(gt_list)]
+
+            if len(target_img_list) > len(gt_list):
+                target_img_list = target_img_list[:len(gt_list)]
 
             # save predict list to csv
             predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
@@ -205,9 +187,10 @@ def inference_main(args):
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
     total_mPrecision, total_mRecall = total_metrics['mPrecision'], total_metrics['mRecall']
+    total_Precision, total_Recall = total_metrics['Precision'], total_metrics['Recall']
     total_Jaccard = total_metrics['Jaccard']
 
-    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
+    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Precision=total_Precision, Recall=total_Recall , Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -218,7 +201,7 @@ def inference_main(args):
         'model':args.model,
         'methods':args.hem_extract_mode,
         'top_ratio':args.top_ratio,
-        'stage': args.stage,
+        'stage': args.train_stage,
 
         'random_seed': args.random_seed,
         'IB_ratio': args.IB_ratio,
@@ -231,6 +214,8 @@ def inference_main(args):
         'OR':total_OR,
         'mPrecision':total_mPrecision,
         'mRecall': total_mRecall,
+        'Precision':total_Precision,
+        'Recall': total_Recall,
         'Jaccard': total_Jaccard,
 
         'details_path':details_results_path,
@@ -247,7 +232,7 @@ def main():
     args, experiment_summary, patients_CR, patients_OR = inference_main(args)
 
     # 4. save experiments summary
-    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_summary-fold_{}.csv'.format(args.inference_fold))
+    experiments_sheet_path = os.path.join(args.experiments_sheet_dir, 'experiments_etc_summary-fold_{}.csv'.format(args.inference_fold))
     os.makedirs(args.experiments_sheet_dir, exist_ok=True)
 
     save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
@@ -264,8 +249,24 @@ if __name__ == '__main__':
         sys.path.append(base_path)
         sys.path.append(base_path+'/core/accessory/RepVGG')
         print(base_path)
+
+        from core.config.base_opts import parse_opts
         
         from core.utils.misc import save_dict_to_csv, prepare_inference_aseets_etc, get_inference_model_path, \
-    set_args_per_stage, check_hem_online_mode, clean_paging_chache
+            clean_paging_chache
+
+        ### test inference module
+        from core.api.trainer import CAMIO
+        from core.api.theator_trainer import TheatorTrainer
+        from core.api.inference import InferenceDB # inference module
+        from core.api.evaluation import Evaluator # evaluation module
+        from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
+        from core.utils.logger import Report # report helper (for experiments reuslts and inference results)
+
+        from core.api.visualization import VisualTool # visual module
+
+        import os
+        import pandas as pd
+        import glob
 
     main()
