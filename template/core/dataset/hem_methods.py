@@ -350,7 +350,7 @@ class HEMHelper():
         return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
     
 
-    def get_answer(self, dropout_predictions, gt_list):
+    def get_answer_by_voting(self, dropout_predictions, gt_list):
         predict_table = np.argmax(dropout_predictions, axis=2) # (forward_passes, n_samples)
         predict_ratio = np.mean(predict_table, axis=0) # (n_samples)
 
@@ -360,6 +360,14 @@ class HEMHelper():
 
         answer = predict_np == np.array(gt_list) # compare with gt list
 
+        return answer, predict_np
+
+    def get_answer_by_mean(self, dropout_predictions, gt_list):
+        mean = np.mean(dropout_predictions, axis=-1)
+        predict_np = np.argmax(mean, axis=0)
+        
+        answer = predict_np == np.array(gt_list) # compare with gt list
+        
         return answer, predict_np
 
     
@@ -377,7 +385,7 @@ class HEMHelper():
         predict_table = np.squeeze(predict_mean) # shape (n_samples, ) // (550, )
 
         # 맞았는지, 틀렸는지 (answer) - voting 방식.
-        answer, _ = self.get_answer(dropout_predictions, gt_list)
+        answer, _ = self.get_answer_by_voting(dropout_predictions, gt_list)
         answer_list = answer.tolist()
 
         vanila_df = pd.DataFrame([x for x in zip(img_path_list, gt_list)],
@@ -421,7 +429,7 @@ class HEMHelper():
         predict_table = np.squeeze(predict_mean) # shape (n_samples, ) // (550, )
 
         # 맞았는지, 틀렸는지 (answer) - voting 방식.
-        answer, _ = self.get_answer(dropout_predictions, gt_list)
+        answer, _ = self.get_answer_by_voting(dropout_predictions, gt_list)
         answer_list = answer.tolist()
 
         vanila_df = pd.DataFrame([x for x in zip(img_path_list, gt_list)],
@@ -453,6 +461,7 @@ class HEMHelper():
 
         return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
 
+    '''
     def extract_hem_idx_from_mutual_info_large(self, dropout_predictions, gt_list, img_path_list):
         hem_idx = []
 
@@ -485,7 +494,7 @@ class HEMHelper():
         # predict_list = predict_np.tolist() # to list
 
         # answer = predict_np == np.array(gt_list) # compare with gt list
-        answer, predict_np = self.get_answer(dropout_predictions, gt_list)
+        answer, predict_np = self.get_answer_by_voting(dropout_predictions, gt_list)
         predict_list = predict_np.tolist()
 
         wrong_idx = np.where(answer == False) # wrong example
@@ -543,7 +552,7 @@ class HEMHelper():
         # predict_list = predict_np.tolist() # to list
 
         # answer = predict_np == np.array(gt_list) # compare with gt list
-        answer, predict_np = self.get_answer(dropout_predictions, gt_list)
+        answer, predict_np = self.get_answer_by_voting(dropout_predictions, gt_list)
         predict_list = predict_np.tolist()
 
         wrong_idx = np.where(answer == False) # wrong example
@@ -568,6 +577,120 @@ class HEMHelper():
         hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.split_to_hem_vanila_df(total_df)
 
         return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+        '''
+
+
+    def cal_mutual_info(self, dropout_predictions):
+
+        # dropout_predictinos (1, 46086, 2)
+        # H(X), H(Y)
+        epsilon = sys.float_info.min
+        entropy1 = -np.sum(dropout_predictions * np.log2(dropout_predictions + epsilon), axis=0) # (46086, 2)
+        entropy1_sum = np.sum(entropy1, axis=1) # (46086, )
+        
+        # H(X, Y)
+        dropout_multi = dropout_predictions[:,:,0] * dropout_predictions[:,:,1] # (1, 46086)
+        dropout_multi = np.transpose(dropout_multi) # (46086, 1)
+        entropy2 = -np.sum(dropout_multi * np.log2(dropout_multi + epsilon), axis=1) 
+        
+        # print('dropout_predictions shape: ', dropout_predictions.shape)
+        # print('entropy1 shape: ', entropy1.shape)
+        # print('entropy1_sum shape : ', entropy1_sum.shape)
+        # print('dropout_multi shape : ', dropout_multi.shape)
+        # print('entropy2 shape : ', entropy2.shape)
+
+        # H(X) + H(Y) - H(X, Y)
+        mi_score = entropy1_sum - entropy2
+
+        # print('mi_score shape : ', mi_score.shape)
+
+        return mi_score
+    
+
+    def extract_hem_idx_from_mutual_info_large(self, dropout_predictions, gt_list, img_path_list):
+        ## mutual info 가 크다. -> 두 분포 간 독립성이 적다 (의존적이다). -> 비슷한 값들 (e.g. 0.4/0.6)
+
+        mutual_info = self.cal_mutual_info(dropout_predictions)
+
+        hem_idx = []
+        # sort mi index & extract top/btm sample index 
+        top_ratio = self.top_ratio
+        top_k = int(len(mutual_info) * top_ratio)
+
+        sorted_mi_index = (-mutual_info).argsort() # desecnding index
+        top_mi_index = sorted_mi_index[:top_k] # highest 
+        
+        # answer = predict_np == np.array(gt_list) # compare with gt list
+        answer, predict_np = self.get_answer_by_mean(dropout_predictions, gt_list)
+        predict_list = predict_np.tolist()
+
+        # append hem idx - low mi
+        hem_idx += top_mi_index.tolist()
+    
+        # 2. split hem/vanila 
+        total_df_dict = {
+            'Img_path': img_path_list,
+            'predict': predict_list,
+            'GT': gt_list,
+            'mi': mutual_info.tolist(),
+            'hem': [self.NON_HEM] * len(img_path_list) # init hem
+        }
+
+        total_df = pd.DataFrame(total_df_dict)
+        total_df.loc[hem_idx, ['hem']] = self.HEM # hem index
+
+        hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.split_to_hem_vanila_df(total_df)
+
+        return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+
+
+
+
+
+    def extract_hem_idx_from_mutual_info_small(self, dropout_predictions, gt_list, img_path_list):
+        ## mutual info 가 작다. -> 두 분포 간 독립성이 강하다 (의존적이지 않다.). -> 비슷한 값들 (e.g. 0.4/0.6)
+
+        mutual_info = self.cal_mutual_info(dropout_predictions)
+
+        hem_idx = []
+
+        # sort mi index & extract top/btm sample index 
+        btm_ratio = self.top_ratio
+        btm_k = int(len(mutual_info) * btm_ratio)
+
+        sorted_mi_index = (-mutual_info).argsort() # desecnding index
+        btm_mi_index = sorted_mi_index[len(mutual_info) - btm_k:] # lowest
+
+        # # extract wrong anwer from mean softmax // you can also change like voting methods for extracting predict class
+        # predict_np = np.argmax(mean, axis=1)
+        # predict_list = predict_np.tolist() # to list
+
+        # answer = predict_np == np.array(gt_list) # compare with gt list
+        answer, predict_np = self.get_answer_by_mean(dropout_predictions, gt_list)
+        predict_list = predict_np.tolist()
+
+        wrong_idx = np.where(answer == False) # wrong example
+        wrong_idx = wrong_idx[0].tolist() # remove return turple
+
+        # append hem idx - high mi & wrong answer
+        hem_idx += np.intersect1d(wrong_idx, btm_mi_index).tolist()
+        
+        # 2. split hem/vanila 
+        total_df_dict = {
+            'Img_path': img_path_list,
+            'predict': predict_list,
+            'GT': gt_list,
+            'mi': mutual_info.tolist(),
+            'hem': [self.NON_HEM] * len(img_path_list) # init hem
+        }
+
+        total_df = pd.DataFrame(total_df_dict)
+        total_df.loc[hem_idx, ['hem']] = self.HEM # hem index
+
+        hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df = self.split_to_hem_vanila_df(total_df)
+
+        return hard_neg_df, hard_pos_df, vanila_neg_df, vanila_pos_df
+
 
     '''
     def extract_hem_idx_from_softmax_diff(self, dropout_predictions, gt_list, img_path_list, diff='diff_small', ver='ver_1'):
@@ -605,7 +728,7 @@ class HEMHelper():
             predict_table = np.squeeze(predict_mean) # shape (n_samples, ) // (550, )
 
             # 맞았는지, 틀렸는지 (answer) - voting 방식.
-            answer, _ = self.get_answer(dropout_predictions, gt_list)
+            answer, _ = self.get_answer_by_voting(dropout_predictions, gt_list)
             answer_list = answer.tolist()
 
 
@@ -700,7 +823,7 @@ class HEMHelper():
         # predict_list = predict_np.tolist() # to list
 
         # answer = predict_np == np.array(gt_list) # compare with gt list
-        answer, predict_np = self.get_answer(dropout_predictions, gt_list)
+        answer, predict_np = self.get_answer_by_voting(dropout_predictions, gt_list)
         predict_list = predict_np.tolist()
 
         wrong_idx = np.where(answer == False) # wrong example
