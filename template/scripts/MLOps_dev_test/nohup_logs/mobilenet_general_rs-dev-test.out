@@ -1,0 +1,356 @@
+base path :  /OOB_RECOG/template
+train_main
+GPU available: True, used: True
+TPU available: False, using: 0 TPU cores
+[+] Callbacks are set  [<pytorch_lightning.callbacks.lr_monitor.LearningRateMonitor object at 0x7f69d0dd62b0>, <pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint object at 0x7f69d0dd6250>]
+The following callbacks returned in `LightningModule.configure_callbacks` will override existing callbacks passed to Trainer: ModelCheckpoint
+[LOAD FROM SUBSET]
+IB_ASSETS_PATH: /raid/img_db/oob_assets/V3/ROBOT/oob_assets_inbody.csv
+OOB_ASSETS_PATH: /raid/img_db/oob_assets/V3/ROBOT/oob_assets_outofbody.csv
+==> 	Inbody_READ_CSV
+
+
+
+==> 	Outofbody_READ_CSV
+
+
+
+==> 	PATIENT (80)
+R_1|R_3|R_4|R_5|R_7|R_10|R_14|R_15|R_17|R_18|R_19|R_22|R_48|R_56|R_76|R_84|R_94|R_116|R_117|R_201|R_203|R_204|R_205|R_206|R_207|R_208|R_209|R_210|R_303|R_304|R_305|R_310|R_320|R_321|R_324|R_329|R_334|R_338|R_339|R_340|R_342|R_345|R_346|R_347|R_348|R_349|R_355|R_357|R_358|R_369|R_372|R_376|R_378|R_379|R_391|R_393|R_399|R_400|R_402|R_403|R_406|R_409|R_412|R_413|R_415|R_419|R_420|R_427|R_436|R_445|R_449|R_455|R_480|R_493|R_501|R_510|R_522|R_523|R_532|R_533
+
+
+	 ==> RANDOM SAMPLING ... IB_RATIO: 3.0
+
+
+Random sampling from 604036 to 119694
+
+
+
+==> 	FINAL ASSETS (159592)
+
+
+
+[LOAD FROM SUBSET]
+IB_ASSETS_PATH: /raid/img_db/oob_assets/V3/ROBOT/oob_assets_inbody.csv
+OOB_ASSETS_PATH: /raid/img_db/oob_assets/V3/ROBOT/oob_assets_outofbody.csv
+==> 	Inbody_READ_CSV
+
+
+
+==> 	Outofbody_READ_CSV
+
+
+
+==> 	PATIENT (20)
+R_2|R_6|R_13|R_74|R_100|R_202|R_301|R_302|R_311|R_312|R_313|R_336|R_362|R_363|R_386|R_405|R_418|R_423|R_424|R_526
+
+
+	 ==> RANDOM SAMPLING ... IB_RATIO: 3.0
+
+
+Random sampling from 155691 to 49383
+
+
+
+==> 	FINAL ASSETS (65844)
+
+
+
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [5]
+[+] Optimizer and Scheduler are set  Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.001
+    lr: 0.001
+    weight_decay: 1e-05
+) <torch.optim.lr_scheduler.StepLR object at 0x7f69d17d2e20>
+Missing logger folder: /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log
+
+  | Name    | Type             | Params
+---------------------------------------------
+0 | model   | TIMM             | 4.2 M 
+1 | loss_fn | CrossEntropyLoss | 0     
+---------------------------------------------
+4.2 M     Trainable params
+0         Non-trainable params
+4.2 M     Total params
+16.818    Total estimated model params size (MB)
+Validation sanity check: 0it [00:00, ?it/s]Validation sanity check:   0%|          | 0/2 [00:00<?, ?it/s]ON EPOCH START
+None True
+restore path :  None
+Validation sanity check:  50%|█████     | 1/2 [00:02<00:02,  2.39s/it]Validation sanity check: 100%|██████████| 2/2 [00:02<00:00,  1.70s/it]sanity check
+SANITY RESTORE PATH :  /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0
+                                                                      Training: 0it [00:00, ?it/s]ON EPOCH START
+/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0 True
+restore path :  /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0
+Training:   0%|          | 0/4 [00:00<?, ?it/s]Epoch 0:   0%|          | 0/4 [00:00<?, ?it/s] Epoch 0:  25%|██▌       | 1/4 [00:02<00:07,  2.51s/it]Epoch 0:  25%|██▌       | 1/4 [00:02<00:07,  2.51s/it, loss=0.695, v_num=0, val_loss=0.697]Epoch 0:  50%|█████     | 2/4 [00:02<00:02,  1.39s/it, loss=0.695, v_num=0, val_loss=0.697]Epoch 0:  50%|█████     | 2/4 [00:02<00:02,  1.39s/it, loss=0.662, v_num=0, val_loss=0.697, train_loss_step=0.695]
+Validating: 0it [00:00, ?it/s][A
+Validating:   0%|          | 0/2 [00:00<?, ?it/s][AON EPOCH START
+/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0 True
+restore path :  /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0
+
+Validating:  50%|█████     | 1/2 [00:02<00:02,  2.54s/it][AEpoch 0: 100%|██████████| 4/4 [00:05<00:00,  1.34s/it, loss=0.662, v_num=0, val_loss=0.697, train_loss_step=0.695]
+Validating: 100%|██████████| 2/2 [00:02<00:00,  1.81s/it][AEpoch 0: 100%|██████████| 4/4 [00:07<00:00,  1.94s/it, loss=0.662, v_num=0, val_loss=0.590, train_loss_step=0.630, train_loss_epoch=0.662, TP=138.0, TN=500.0, FP=286.0, FN=100.0, Accuracy=0.623, Precision=0.325, Recall=0.580, F1-Score=0.417, Jaccard=0.263, CR=-.282, OR=0.546, Mean_metric=0.0858, gt_IB=786.0, gt_OOB=238.0, predict_IB=600.0, predict_OOB=424.0, Loss=0.590]
+                                                         [AEpoch 0, global step 1: Mean_metric reached 0.08582 (best 0.08582), saving model to "/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0/checkpoints/epoch=0-Mean_metric=0.0858-best.ckpt" as top 1
+ON EPOCH START
+/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0 True
+restore path :  /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0
+Epoch 0:   0%|          | 0/4 [00:00<?, ?it/s, loss=0.662, v_num=0, val_loss=0.590, train_loss_step=0.630, train_loss_epoch=0.662, TP=138.0, TN=500.0, FP=286.0, FN=100.0, Accuracy=0.623, Precision=0.325, Recall=0.580, F1-Score=0.417, Jaccard=0.263, CR=-.282, OR=0.546, Mean_metric=0.0858, gt_IB=786.0, gt_OOB=238.0, predict_IB=600.0, predict_OOB=424.0, Loss=0.590]        Epoch 1:   0%|          | 0/4 [00:00<?, ?it/s, loss=0.662, v_num=0, val_loss=0.590, train_loss_step=0.630, train_loss_epoch=0.662, TP=138.0, TN=500.0, FP=286.0, FN=100.0, Accuracy=0.623, Precision=0.325, Recall=0.580, F1-Score=0.417, Jaccard=0.263, CR=-.282, OR=0.546, Mean_metric=0.0858, gt_IB=786.0, gt_OOB=238.0, predict_IB=600.0, predict_OOB=424.0, Loss=0.590]Epoch 1:  25%|██▌       | 1/4 [00:02<00:07,  2.49s/it, loss=0.635, v_num=0, val_loss=0.590, train_loss_step=0.630, train_loss_epoch=0.662, TP=138.0, TN=500.0, FP=286.0, FN=100.0, Accuracy=0.623, Precision=0.325, Recall=0.580, F1-Score=0.417, Jaccard=0.263, CR=-.282, OR=0.546, Mean_metric=0.0858, gt_IB=786.0, gt_OOB=238.0, predict_IB=600.0, predict_OOB=424.0, Loss=0.590]Epoch 1:  50%|█████     | 2/4 [00:02<00:02,  1.38s/it, loss=0.635, v_num=0, val_loss=0.590, train_loss_step=0.630, train_loss_epoch=0.662, TP=138.0, TN=500.0, FP=286.0, FN=100.0, Accuracy=0.623, Precision=0.325, Recall=0.580, F1-Score=0.417, Jaccard=0.263, CR=-.282, OR=0.546, Mean_metric=0.0858, gt_IB=786.0, gt_OOB=238.0, predict_IB=600.0, predict_OOB=424.0, Loss=0.590]Epoch 1:  50%|█████     | 2/4 [00:02<00:02,  1.38s/it, loss=0.607, v_num=0, val_loss=0.590, train_loss_step=0.581, train_loss_epoch=0.662, TP=138.0, TN=500.0, FP=286.0, FN=100.0, Accuracy=0.623, Precision=0.325, Recall=0.580, F1-Score=0.417, Jaccard=0.263, CR=-.282, OR=0.546, Mean_metric=0.0858, gt_IB=786.0, gt_OOB=238.0, predict_IB=600.0, predict_OOB=424.0, Loss=0.590]
+Validating: 0it [00:00, ?it/s][A
+Validating:   0%|          | 0/2 [00:00<?, ?it/s][AON EPOCH START
+/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0 True
+restore path :  /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0
+
+Validating:  50%|█████     | 1/2 [00:02<00:02,  2.52s/it][AEpoch 1: 100%|██████████| 4/4 [00:05<00:00,  1.32s/it, loss=0.607, v_num=0, val_loss=0.590, train_loss_step=0.581, train_loss_epoch=0.662, TP=138.0, TN=500.0, FP=286.0, FN=100.0, Accuracy=0.623, Precision=0.325, Recall=0.580, F1-Score=0.417, Jaccard=0.263, CR=-.282, OR=0.546, Mean_metric=0.0858, gt_IB=786.0, gt_OOB=238.0, predict_IB=600.0, predict_OOB=424.0, Loss=0.590]
+Validating: 100%|██████████| 2/2 [00:02<00:00,  1.79s/it][AEpoch 1: 100%|██████████| 4/4 [00:09<00:00,  2.45s/it, loss=0.607, v_num=0, val_loss=0.513, train_loss_step=0.524, train_loss_epoch=0.552, TP=105.0, TN=391.0, FP=2.000, FN=14.00, Accuracy=0.969, Precision=0.981, Recall=0.882, F1-Score=0.929, Jaccard=0.868, CR=0.851, OR=0.0165, Mean_metric=0.917, gt_IB=393.0, gt_OOB=119.0, predict_IB=405.0, predict_OOB=107.0, Loss=0.513]
+                                                         [AEpoch 1, global step 3: Mean_metric reached 0.91727 (best 0.91727), saving model to "/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0/checkpoints/epoch=1-Mean_metric=0.9173-best.ckpt" as top 1
+Saving latest checkpoint...
+Epoch 1: 100%|██████████| 4/4 [00:10<00:00,  2.60s/it, loss=0.607, v_num=0, val_loss=0.513, train_loss_step=0.524, train_loss_epoch=0.552, TP=105.0, TN=391.0, FP=2.000, FN=14.00, Accuracy=0.969, Precision=0.981, Recall=0.882, F1-Score=0.929, Jaccard=0.868, CR=0.851, OR=0.0165, Mean_metric=0.917, gt_IB=393.0, gt_OOB=119.0, predict_IB=405.0, predict_OOB=107.0, Loss=0.513]
+restore_path:  /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0
+inference_main
+restore :  /OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0
+
+==================================================
+	 ===== GET VIDEO PATH FOR ROBOT =====
+==================================================
+
+
+ ==> APPLY EXEPTION RULE
+
+==================================================
+	 ===== GET VIDEO PATH FOR ROBOT =====
+==================================================
+
+
+ ==> APPLY EXEPTION RULE
+
+==================================================
+	 ===== GET ANNOTATION PATH =====
+==================================================
+
+
+----- PROCESSED DATA CNT : 225 | FAILED PROCESSED DATA CNT : 0 ------
+
+
+==================================================
+	 ===== GET DB PATH =====
+==================================================
+
+
+----- PROCESSED DATA CNT : 225 | FAILED PROCESSED DATA CNT : 0 ------
+
+
+==================================================
+	 ===== GET PATIENT VIDEO ===== 	
+==================================================
+
+
+	########## INFERENCEING (DB) #########
+
+DB PATH : 			/raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_01
+INFERENCE_INTERVAL : 		3000
+expected loop-cnt : 0.2
+Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_01:   0%|          | 0/537 [00:00<?, ?it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_01:   0%|          | 1/537 [00:00<04:17,  2.08it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_01:   0%|          | 1/537 [00:00<04:17,  2.08it/s]
+	 => video_name: R_202_ch1_01
+	    video_CR: 0.000 | video_OR: 0.500
+	    video_TP: 1 | video_FP: 1 | video_TN: 44 | video_FN: 0
+
+	########## INFERENCEING (DB) #########
+
+DB PATH : 			/raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_03
+INFERENCE_INTERVAL : 		3000
+expected loop-cnt : 0.2
+Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_03:   0%|          | 0/538 [00:00<?, ?it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_03:   0%|          | 1/538 [00:00<04:06,  2.18it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_03:   0%|          | 1/538 [00:00<04:06,  2.17it/s]
+	 => video_name: R_202_ch1_03
+	    video_CR: 1.000 | video_OR: 0.000
+	    video_TP: 1 | video_FP: 0 | video_TN: 45 | video_FN: 0
+
+	########## INFERENCEING (DB) #########
+
+DB PATH : 			/raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_05
+INFERENCE_INTERVAL : 		3000
+expected loop-cnt : 0.1
+Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_05:   0%|          | 0/413 [00:00<?, ?it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_05:   0%|          | 1/413 [00:00<02:26,  2.80it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_202/01_G_01_R_202_ch1_05:   0%|          | 1/413 [00:00<02:27,  2.80it/s]
+	 => video_name: R_202_ch1_05
+	    video_CR: 1.000 | video_OR: 0.000
+	    video_TP: 10 | video_FP: 0 | video_TN: 26 | video_FN: 0
+		 => patient_no: R_202
+		    patient_CR: 0.846 | patient_OR: 0.077
+		    patient_TP: 12 | patient_FP: 1 | patient_TN: 115 | patient_FN: 0
+
+	########## INFERENCEING (DB) #########
+
+DB PATH : 			/raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_01
+INFERENCE_INTERVAL : 		3000
+expected loop-cnt : 0.2
+Inferencing... 	 ==> /raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_01:   0%|          | 0/538 [00:00<?, ?it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_01:   0%|          | 1/538 [00:00<04:08,  2.16it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_01:   0%|          | 1/538 [00:00<04:09,  2.16it/s]
+	 => video_name: R_10_ch1_01
+	    video_CR: 1.000 | video_OR: 0.000
+	    video_TP: 1 | video_FP: 0 | video_TN: 45 | video_FN: 0
+
+	########## INFERENCEING (DB) #########
+
+DB PATH : 			/raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_03
+INFERENCE_INTERVAL : 		3000
+expected loop-cnt : 0.1
+Inferencing... 	 ==> /raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_03:   0%|          | 0/244 [00:00<?, ?it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_03:   0%|          | 1/244 [00:00<00:52,  4.66it/s]Inferencing... 	 ==> /raid/img_db/ROBOT/R_10/01_G_01_R_10_ch1_03:   0%|          | 1/244 [00:00<00:52,  4.64it/s]
+/opt/conda/lib/python3.8/site-packages/pycm/pycm_util.py:387: RuntimeWarning: Used classes is not a subset of classes in actual and predict vectors.
+  warn(CLASSES_WARNING, RuntimeWarning)
+/OOB_RECOG/template/core/utils/metric.py:68: RuntimeWarning: invalid value encountered in half_scalars
+  metrics['CR'] = (TP - FP) / (FN + TP + FP) # 잘못예측한 OOB / predict OOB + 실제 OOB # Confidence Ratio
+/OOB_RECOG/template/core/utils/metric.py:69: RuntimeWarning: invalid value encountered in half_scalars
+  metrics['OR'] = FP / (FN + TP + FP) # Over estimation ratio
+	 => video_name: R_10_ch1_03
+	    video_CR: -100.000 | video_OR: -100.000
+	    video_TP: 0 | video_FP: 0 | video_TN: 21 | video_FN: 0
+		 => patient_no: R_10
+		    patient_CR: 1.000 | patient_OR: 0.000
+		    patient_TP: 1 | patient_FP: 0 | patient_TN: 66 | patient_FN: 0
+{
+    "experiment": {
+        "model": "mobilenetv3_large_100",
+        "method": "hem-softmax_diff_small-offline",
+        "inference_fold": "free",
+        "mCR": 0.9228515625,
+        "mOR": 0.0384521484375,
+        "CR": 0.85693359375,
+        "OR": 0.0714111328125,
+        "mPrecision": 0.96142578125,
+        "mRecall": 1.0,
+        "Precision": 0,
+        "Recall": 0,
+        "Jaccard": 0.9287109375,
+        "details_path": "/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0/inference_results",
+        "model_path": "/OOB_RECOG/logs-dev-test-robot-offline-general/mobilenet_general_rs/TB_log/version_0/checkpoints/epoch=1-Mean_metric=0.9173-best.ckpt",
+        "patients": [
+            {
+                "patient_no": "R_202",
+                "FP": 1,
+                "TP": 12,
+                "FN": 0,
+                "TN": 115,
+                "TOTAL": 128,
+                "CR": 0.84619140625,
+                "OR": 0.076904296875,
+                "Precision": 0.9228515625,
+                "Recall": 1.0,
+                "Jaccard": 0.9228515625,
+                "gt_IB": 116,
+                "gt_OOB": 12,
+                "predict_IB": 115,
+                "predict_OOB": 13
+            },
+            {
+                "patient_no": "R_10",
+                "FP": 0,
+                "TP": 1,
+                "FN": 0,
+                "TN": 66,
+                "TOTAL": 67,
+                "CR": 1.0,
+                "OR": 0.0,
+                "Precision": 1.0,
+                "Recall": 1.0,
+                "Jaccard": 1.0,
+                "gt_IB": 66,
+                "gt_OOB": 1,
+                "predict_IB": 66,
+                "predict_OOB": 1
+            }
+        ],
+        "videos": [
+            {
+                "patient_no": "R_202",
+                "video_no": "R_202_ch1_01",
+                "FP": 1,
+                "TP": 1,
+                "FN": 0,
+                "TN": 44,
+                "TOTAL": 46,
+                "CR": 0.0,
+                "OR": 0.5,
+                "Precision": 0.5,
+                "Recall": 1.0,
+                "Jaccard": 0.5,
+                "gt_IB": 45,
+                "gt_OOB": 1,
+                "predict_IB": 44,
+                "predict_OOB": 2
+            },
+            {
+                "patient_no": "R_202",
+                "video_no": "R_202_ch1_03",
+                "FP": 0,
+                "TP": 1,
+                "FN": 0,
+                "TN": 45,
+                "TOTAL": 46,
+                "CR": 1.0,
+                "OR": 0.0,
+                "Precision": 1.0,
+                "Recall": 1.0,
+                "Jaccard": 1.0,
+                "gt_IB": 45,
+                "gt_OOB": 1,
+                "predict_IB": 45,
+                "predict_OOB": 1
+            },
+            {
+                "patient_no": "R_202",
+                "video_no": "R_202_ch1_05",
+                "FP": 0,
+                "TP": 10,
+                "FN": 0,
+                "TN": 26,
+                "TOTAL": 36,
+                "CR": 1.0,
+                "OR": 0.0,
+                "Precision": 1.0,
+                "Recall": 1.0,
+                "Jaccard": 1.0,
+                "gt_IB": 26,
+                "gt_OOB": 10,
+                "predict_IB": 26,
+                "predict_OOB": 10
+            },
+            {
+                "patient_no": "R_10",
+                "video_no": "R_10_ch1_01",
+                "FP": 0,
+                "TP": 1,
+                "FN": 0,
+                "TN": 45,
+                "TOTAL": 46,
+                "CR": 1.0,
+                "OR": 0.0,
+                "Precision": 1.0,
+                "Recall": 1.0,
+                "Jaccard": 1.0,
+                "gt_IB": 45,
+                "gt_OOB": 1,
+                "predict_IB": 45,
+                "predict_OOB": 1
+            },
+            {
+                "patient_no": "R_10",
+                "video_no": "R_10_ch1_03",
+                "FP": 0,
+                "TP": 0,
+                "FN": 0,
+                "TN": 21,
+                "TOTAL": 21,
+                "CR": -100,
+                "OR": -100,
+                "Precision": -100,
+                "Recall": -100,
+                "Jaccard": -100,
+                "gt_IB": 21,
+                "gt_OOB": 0,
+                "predict_IB": 21,
+                "predict_OOB": 0
+            }
+        ]
+    }
+}
