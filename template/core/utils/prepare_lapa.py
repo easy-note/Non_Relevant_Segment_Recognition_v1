@@ -837,7 +837,7 @@ class PatientsGT():
         '''
 
         # 1. load inference dataset
-        inference_assets = prepare_inference_aseets(case='ROBOT' , anno_ver='3', inference_fold='all', save_path='/OOB_RECOG/results')
+        inference_assets = prepare_inference_aseets(case='LAPA' , anno_ver='3', inference_fold='all', save_path='/OOB_RECOG/results')
         patients = inference_assets['patients']
         patients_count = len(patients)
 
@@ -867,11 +867,15 @@ class PatientsGT():
         video_no = []
         annotation_path_list = self.patients_assets[patient_no]
 
-        info_parser = InfoParser(parser_type='ROBOT_ANNOTATION')
+        # info_parser = InfoParser(parser_type='ROBOT_ANNOTATION')
 
         for annotation_path in annotation_path_list:    
-            info_parser.write_file_name(annotation_path)
-            video_no.append(info_parser.get_video_name())
+            annotation_path = os.path.basename(os.path.splitext(annotation_path)[0])
+
+            video_no.append('_'.join(annotation_path.split('_')[:-2]))
+
+            # info_parser.write_file_name(annotation_path)
+            # video_no.append(info_parser.get_video_name())
 
         return video_no # already sorted
 
