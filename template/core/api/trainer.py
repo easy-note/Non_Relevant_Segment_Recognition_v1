@@ -61,7 +61,7 @@ class CAMIO(BaseTrainer):
             print('restore path : ', self.restore_path)
             
             # if self.training and self.restore_path is not None and self.current_epoch == 0:
-            if self.cur_stage > 1 and self.restore_path is not None and self.current_epoch == 0:
+            if self.cur_stage > 1 and self.restore_path is not None and self.current_epoch == 0: # iteration == 200 이고, 첫 번째 epoch 에서 동작. (online)
                 trainset = copy.deepcopy(self.trainset)
                 trainset.img_list = trainset.img_list[trainset.split_patient:]
                 trainset.label_list = trainset.label_list[trainset.split_patient:]
@@ -211,7 +211,7 @@ class CAMIO(BaseTrainer):
         else:
             return self.model(x)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx): # train - every batch
 
         if 'hem-emb' in self.hem_extract_mode and self.training:
             img_path, x, y = batch
@@ -233,7 +233,7 @@ class CAMIO(BaseTrainer):
             'loss': loss,
         }
 
-    def training_epoch_end(self, outputs):
+    def training_epoch_end(self, outputs): # train - every epoch
         train_loss, cnt = 0, 0
 
         for output in outputs:
@@ -245,7 +245,7 @@ class CAMIO(BaseTrainer):
         # write train loss
         self.metric_helper.write_loss(train_loss_mean, task='train')
 
-        # save number of train dataset (rs, nrs)
+        # save number of train dataset (rs, nrs), 마지막 epoch 에서만 실행?
         if self.current_epoch == self.last_epoch:
             pass
 
@@ -271,6 +271,7 @@ class CAMIO(BaseTrainer):
             self.sanity_check = False
 
         else:
+            # TODO : self.restore_path 중복 선언? (if self.sanity_check)
             self.restore_path = os.path.join(self.args.save_path, self.logger.log_dir) # hem-df path / inference module restore path
             
             metrics = self.metric_helper.calc_metric() # 매 epoch 마다 metric 계산 (TP, TN, .. , accuracy, precision, recaull, f1-score)
@@ -295,7 +296,7 @@ class CAMIO(BaseTrainer):
             self.metric_helper.write_loss(val_loss_mean, task='val')
             self.metric_helper.save_loss_pic(save_path=os.path.join(self.args.save_path, self.logger.log_dir))
 
-            if not self.args.use_lightning_style_save:
+            if not self.args.use_lightning_style_save: # pytorch style save
                 if self.best_val_loss > val_loss_mean : # math.inf 보다 현재 epoch val loss 가 작으면,
                     self.best_val_loss = val_loss_mean # self.best_val_loss 업데이트. 
                     self.save_checkpoint()

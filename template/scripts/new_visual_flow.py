@@ -177,6 +177,13 @@ def inference_main(args):
             evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
             gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
 
+            # except (img_db length 와 json length 다를 때 처리)
+            if len(target_frame_idx_list) > len(gt_list):
+                target_frame_idx_list = target_frame_idx_list[:len(gt_list)]
+
+            if len(target_img_list) > len(gt_list):
+                target_img_list = target_img_list[:len(gt_list)]
+
             # save predict list to csv
             predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
             predict_df = pd.DataFrame({
@@ -250,9 +257,10 @@ def inference_main(args):
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
     total_mPrecision, total_mRecall = total_metrics['mPrecision'], total_metrics['mRecall']
+    total_Precision, total_Recall = total_metrics['Precision'], total_metrics['Recall']
     total_Jaccard = total_metrics['Jaccard']
 
-    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
+    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Precision=total_Precision, Recall=total_Recall , Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -276,6 +284,8 @@ def inference_main(args):
         'OR':total_OR,
         'mPrecision':total_mPrecision,
         'mRecall': total_mRecall,
+        'Precision':total_Precision,
+        'Recall': total_Recall,
         'Jaccard': total_Jaccard,
 
         'details_path':details_results_path,
@@ -381,10 +391,12 @@ def new_main():
                 if args.hem_interation_idx == 100:
                     args.appointment_assets_path = ''
 
+                '''
                 else: # 200, 300 일때는 appointmnet assets path 에서 csv 불러오기
                     # csv 불러오기 위한 용도로 scripts에서 받아오는 args.hem_iteration idx, model_name, hem_extract_mode 대한 의미를 다음과 같이 부여가능 => 이중의미 (실제로 baby model학습모델 + 이전 iteration 에서 model을 사용해서 뽑은 hem_assets csv))
                     hem_assets_path = get_hem_assets_path(args.hem_interation_idx, args.model, hem_extract_mode='hem-softmax_diff_small-offline') # hem_extract_mode 도 args로 받게 해도 됨.
                     args.appointment_assets_path = hem_assets_path
+                '''
                 
                 for train_stage in mini_fold_stage:
                     args.train_stage = train_stage

@@ -10,23 +10,23 @@
 # appointment_assets_path는 args긴 한데, apply scripts 에서 사용하는 args는 아님, 내부적으로 robot dataset불러올때 내부 로직에서 알아서 setting 해주는 용도라 scripts에서 넘기지 않음
 
 top_ratio=(0.05);
-
 WS_ratio=3;
-n_dropout=5;
 IB_ratio=3;
 
+n_dropout=1;
+
 hem_interation_idx=100;
-baby_model_save_path="/OOB_RECOG/logs-new/mobilenet-vanila1"
+baby_model_save_path="/OOB_RECOG/logs-new/baby-BEST/resnet18-vanila-MC=3"
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../new_apply_offline_methods_flow.py \
+    nohup python -u ../new_apply_offline_methods_flow.py \
         --hem_interation_idx ${hem_interation_idx} \
         --baby_model_save_path ${baby_model_save_path} \
         --fold "1" \
         --use_wise_sample \
         --WS_ratio ${WS_ratio} \
-        --model "mobilenetv3_large_100" \
+        --model "resnet18" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 100 \
@@ -34,15 +34,15 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "0" \
+        --cuda_list "5" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
-        --hem_extract_mode "offline" \
+        --hem_extract_mode "offline-multi" \
         --top_ratio ${ratio} \
         --n_dropout ${n_dropout} \
         --train_stage "hem_train" \
         --inference_fold "1" \
         --inference_interval "30" \
-        --experiments_sheet_dir "/OOB_RECOG/results/mobilenet-apply1" \
-        --save_path "/OOB_RECOG/logs-new/mobilenet-apply1" > "./mobilenet-apply1.out"
+        --experiments_sheet_dir "/OOB_RECOG/results/resnet18-apply-MC=1" \
+        --save_path "/OOB_RECOG/logs-new/resnet18-apply-MC=1" > "./resnet18-apply-MC=1.out"
 done;

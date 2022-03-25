@@ -20,7 +20,7 @@ baby_model_save_path="/OOB_RECOG/logs-new/mobilevit-vanila1"
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../new_apply_offline_methods_flow.py \
+    nohup python ../../new_apply_offline_methods_flow.py \
         --hem_interation_idx ${hem_interation_idx} \
         --baby_model_save_path ${baby_model_save_path} \
         --fold "1" \
@@ -37,12 +37,12 @@ do
         --cuda_list "1" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
-        --hem_extract_mode "offline" \
+        --hem_extract_mode "offline-multi" \
         --top_ratio ${ratio} \
         --n_dropout ${n_dropout} \
         --train_stage "hem_train" \
         --inference_fold "1" \
         --inference_interval "30" \
         --experiments_sheet_dir "/OOB_RECOG/results/mobilevit-apply1" \
-        --save_path "/OOB_RECOG/logs-new/mobilevit-apply1" > "./mobilevit-apply1.out"
+        --save_path "/OOB_RECOG/logs-new/mobilevit-apply1" > "../nohup_logs/mobilevit-apply1.out"
 done;

@@ -17,24 +17,26 @@
 
 # --inference 부분은 없어도 됨, 어차피 안함.
 
-
+#################################
+### model = mobileViT, MC = 1 ###
+#################################
 
 IB_ratio=3;
 
 top_ratio=(0.05);
 WS_ratio=3;
-n_dropout=5;
+n_dropout=1;
 
 hem_interation_idx=100;
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../new_visual_flow.py \
+    nohup python -u ../new_visual_flow.py \
         --hem_interation_idx ${hem_interation_idx}\
         --fold "1" \
         --use_wise_sample \
         --WS_ratio ${WS_ratio} \
-        --model "mobilenetv3_large_100" \
+        --model "mobile_vit" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 50 \
@@ -42,11 +44,11 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "0" \
+        --cuda_list "4" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --train_stage "mini_fold_stage_0" \
-        --hem_extract_mode "hem-softmax_diff_small-offline" \
-        --experiments_sheet_dir "/OOB_RECOG/results/mobilenet-vanila1" \
-        --save_path "/OOB_RECOG/logs-new/mobilenet-vanila1" > "./mobilenet-vanila1.out"
+        --hem_extract_mode "offline-multi" \
+        --experiments_sheet_dir "/OOB_RECOG/results/mobilevit-vanila" \
+        --save_path "/OOB_RECOG/logs-new/mobilevit-vanila-MC=1" > "./mobilevit-vanila-MC=1.out"
 done;

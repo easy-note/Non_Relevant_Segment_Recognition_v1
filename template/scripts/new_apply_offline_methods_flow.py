@@ -1,6 +1,5 @@
 def get_experiment_args():
-    from core.config.base_opts import parse_opts
-
+    
     parser = parse_opts()
 
     args = parser.parse_args()
@@ -25,8 +24,7 @@ def get_experiment_args():
     return args
 
 def get_clean_args():
-    import argparse
-    from core.config.base_opts import parse_opts
+
 
     parser = parse_opts()
     args = parser.parse_args()
@@ -58,7 +56,9 @@ def get_extract_hem_assets_args(args):
         'max_epoch': 0,
         'use_online_mcd': False,
         'hem_interation_idx': args.hem_interation_idx, # var
-        'baby_model_save_path': args.baby_model_save_path # var
+        'baby_model_save_path': args.baby_model_save_path, # var
+        'experiment_sub_type': 'none', # only in semi (dataset)
+        'semi_data': 'rs-general', # only in semi (dataset)
     }
 
     # 2. only set for extract hem assets from input args
@@ -70,16 +70,7 @@ def get_extract_hem_assets_args(args):
 def train_main(args):
     print('train_main')
     
-    import os
-    import pytorch_lightning as pl
-    from pytorch_lightning import loggers as pl_loggers
-    from pytorch_lightning.plugins import DDPPlugin
 
-    from core.model import get_model, get_loss
-    from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
-
-    from torchsummary import summary
 
     tb_logger = pl_loggers.TensorBoardLogger(
         save_dir=args.save_path,
@@ -126,19 +117,7 @@ def train_main(args):
 def inference_main(args):
     print('inference_main')
     
-    ### test inference module
-    from core.api.trainer import CAMIO
-    from core.api.theator_trainer import TheatorTrainer
-    from core.api.inference import InferenceDB # inference module
-    from core.api.evaluation import Evaluator # evaluation module
-    from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
-    from core.utils.logger import Report # report helper (for experiments reuslts and inference results)
 
-    from core.api.visualization import VisualTool # visual module
-    
-    import os
-    import pandas as pd
-    import glob
 
     # from pretrained model
     '''
@@ -222,6 +201,13 @@ def inference_main(args):
             evaluator = Evaluator(predict_csv_path, annotation_path, args.inference_interval)
             gt_list, predict_list = evaluator.get_assets() # get gt_list, predict_list by inference_interval
 
+            # except (img_db length 와 json length 다를 때 처리)
+            if len(target_frame_idx_list) > len(gt_list):
+                target_frame_idx_list = target_frame_idx_list[:len(gt_list)]
+
+            if len(target_img_list) > len(gt_list):
+                target_img_list = target_img_list[:len(gt_list)]
+
             # save predict list to csv
             predict_csv_path = os.path.join(each_videos_save_dir, '{}.csv'.format(video_name))
             predict_df = pd.DataFrame({
@@ -295,9 +281,10 @@ def inference_main(args):
     total_metrics = MetricHelper().aggregate_calc_metric(patients_metrics_list)
     total_mCR, total_mOR, total_CR, total_OR = total_metrics['mCR'], total_metrics['mOR'], total_metrics['CR'], total_metrics['OR']
     total_mPrecision, total_mRecall = total_metrics['mPrecision'], total_metrics['mRecall']
+    total_Precision, total_Recall = total_metrics['Precision'], total_metrics['Recall']
     total_Jaccard = total_metrics['Jaccard']
 
-    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
+    report.set_experiment(model=args.model, methods=args.hem_extract_mode, inference_fold=args.inference_fold, mCR=total_mCR, mOR=total_mOR, CR=total_CR, OR=total_OR, mPrecision=total_mPrecision, mRecall=total_mRecall, Precision=total_Precision, Recall=total_Recall , Jaccard=total_Jaccard, details_path=details_results_path, model_path=model_path)
     report.save_report() # save report
 
     # SUMMARY
@@ -321,6 +308,8 @@ def inference_main(args):
         'OR':total_OR,
         'mPrecision':total_mPrecision,
         'mRecall': total_mRecall,
+        'Precision':total_Precision,
+        'Recall': total_Recall,
         'Jaccard': total_Jaccard,
 
         'details_path':details_results_path,
@@ -332,8 +321,7 @@ def inference_main(args):
 
 
 def get_baby_model_path_from_NAS(hem_interation_idx, model_name, train_stage):
-    import os
-    from core.config.assets_info import mc_assets_save_path
+    
 
     # train_stage의 경우 args 상관없이 미리 정의된 extract_stage에서 for문 돌면서 셋팅된 값 받아서 해당 함수로 call
     # model 과 hem_iter 만 변경 (전체 flow에서는 extract_args에서 셋팅된 값 받아서 해당 함수로 call)
@@ -350,7 +338,7 @@ def get_baby_model_path_from_NAS(hem_interation_idx, model_name, train_stage):
     return model_dir
 
 def get_baby_model_path_from_restore_dir(baby_model_save_path, train_stage):
-    import os
+    
 
     # visual flow에서 학습한 baby model dir을 넣어주어서 train_stage에 따라서 model path 가져오기
     train_stage_to_restore_path = {
@@ -365,8 +353,7 @@ def get_baby_model_path_from_restore_dir(baby_model_save_path, train_stage):
     return model_dir
 
 def save_hem_assets_info(hem_assets_df, save_path):
-    import json
-    import pandas as pd
+    
 
     NON_HEM, HEM = (0, 1)
     RS_CLASS, NRS_CLASS = (0, 1)
@@ -396,19 +383,6 @@ def save_hem_assets_info(hem_assets_df, save_path):
 
 
 def extract_hem_assets(extract_args, offline_methods, save_path): # save_path 는 저장하는 ~/TB_log/version_0 에서의 ~
-
-    import glob
-    import os
-    import json
-    import natsort
-    import pandas as pd
-
-    from core.api.trainer import CAMIO
-    from core.dataset.robot_dataset_new import RobotDataset_new
-    from core.config.assets_info import mc_assets_save_path
-    from core.dataset.hem_methods import HEMHelper
-
-    from core.utils.parser import FileLoader
     
     hem_assets_paths = {} # return 
 
@@ -437,6 +411,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
 
         # 1. baby model (extract model) 불러오기
         if extract_args.baby_model_save_path == '': # 1-1. model 불러오기 (from NAS)
+            assert False, "not support, check baby model save path"
             model_dir = get_baby_model_path_from_NAS(extract_args.hem_interation_idx, extract_args.model, train_stage)
         else : # 1-2. local에서 불러오기
             model_dir = get_baby_model_path_from_restore_dir(extract_args.baby_model_save_path, train_stage)
@@ -453,7 +428,7 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.model = extract_args.model # 'mobilenetv3_large_100' # model 정보만 정확하게 넘겨주면 되지 않을까?????
         
         args.experiment_type = 'ours'
-        args.hem_extract_mode = 'offline' # 어차피 사용안됨, 그냥 넣어줌
+        args.hem_extract_mode = 'offline-multi' # 어차피 사용안됨, 그냥 넣어줌
         args.dropout_prob = 0.3
         args.loss_fn = 'ce' # get_loss function
 
@@ -493,6 +468,9 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.random_seed = 3829
         args.fold = '1'
         args.use_wise_sample = True # 사실 이건 mini fold stage에서 wise sampling 햇냐 안햇냐의 재현 여부
+        # ==> semi
+        args.experiment_sub_type = extract_args.experiment_sub_type # 'semi' or 'none'
+        args.semi_data == extract_args.semi_data # 'rs-general'
         # ------------ ------------- ------------ #
 
         trainset = RobotDataset_new(args, state='train_mini', minifold=train_stage_to_minifold[train_stage], wise_sample=args.use_wise_sample) # train dataset setting
@@ -510,6 +488,9 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         args.WS_ratio = 3 # hueristic sampler 에서 사용
         args.random_seed = 3829
         args.fold = '1'
+        # ==> semi
+        args.experiment_sub_type = extract_args.experiment_sub_type # 'semi' or 'none'
+        args.semi_data == extract_args.semi_data # 'rs-general'
         # ------------ ----save_hem_assets_info--------- ------------ #
 
         val_all_metaset = RobotDataset_new(args, state='val_mini',  minifold=train_stage_to_minifold[train_stage], all_sample=True, use_metaset=True) # val dataset setting
@@ -519,54 +500,51 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
 
 
         # 2. hem_methods 적용
+        
+        # ------------ 4.  hem_helper args ------------ # 
+        args = get_clean_args()
+
+        n_dropout = extract_args.n_dropout  # hem_helper_init
+        hem_extract_mode = 'offline-multi' # hem_helper_init
+        use_hem_per_patient = True # hem_helper init 
+        
+        IB_ratio = 3 # 이건 get_target_patient_hem_count
+        random_seed = 3829 # 이건 set_ratio에서 사용
+
+        top_ratio = extract_args.top_ratio
+
+        hem_helper = HEMHelper(args)
+        hem_helper.set_method(hem_extract_mode)
+        hem_helper.set_offline_multi_stack(offline_methods) # 한번에 처리
+        hem_helper.set_restore_path(restore_path)
+        hem_helper.set_n_dropout(n_dropout)
+        hem_helper.set_use_hem_per_patient(use_hem_per_patient)
+        hem_helper.set_IB_ratio(IB_ratio)
+        hem_helper.set_random_seed(random_seed)
+        hem_helper.set_top_ratio(top_ratio)
+
+        ### => dataset_info load and set target hem cnt
+        f_loader = FileLoader()
+        f_loader.set_file_path(train_dataset_info_path)
+        train_dataset_info = f_loader.load()
+
+        f_loader.set_file_path(val_dataset_info_path)
+        val_dataset_info = f_loader.load()
+        
+        hem_helper.set_target_hem_count(train_dataset_info['target_hem_count']['rs'], train_dataset_info['target_hem_count']['nrs'])
+        hem_helper.set_target_patient_dict(val_dataset_info['patients'])
+
+        results_dict = hem_helper.compute_hem(model, val_all_metaset) # {'hem-softmax_diff_small-offline(1)':saved_save_path(1), 'hem-softmax_diff_large-offline(2)':saved_save_path(2), ..}
+
+        # 3. append hem csv path from results dict(return compute)
         for method_idx, method in enumerate(offline_methods, 1):
             method_info = '{}({})'.format(method, method_idx)
-            
-            # ------------ 4.  hem_helper args ------------ # 
-            args = get_clean_args()
 
-            n_dropout = extract_args.n_dropout  # hem_helper_init
-            hem_extract_mode = method # hem_helper_init
-            use_hem_per_patient = True # hem_helper init 
-            
-            IB_ratio = 3 # 이건 get_target_patient_hem_count
-            random_seed = 3829 # 이건 set_ratio에서 사용
-
-            top_ratio = extract_args.top_ratio
-
-            hem_helper = HEMHelper(args)
-            hem_helper.set_method(hem_extract_mode)
-            hem_helper.set_restore_path(restore_path)
-            hem_helper.set_n_dropout(n_dropout)
-            hem_helper.set_use_hem_per_patient(use_hem_per_patient)
-            hem_helper.set_IB_ratio(IB_ratio)
-            hem_helper.set_random_seed(random_seed)
-            hem_helper.set_top_ratio(top_ratio)
-
-            ### => dataset_info load and set target hem cnt
-            f_loader = FileLoader()
-            f_loader.set_file_path(train_dataset_info_path)
-            train_dataset_info = f_loader.load()
-
-            f_loader.set_file_path(val_dataset_info_path)
-            val_dataset_info = f_loader.load()
-            
-            hem_helper.set_target_hem_count(train_dataset_info['target_hem_count']['rs'], train_dataset_info['target_hem_count']['nrs'])
-            hem_helper.set_target_patient_dict(val_dataset_info['patients'])
-
-            hem_final_df = hem_helper.compute_hem(model, val_all_metaset)
-
-            # 3. save hem_df.to_csv ==> # version 0,1,2,3 hem_final_df aggregation df 하여 뽑기
-            fold = '1'
-            hem_final_df_path = os.path.join(restore_path, '{}.csv'.format(method_info))
-            hem_final_df.to_csv(hem_final_df_path, index=False) # restore_path (mobilenet_v3-hem-vi-fold-1.csv)
-
-            if hem_extract_mode in hem_assets_paths:
-                hem_assets_paths[method_info].append(hem_final_df_path)    
+            if method_info in hem_assets_paths: # 같은 method 를 여러 번 수행했을 때. 
+                hem_assets_paths[method_info].append(results_dict[method_info])
             else:
-                hem_assets_paths[method_info] = [hem_final_df_path]
-
-            save_hem_assets_info(hem_final_df, os.path.join(restore_path, '{}.json'.format(method_info)))
+                hem_assets_paths[method_info] = [results_dict[method_info]]
+    
     
     # 4. aggregation hem path
     all_hem_assets_dir = os.path.join(save_path, 'hem_assets')
@@ -586,12 +564,12 @@ def extract_hem_assets(extract_args, offline_methods, save_path): # save_path �
         save_hem_assets_info(agg_hem_assets_df, os.path.join(all_hem_assets_dir, '{}-agg.json'.format(method_info)))
 
         hem_assets_paths[method_info] = agg_hem_assets_path # re-define hem_assets_paths to agg hem assets path
+
     
     return hem_assets_paths
 
 
 def apply_offline_methods_main(args, apply_offline_methods):
-    import os
     
     # 0. mini fold args 통합 및 정리 (def extract_hem_assets 에서 사용될 독립 args)
     extract_hem_assets_args = get_extract_hem_assets_args(args)
@@ -606,6 +584,21 @@ def apply_offline_methods_main(args, apply_offline_methods):
     for method_idx, method in enumerate(apply_offline_methods, 1):
         method_info = '{}({})'.format(method, method_idx)
         hem_assets_path = hem_assets_paths[method_info]
+
+        ####### hem assets visualization #######
+        
+        try:
+            hem_df = pd.read_csv(hem_assets_path)
+            model = args.model
+            save_dir = os.path.join('/'.join(hem_assets_path.split('/')[:-1]), method_info)
+
+            test_visual_sampling.visual_flow_for_sampling(hem_df, model, save_dir)
+
+        except:
+            print('visual error')
+            pass
+        
+
 
         args.train_stage = 'hem_train'
         args.appointment_assets_path = hem_assets_path
@@ -622,13 +615,7 @@ def apply_offline_methods_main(args, apply_offline_methods):
 
         save_dict_to_csv({**experiment_summary, **patients_CR}, experiments_sheet_path)
 
-    return args
-
 def main():
-    # 0. set each experiment args 
-    import os, torch, random
-    import numpy as np
-
     # 0. set each experiment args 
     args = get_experiment_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_list
@@ -641,7 +628,12 @@ def main():
     torch.backends.cudnn.deterministic=True
     torch.backends.cudnn.benchmark=True
 
-    apply_offline_methods_main(args, apply_offline_methods= ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline'])
+    if args.hem_extract_mode == 'offline-multi':
+        apply_offline_methods = ['hem-softmax_diff_small-offline', 'hem-softmax_diff_large-offline', 'hem-voting-offline', 'hem-mi_small-offline', 'hem-mi_large-offline']
+    else:
+        apply_offline_methods = [args.hem_extract_mode]
+    
+    apply_offline_methods_main(args, apply_offline_methods=apply_offline_methods)
     
 
 if __name__ == '__main__':
@@ -656,5 +648,50 @@ if __name__ == '__main__':
         from core.utils.misc import prepare_inference_aseets, get_inference_model_path, \
             clean_paging_chache, save_dict_to_csv, save_dataset_info
 
-    main()
+        ### get args
+        import argparse
+        from core.config.base_opts import parse_opts        
 
+        ### train main
+        import os
+        import pytorch_lightning as pl
+        from pytorch_lightning import loggers as pl_loggers
+        from pytorch_lightning.plugins import DDPPlugin
+
+        from core.model import get_model, get_loss
+        from core.api.trainer import CAMIO
+        from core.api.theator_trainer import TheatorTrainer
+
+        from torchsummary import summary
+
+        from scripts.unit_test import test_visual_sampling
+
+        ### test inference module
+        # from core.api.trainer import CAMIO
+        # from core.api.theator_trainer import TheatorTrainer
+        from core.api.inference import InferenceDB # inference module
+        from core.api.evaluation import Evaluator # evaluation module
+        from core.utils.metric import MetricHelper # metric helper (for calc CR, OR, mCR, mOR)
+        from core.utils.logger import Report # report helper (for experiments reuslts and inference results)
+
+        from core.api.visualization import VisualTool # visual module
+
+        ### extract hem assets
+        # from core.api.trainer import CAMIO
+        from core.dataset.robot_dataset_new import RobotDataset_new
+        from core.config.assets_info import mc_assets_save_path
+        from core.dataset.hem_methods import HEMHelper
+
+        ### etc
+        from core.utils.parser import FileLoader
+
+        import os, torch, random
+        import numpy as np
+        import pandas as pd
+        import glob
+        import json
+        import natsort
+
+
+    
+    main()

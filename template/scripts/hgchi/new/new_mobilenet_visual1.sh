@@ -1,4 +1,4 @@
-# 22-01-18 baby model학습시키기
+# 22-01-28 baby model학습시키기
 
 # offline 용 visual_flow (baby model 학습시키기용도) - baby model 학습할때의 기준으로 생각해서 셋팅하기.
 ## hem_iteration_idx가 100(초기) 이 외에는 appointment_assets_path 에서 불러옴
@@ -29,7 +29,7 @@ hem_interation_idx=100;
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../new_visual_flow.py \
+    nohup python ../../new_visual_flow.py \
         --hem_interation_idx ${hem_interation_idx}\
         --fold "1" \
         --use_wise_sample \
@@ -47,6 +47,6 @@ do
         --IB_ratio ${IB_ratio} \
         --train_stage "mini_fold_stage_0" \
         --hem_extract_mode "hem-softmax_diff_small-offline" \
-        --experiments_sheet_dir "/OOB_RECOG/results/new-test_visual-mobilenet-vanila3" \
-        --save_path "/OOB_RECOG/logs-new-test_visual-mobilenet-vanila3" > "./visual3.out"
+        --experiments_sheet_dir "/OOB_RECOG/results/mobilenet-vanila1" \
+        --save_path "/OOB_RECOG/logs-new/mobilenet-vanila1" > "../nohup_logs/mobilenet-vanila1.out"
 done;

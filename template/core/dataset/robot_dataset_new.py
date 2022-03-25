@@ -107,12 +107,12 @@ class RobotDataset_new(Dataset):
 
     def load_data(self, appointment_assets_path):
 
-        if appointment_assets_path is not '':
+        if appointment_assets_path is not '': # for baby model - iter(200, 300) appointment assets
             print('[LOAD FROM APPOINTMENT]')
             print('====> {}'.format(appointment_assets_path))
             self.load_data_from_appointment_assets() # load from speicific path
         
-        else: # assets type check
+        else: # assets type check # general train, hem train
             ## set meta/sub assets path
             assets_root_path = os.path.join(oob_assets_save_path['oob_assets_v3_robot_save_path'])
 

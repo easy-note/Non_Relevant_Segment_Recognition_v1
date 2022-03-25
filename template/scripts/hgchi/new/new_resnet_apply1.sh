@@ -1,4 +1,4 @@
-# 22-01.18 theator stage 200 apply로 뽑아서 hem train시키기
+# 22-01-28 theator stage 200 apply로 뽑아서 hem train시키기
 
 # hem_train 돌릴때 기준으로 생각해서 셋팅하면 됨
 # apply에서는 hem_extract_mode 일단은 "offine"으로 해놓기, 사실 뭐든 offline중 아무거나 해놓으면 됨 => 현재는 내부에 작성된 []에서 hem_extract_mode가 초기화되기 때문에
@@ -16,15 +16,17 @@ n_dropout=5;
 IB_ratio=3;
 
 hem_interation_idx=100;
+baby_model_save_path="/OOB_RECOG/logs-new/resnet18-vanila1"
 
 for ratio in "${top_ratio[@]}";
 do
-    nohup python ../new_apply_offline_methods_flow.py \
-        --hem_interation_idx ${hem_interation_idx}\
+    nohup python ../../new_apply_offline_methods_flow.py \
+        --hem_interation_idx ${hem_interation_idx} \
+        --baby_model_save_path ${baby_model_save_path} \
         --fold "1" \
         --use_wise_sample \
         --WS_ratio ${WS_ratio} \
-        --model "mobilenetv3_large_100" \
+        --model "resnet18" \
         --pretrained \
         --use_lightning_style_save \
         --max_epoch 100 \
@@ -32,15 +34,15 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "1" \
+        --cuda_list "2" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
-        --hem_extract_mode "offline" \
+        --hem_extract_mode "offline-multi" \
         --top_ratio ${ratio} \
         --n_dropout ${n_dropout} \
         --train_stage "hem_train" \
         --inference_fold "1" \
         --inference_interval "30" \
-        --experiments_sheet_dir "/OOB_RECOG/results/new-test_apply-mobilenet-vanila3" \
-        --save_path "/OOB_RECOG/logs-new-test_apply-mobilenet-vanila3" > "./apply3.out"
+        --experiments_sheet_dir "/OOB_RECOG/results/resnet18-apply1" \
+        --save_path "/OOB_RECOG/logs-new/resnet18-apply1" > "../nohup_logs/resnet18-apply1.out"
 done;

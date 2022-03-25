@@ -80,6 +80,8 @@ class Report():
                 'OR':0,
                 'mPrecision':0,
                 'mRecall':0,
+                'Precision':0,
+                'Recall':0,
                 'Jaccard':0,
                 'details_path':'',
                 'model_path':'',
@@ -136,7 +138,7 @@ class Report():
     def set_report_save_path(self, report_save_path):
         self.report_save_path = report_save_path
     
-    def set_experiment(self, model, methods, inference_fold, mCR, mOR, CR, OR, mPrecision, mRecall, Jaccard, details_path, model_path):
+    def set_experiment(self, model, methods, inference_fold, mCR, mOR, CR, OR, mPrecision, mRecall, Precision, Recall, Jaccard, details_path, model_path):
         self.experiment['model'] = model
         self.experiment['method'] = methods
         self.experiment['inference_fold'] = inference_fold

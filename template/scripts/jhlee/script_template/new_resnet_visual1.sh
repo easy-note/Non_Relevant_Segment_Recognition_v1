@@ -17,13 +17,15 @@
 
 # --inference 부분은 없어도 됨, 어차피 안함.
 
-
+################################
+### model = resnet18, MC = 1 ###
+################################
 
 IB_ratio=3;
 
 top_ratio=(0.05);
 WS_ratio=3;
-n_dropout=5;
+n_dropout=1;
 
 hem_interation_idx=100;
 
@@ -42,11 +44,11 @@ do
         --lr_scheduler "step_lr" \
         --lr_scheduler_step 5 \
         --lr_scheduler_factor 0.9 \
-        --cuda_list "2" \
+        --cuda_list "3" \
         --random_seed 3829 \
         --IB_ratio ${IB_ratio} \
         --train_stage "mini_fold_stage_0" \
-        --hem_extract_mode "hem-softmax_diff_small-offline" \
-        --experiments_sheet_dir "/OOB_RECOG/results/resnet18-vanila1" \
-        --save_path "/OOB_RECOG/logs-new/resnet18-vanila1" > "./resnet18-vanila1.out"
+        --hem_extract_mode "offline-multi" \
+        --experiments_sheet_dir "/OOB_RECOG/results/resnet18-vanila" \
+        --save_path "/OOB_RECOG/logs-new/resnet18-vanila-MC=1" > "./resnet18-vanila-MC=1.out"
 done;
