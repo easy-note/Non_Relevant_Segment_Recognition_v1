@@ -87,9 +87,6 @@ class ffmpegHelper():
     def extract_frame_by_index(self, frame_index):
         # frame_index= 500
         cmd = self._process_cmd('extract_frame_by_index', frame_index=frame_index)
-
-        print(cmd)
-        exit(0)
         
         print('EXTRACT FRAME BY INDEX : {}'.format(cmd), end= ' ')
 
